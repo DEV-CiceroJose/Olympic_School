@@ -9,6 +9,9 @@
 - App Check configurado com reCAPTCHA Enterprise.
 - Regras e índices do Firestore publicados.
 
+Os arquivos operacionais ficam em `backend/`. Os adaptadores usados pela interface ficam em
+`frontend/src/services/`.
+
 ## Operação gratuita
 
 - O modelo `gemini-3.6-flash` funciona pela Gemini Developer API sem plano Blaze, dentro das cotas
@@ -19,6 +22,16 @@
   desligado durante a validação inicial.
 
 Depois de validar métricas no domínio publicado, o enforcement pode ser habilitado gradualmente.
+
+## Deploy
+
+Execute na raiz:
+
+```sh
+npm run firebase:use
+npm run firebase:deploy:auth
+npm run firebase:deploy:firestore
+```
 
 ## Modelo de dados
 

@@ -20,8 +20,9 @@
 
 ## Estrutura e variáveis
 
-A estrutura do banco e todas as variáveis estão em `README.md` e `docs/firebase-setup.md`.
-`.env.local` contém apenas configuração pública do app Web e não é versionado.
+A aplicação está separada em `frontend/` e `backend/`, com comandos unificados na raiz. A estrutura
+do banco e todas as variáveis estão em `README.md` e `docs/firebase-setup.md`.
+`frontend/.env.local` contém apenas configuração pública do app Web e não é versionado.
 
 ## Validação executada
 

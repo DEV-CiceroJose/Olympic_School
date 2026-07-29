@@ -1,0 +1,9 @@
+{
+  "name": "biodoraia-backend",
+  "private": true,
+  "scripts": {
+    "firebase:use": "npx -y firebase-tools@latest use",
+    "deploy:auth": "npx -y firebase-tools@latest deploy --only auth --project biodoraia",
+    "deploy:firestore": "npx -y firebase-tools@latest deploy --only firestore --project biodoraia"
+  }
+}

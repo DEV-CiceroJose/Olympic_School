@@ -28,7 +28,8 @@ Data: 2026-07-29
 - Ainda não existe projeto Firebase da BiodoraIA na conta autenticada.
 - Firestore, Storage, App Check e AI Logic não estão provisionados.
 - Não há testes automatizados nem emuladores configurados.
-- O frontend usa rotas de arquivo do TanStack Start; `src/routeTree.gen.ts` deve continuar sendo gerado, nunca editado manualmente.
+- O frontend usa rotas de arquivo do TanStack Start; `frontend/src/routeTree.gen.ts` deve continuar
+  sendo gerado, nunca editado manualmente.
 - O pacote de origem usa Bun, mas o ambiente atual dispõe apenas de npm.
 
 ## Arquivos preservados

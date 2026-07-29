@@ -31,7 +31,7 @@ Requisitos:
 - npm 11 ou superior;
 
 ```sh
-cp .env.example .env.local
+cp frontend/.env.example frontend/.env.local
 npm install
 npm run dev
 ```
@@ -47,7 +47,7 @@ npm audit --omit=dev
 
 ## Variáveis de ambiente
 
-O arquivo `.env.local` é ignorado pelo Git. Preencha:
+O arquivo `frontend/.env.local` é ignorado pelo Git. Preencha:
 
 ```text
 VITE_FIREBASE_API_KEY=
@@ -80,13 +80,34 @@ garantida pelo Firebase Authentication, Security Rules e, quando ativado, App Ch
 Deploy:
 
 ```sh
-npx -y firebase-tools@latest deploy --only auth --project biodoraia
-npx -y firebase-tools@latest deploy --only firestore --project biodoraia
+npm run firebase:deploy:auth
+npm run firebase:deploy:firestore
 ```
 
 O `gemini-3.6-flash` está disponível na Gemini Developer API sem exigir faturamento, respeitando as
 cotas gratuitas do serviço. A aplicação não provisiona Firebase Storage para evitar a exigência de
 plano Blaze em projetos novos.
+
+## Estrutura do repositório
+
+```text
+BiodoraIA/
+├── frontend/             aplicação React/TanStack
+│   ├── src/components/   interface
+│   ├── src/routes/       páginas e layouts
+│   ├── src/domain/       aprendizagem determinística
+│   └── src/services/     adaptadores Firebase e IA
+├── backend/              configuração do backend gerenciado
+│   ├── firebase.json
+│   ├── firestore.rules
+│   └── firestore.indexes.json
+├── docs/                 relatórios e documentação
+└── package.json          comandos unificados do workspace
+```
+
+Não existe um servidor pago escondido no frontend. O diretório `backend/` concentra configuração,
+autorização e deploy dos serviços gerenciados do Firebase. Consulte
+[frontend/README.md](./frontend/README.md) e [backend/README.md](./backend/README.md).
 
 ## Rotas
 
