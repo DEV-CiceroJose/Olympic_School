@@ -1,6 +1,6 @@
-import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
+import { getAI, getGenerativeModel, GoogleAIBackend, type Part } from "firebase/ai";
 import { firebaseApp } from "@/lib/firebase";
-import type { AssistantMode } from "@/types/chat";
+import type { AssistantMode, Attachment } from "@/types/chat";
 
 const MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3.6-flash";
 const MAX_INPUT_LENGTH = 12_000;
@@ -46,13 +46,32 @@ export function getBiodoraModel(mode: AssistantMode = "tutor") {
   });
 }
 
+export function buildContentParts(
+  message: string,
+  mode: AssistantMode = "tutor",
+  attachments: Attachment[] = [],
+): Array<string | Part> {
+  const parts: Array<string | Part> = [buildPrompt(message, mode)];
+  for (const attachment of attachments) {
+    if (!attachment.data) continue;
+    parts.push({
+      inlineData: {
+        mimeType: attachment.type,
+        data: attachment.data,
+      },
+    });
+  }
+  return parts;
+}
+
 export async function* streamBiodoraResponse(
   message: string,
   mode: AssistantMode = "tutor",
+  attachments: Attachment[] = [],
   signal?: AbortSignal,
 ) {
   const model = getBiodoraModel(mode);
-  const result = await model.generateContentStream(buildPrompt(message, mode));
+  const result = await model.generateContentStream(buildContentParts(message, mode, attachments));
   for await (const chunk of result.stream) {
     if (signal?.aborted) return;
     const text = chunk.text();

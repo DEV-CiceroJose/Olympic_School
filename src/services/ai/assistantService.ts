@@ -29,7 +29,12 @@ export const assistantService = {
     sentMessages += 1;
 
     try {
-      yield* streamBiodoraResponse(payload.message, payload.mode ?? "tutor", options?.signal);
+      yield* streamBiodoraResponse(
+        payload.message,
+        payload.mode ?? "tutor",
+        payload.attachments,
+        options?.signal,
+      );
     } catch (error) {
       throw friendlyAiError(error);
     }

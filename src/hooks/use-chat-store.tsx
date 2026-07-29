@@ -74,7 +74,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, [notebookId]);
 
   const runAssistant = useCallback(
-    async (conversationId: string, message: string, mode?: AssistantMode) => {
+    async (
+      conversationId: string,
+      message: string,
+      mode?: AssistantMode,
+      attachments?: Attachment[],
+    ) => {
       const assistantId = uid("msg");
       const controller = new AbortController();
       abortRef.current = controller;
@@ -107,7 +112,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       try {
         let content = "";
         for await (const chunk of assistantService.sendMessage(
-          { conversationId, message, mode, notebookId: notebookId ?? undefined },
+          {
+            conversationId,
+            message,
+            mode,
+            notebookId: notebookId ?? undefined,
+            attachmentIds: attachments?.map(({ id }) => id),
+            attachments,
+          },
           { signal: controller.signal },
         )) {
           content += chunk;
@@ -162,7 +174,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           current?.messages.length === 0 ? text.slice(0, 42) : (current?.title ?? "Nova conversa"),
         notebookId: notebookId ?? undefined,
       });
-      await runAssistant(conversationId, text, mode);
+      await runAssistant(conversationId, text, mode, attachments);
     },
     [conversations, notebookId, patchConversation, runAssistant],
   );
@@ -179,7 +191,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           (message) => !(message.role === "assistant" && message.status === "error"),
         ),
       }));
-      await runAssistant(conversationId, lastUser.content, lastUser.mode);
+      await runAssistant(conversationId, lastUser.content, lastUser.mode, lastUser.attachments);
     },
     [conversations, patchConversation, runAssistant],
   );

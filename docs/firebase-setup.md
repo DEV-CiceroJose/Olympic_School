@@ -6,21 +6,19 @@
 - Firestore Enterprise em modo Native, banco `biodoraia`, região `southamerica-east1`.
 - Google Sign-In implantado com Firebase CLI.
 - Firebase AI Logic habilitado para o app Web, usando Gemini Developer API.
+- App Check configurado com reCAPTCHA Enterprise.
 - Regras e índices do Firestore publicados.
 
-## Ações manuais restantes
+## Operação gratuita
 
-1. Vincular o projeto ao plano Blaze.
-2. Em Firebase Console → Storage, criar o bucket padrão
-   `biodoraia.firebasestorage.app`.
-3. Executar `firebase deploy --only storage --project biodoraia`.
-4. Criar uma chave reCAPTCHA Enterprise para os domínios reais.
-5. Informar a chave em `VITE_RECAPTCHA_ENTERPRISE_SITE_KEY`.
-6. Depois de validar métricas, ativar enforcement do App Check para Firestore, Storage,
-   Authentication e AI Logic.
+- O modelo `gemini-3.6-flash` funciona pela Gemini Developer API sem plano Blaze, dentro das cotas
+  gratuitas.
+- Anexos são enviados como conteúdo inline para a IA e não usam Firebase Storage.
+- Não há Cloud Functions ou outros recursos que exijam faturamento.
+- O reCAPTCHA Enterprise do App Check opera dentro da cota gratuita; o enforcement permanece
+  desligado durante a validação inicial.
 
-Não ative enforcement antes de publicar uma versão que envie tokens App Check; isso bloquearia
-clientes legítimos.
+Depois de validar métricas no domínio publicado, o enforcement pode ser habilitado gradualmente.
 
 ## Modelo de dados
 
@@ -33,7 +31,6 @@ users/{uid}/skillMastery/{skillId}
 users/{uid}/studyPlans/{planId}
 users/{uid}/progressEvents/{eventId}
 users/{uid}/artifacts/{artifactId}
-users/{uid}/uploads/{uploadId}
 skills/{skillId}
 questions/{questionId}
 notebooks/{notebookId}

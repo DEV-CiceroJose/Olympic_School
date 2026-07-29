@@ -18,6 +18,8 @@ export type Attachment = {
   name: string;
   size: number;
   type: string;
+  /** Conteúdo base64 mantido somente durante a sessão atual. */
+  data?: string;
 };
 
 export type Notebook = {
@@ -42,6 +44,7 @@ export type SendMessagePayload = {
   mode?: AssistantMode;
   notebookId?: string;
   attachmentIds?: string[];
+  attachments?: Attachment[];
 };
 
 export type AssistantChunk = { delta: string };

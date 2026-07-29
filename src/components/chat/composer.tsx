@@ -78,8 +78,8 @@ export function Composer({
     try {
       const uploaded = await Promise.all(Array.from(files).map((file) => fileService.upload(file)));
       setAttachments((prev) => [...prev, ...uploaded]);
-    } catch {
-      toast.error("Não foi possível anexar o arquivo.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível anexar o arquivo.");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -148,6 +148,7 @@ export function Composer({
           ref={fileRef}
           type="file"
           multiple
+          accept=".pdf,.txt,.md,.markdown,application/pdf,text/plain,text/markdown"
           className="sr-only"
           onChange={(event) => handleFiles(event.target.files)}
         />

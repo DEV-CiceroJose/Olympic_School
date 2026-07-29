@@ -4,9 +4,8 @@ MVP de treinamento adaptativo para estudantes que se preparam para olimpíadas c
 Biologia. A plataforma transforma respostas reais em um mapa de domínio por habilidade, seleciona
 a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso.
 
-> Status: Firebase Authentication, Firestore e Firebase AI Logic estão integrados ao projeto
-> `biodoraia`. O Storage aguarda a ativação do plano Blaze e o App Check aguarda uma chave
-> reCAPTCHA Enterprise vinculada ao domínio de produção.
+> Status: Firebase Authentication, Firestore, App Check e Firebase AI Logic estão integrados ao
+> projeto `biodoraia`, sem exigir plano Blaze.
 
 ## Funcionalidades
 
@@ -21,7 +20,7 @@ a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso
 - treino adaptativo e progresso por habilidade;
 - planos e artefatos privados persistidos por usuário;
 - notebooks externos claramente identificados como não sincronizados;
-- upload de PDF, TXT e Markdown (código e regras prontos; bucket pendente);
+- anexos PDF, TXT e Markdown enviados diretamente à IA na sessão, sem bucket pago;
 - regras de segurança com isolamento por `request.auth.uid`.
 
 ## Desenvolvimento
@@ -30,7 +29,6 @@ Requisitos:
 
 - Node.js 20 ou superior;
 - npm 11 ou superior;
-- Java 21 para executar o Emulator Suite e `npm run test:rules`.
 
 ```sh
 cp .env.example .env.local
@@ -43,7 +41,6 @@ Validação:
 ```sh
 npm run lint
 npm run test
-npm run test:rules
 npm run build
 npm audit --omit=dev
 ```
@@ -78,17 +75,18 @@ garantida pelo Firebase Authentication, Security Rules e, quando ativado, App Ch
 - Authentication: provedor Google habilitado;
 - Firebase AI Logic: Gemini Developer API habilitada;
 - modelo padrão: `gemini-3.6-flash`.
+- App Check: reCAPTCHA Enterprise configurado, sem enforcement durante a validação inicial.
 
 Deploy:
 
 ```sh
 npx -y firebase-tools@latest deploy --only auth --project biodoraia
 npx -y firebase-tools@latest deploy --only firestore --project biodoraia
-npx -y firebase-tools@latest deploy --only storage --project biodoraia
 ```
 
-O último comando só funciona depois que o bucket padrão for criado no console em um projeto com
-plano Blaze.
+O `gemini-3.6-flash` está disponível na Gemini Developer API sem exigir faturamento, respeitando as
+cotas gratuitas do serviço. A aplicação não provisiona Firebase Storage para evitar a exigência de
+plano Blaze em projetos novos.
 
 ## Rotas
 
@@ -108,12 +106,12 @@ plano Blaze.
 
 ## Limitações conhecidas
 
-- o bucket do Storage não pode ser criado no plano atual; uploads estão bloqueados até o upgrade;
-- App Check está integrado de forma condicional, mas não é aplicado sem a chave reCAPTCHA;
+- cotas gratuitas da IA não são ilimitadas; quando atingidas, a interface pede para aguardar;
+- anexos são mantidos somente durante a conversa atual e não ficam armazenados após recarregar;
+- o enforcement do App Check só deve ser ligado depois da validação no domínio publicado;
 - tentativas e domínio ainda são calculados localmente; agregados no Firestore são somente leitura
   para o cliente e precisam de uma função confiável antes de sincronizar progresso;
 - links específicos dos notebooks ainda dependem de cadastro pela equipe;
-- os testes de regras exigem Java, ausente na máquina usada nesta implementação.
 
 Veja [docs/firebase-setup.md](./docs/firebase-setup.md),
 [docs/security-audit.json](./docs/security-audit.json) e

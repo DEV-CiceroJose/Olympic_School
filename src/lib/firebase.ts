@@ -2,7 +2,6 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -24,7 +23,6 @@ export const db = getFirestore(
   firebaseApp,
   import.meta.env.VITE_FIRESTORE_DATABASE_ID || "biodoraia",
 );
-export const storage = getStorage(firebaseApp);
 
 let appCheck: AppCheck | null = null;
 

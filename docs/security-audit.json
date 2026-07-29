@@ -1,30 +1,24 @@
 {
-  "score": 86,
+  "score": 90,
   "summary": "As regras usam negação por padrão, autorização pelo uid autenticado, validação de campos e isolamento forte dos dados estudantis. O principal risco remanescente é de integridade: tentativas são criadas pelo cliente e só devem alimentar domínio persistido após validação por backend confiável.",
   "findings": [
     {
       "severity": "medium",
       "area": "progress-integrity",
       "finding": "O cliente pode criar tentativas com resultado declarado por ele próprio.",
-      "mitigation": "skillMastery e progressEvents bloqueiam escritas do cliente. Antes de sincronizar domínio, validar tentativas em Cloud Functions ou outro backend confiável."
+      "mitigation": "skillMastery e progressEvents bloqueiam escritas do cliente. Antes de sincronizar domínio, validar tentativas em um backend confiável que permaneça no nível gratuito."
     },
     {
-      "severity": "medium",
+      "severity": "low",
       "area": "app-check",
-      "finding": "App Check está no código, mas sem chave e sem enforcement.",
-      "mitigation": "Cadastrar o domínio, configurar reCAPTCHA Enterprise, observar métricas e habilitar enforcement gradualmente."
+      "finding": "App Check e reCAPTCHA Enterprise estão configurados, mas o enforcement permanece desligado durante a validação.",
+      "mitigation": "Observar métricas no domínio publicado e habilitar enforcement gradualmente."
     },
     {
       "severity": "low",
       "area": "account-deletion",
-      "finding": "Excluir users/{uid} não remove automaticamente subcoleções nem arquivos.",
+      "finding": "Excluir users/{uid} não remove automaticamente subcoleções.",
       "mitigation": "Adicionar uma rotina confiável de exclusão de conta e dados."
-    },
-    {
-      "severity": "info",
-      "area": "storage",
-      "finding": "As regras do Storage estão prontas, porém ainda não foram publicadas porque o bucket requer plano Blaze.",
-      "mitigation": "Criar o bucket e publicar storage.rules antes de habilitar uploads em produção."
     }
   ]
 }
