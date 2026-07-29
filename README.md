@@ -1,75 +1,56 @@
 # BiodoraIA
 
-MVP de treinamento adaptativo para estudantes que se preparam para olimpíadas científicas de Biologia. A plataforma transforma respostas reais em um mapa de domínio por habilidade, seleciona a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso.
+MVP de treinamento adaptativo para estudantes que se preparam para olimpíadas científicas de
+Biologia. A plataforma transforma respostas reais em um mapa de domínio por habilidade, seleciona
+a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso.
 
-> Status: núcleo local de aprendizagem implementado. Firebase Authentication, Firestore, Storage, App Check e Firebase AI Logic ainda aguardam o provisionamento de um projeto Firebase próprio.
+> Status: Firebase Authentication, Firestore e Firebase AI Logic estão integrados ao projeto
+> `biodoraia`. O Storage aguarda a ativação do plano Blaze e o App Check aguarda uma chave
+> reCAPTCHA Enterprise vinculada ao domínio de produção.
 
-## Funcionalidades disponíveis
+## Funcionalidades
 
-- landing page responsiva preservada do frontend original;
-- diagnóstico inicial com 15 questões de Biologia;
-- resultado por habilidade, além da porcentagem geral;
+- landing page responsiva preservada;
+- Login Google real, perfil com nome e turma, logout e rotas protegidas;
+- chat com Firebase AI Logic e modelo configurável;
+- modos tutor, resumo, questões, flashcards, mapa mental, plano e correção;
+- histórico de conversas e mensagens persistido no Firestore;
+- correção discursiva assistida por IA com saída JSON estruturada;
+- diagnóstico inicial com 15 questões e resultado por habilidade;
 - cálculo determinístico de domínio entre 0 e 100;
-- treino adaptativo orientado pela habilidade com menor domínio;
-- progresso com quantidade de tentativas, acertos e confiança da medição;
-- planos determinísticos que priorizam as lacunas registradas;
-- biblioteca externa de notebooks, sem alegar sincronização;
-- salvamento local de resumos, questões, flashcards, mapas mentais e planos;
-- interface de chat existente com serviços simulados;
-- persistência local temporária para diagnóstico e treino;
-- testes unitários do motor de aprendizagem.
+- treino adaptativo e progresso por habilidade;
+- planos e artefatos privados persistidos por usuário;
+- notebooks externos claramente identificados como não sincronizados;
+- upload de PDF, TXT e Markdown (código e regras prontos; bucket pendente);
+- regras de segurança com isolamento por `request.auth.uid`.
 
 ## Desenvolvimento
 
 Requisitos:
 
 - Node.js 20 ou superior;
-- npm 11 ou superior.
+- npm 11 ou superior;
+- Java 21 para executar o Emulator Suite e `npm run test:rules`.
 
 ```sh
+cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-Validação completa:
+Validação:
 
 ```sh
 npm run lint
 npm run test
+npm run test:rules
 npm run build
 npm audit --omit=dev
 ```
 
-## Rotas
+## Variáveis de ambiente
 
-| Rota                    | Função                     |
-| ----------------------- | -------------------------- |
-| `/`                     | Landing page               |
-| `/auth`                 | Protótipo do acesso Google |
-| `/app`                  | Visão geral da trilha      |
-| `/app/diagnostic`       | Diagnóstico de 15 questões |
-| `/app/training`         | Treino adaptativo          |
-| `/app/progress`         | Progresso por habilidade   |
-| `/app/plans`            | Planos de estudo           |
-| `/app/notebooks`        | Links externos             |
-| `/app/artifacts`        | Materiais salvos           |
-| `/chat`                 | Interface do assistente    |
-| `/chat/:conversationId` | Conversa existente         |
-
-## Arquitetura
-
-- TanStack Start com rotas de arquivo;
-- React 19 e TypeScript;
-- Vite 8 e Tailwind CSS 4;
-- domínio de aprendizagem puro em `src/domain/learning.ts`;
-- catálogo inicial em `src/data/diagnostic-questions.ts`;
-- persistência temporária encapsulada por `src/services/learning-repository.ts`.
-
-`src/routeTree.gen.ts` é gerado automaticamente. Não edite esse arquivo manualmente.
-
-## Firebase pendente
-
-Ainda não existe um projeto Firebase da BiodoraIA na conta consultada. Quando o projeto for escolhido ou criado, o frontend deverá receber, por meio de um arquivo `.env.local` não versionado:
+O arquivo `.env.local` é ignorado pelo Git. Preencha:
 
 ```text
 VITE_FIREBASE_API_KEY=
@@ -78,20 +59,62 @@ VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
-VITE_FIREBASE_APP_CHECK_SITE_KEY=
-VITE_FIREBASE_AI_MODEL=
+VITE_FIREBASE_MEASUREMENT_ID=
+VITE_FIRESTORE_DATABASE_ID=biodoraia
+VITE_RECAPTCHA_ENTERPRISE_SITE_KEY=
+VITE_GEMINI_MODEL=gemini-3.6-flash
+VITE_USE_MOCKS=false
 ```
 
-As chaves públicas de configuração do SDK Web não substituem as regras de autorização. Dados privados deverão ser protegidos por Firebase Authentication, Security Rules e App Check.
+As chaves do SDK Web identificam o app, mas não são segredos de servidor. A autorização é
+garantida pelo Firebase Authentication, Security Rules e, quando ativado, App Check.
 
-## Limitações atuais
+## Firebase
 
-- login Google ainda é simulado;
-- dados de aprendizagem ficam somente no navegador atual;
-- chat usa respostas simuladas por padrão;
-- uploads não são enviados ao Firebase Storage;
-- notebooks externos, planos e artefatos ainda não estão persistidos no Firebase;
-- Firebase AI Logic ainda não está provisionado;
-- não houve validação visual automatizada porque o navegador interno não conseguiu acessar o perfil local do Windows.
+- projeto: `biodoraia`;
+- app Web: `BiodoraIA Web`;
+- Firestore Enterprise / Native mode: banco nomeado `biodoraia`;
+- região: `southamerica-east1`;
+- Authentication: provedor Google habilitado;
+- Firebase AI Logic: Gemini Developer API habilitada;
+- modelo padrão: `gemini-3.6-flash`.
 
-Leia [SPEC.md](./SPEC.md) para o escopo completo e [docs/initial-inspection.md](./docs/initial-inspection.md) para o inventário do frontend recebido.
+Deploy:
+
+```sh
+npx -y firebase-tools@latest deploy --only auth --project biodoraia
+npx -y firebase-tools@latest deploy --only firestore --project biodoraia
+npx -y firebase-tools@latest deploy --only storage --project biodoraia
+```
+
+O último comando só funciona depois que o bucket padrão for criado no console em um projeto com
+plano Blaze.
+
+## Rotas
+
+| Rota                    | Função                     |
+| ----------------------- | -------------------------- |
+| `/`                     | Landing page               |
+| `/auth`                 | Login Google e perfil      |
+| `/app`                  | Visão geral da trilha      |
+| `/app/diagnostic`       | Diagnóstico de 15 questões |
+| `/app/training`         | Treino adaptativo          |
+| `/app/progress`         | Progresso por habilidade   |
+| `/app/plans`            | Planos persistidos         |
+| `/app/notebooks`        | Links externos             |
+| `/app/artifacts`        | Materiais persistidos      |
+| `/chat`                 | Assistente com Gemini      |
+| `/chat/:conversationId` | Histórico de uma conversa  |
+
+## Limitações conhecidas
+
+- o bucket do Storage não pode ser criado no plano atual; uploads estão bloqueados até o upgrade;
+- App Check está integrado de forma condicional, mas não é aplicado sem a chave reCAPTCHA;
+- tentativas e domínio ainda são calculados localmente; agregados no Firestore são somente leitura
+  para o cliente e precisam de uma função confiável antes de sincronizar progresso;
+- links específicos dos notebooks ainda dependem de cadastro pela equipe;
+- os testes de regras exigem Java, ausente na máquina usada nesta implementação.
+
+Veja [docs/firebase-setup.md](./docs/firebase-setup.md),
+[docs/security-audit.json](./docs/security-audit.json) e
+[docs/final-report.md](./docs/final-report.md).
