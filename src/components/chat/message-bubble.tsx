@@ -115,8 +115,8 @@ export function MessageBubble({
             {message.status === "completed" && isArtifactMode(message.mode) ? (
               <button
                 type="button"
-                onClick={() => {
-                  artifactRepository.save({
+                onClick={async () => {
+                  await artifactRepository.save({
                     id: `artifact-${message.id}`,
                     kind: message.mode,
                     title: `${artifactLabels[message.mode]} — ${new Date(message.createdAt).toLocaleDateString("pt-BR")}`,

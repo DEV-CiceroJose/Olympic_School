@@ -113,7 +113,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           content += chunk;
           updateAssistant({ content, status: "streaming" });
         }
+        const completedMessage: ChatMessage = {
+          id: assistantId,
+          role: "assistant",
+          content,
+          createdAt: new Date().toISOString(),
+          status: "completed",
+          mode,
+        };
         updateAssistant({ status: "completed" });
+        await conversationService.saveMessage(conversationId, completedMessage);
       } catch {
         updateAssistant({
           status: "error",
@@ -146,9 +155,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         messages: [...conversation.messages, userMessage],
       }));
 
+      const current = conversations.find((conversation) => conversation.id === conversationId);
+      await conversationService.saveMessage(conversationId, userMessage);
+      await conversationService.updateSummary(conversationId, {
+        title:
+          current?.messages.length === 0 ? text.slice(0, 42) : (current?.title ?? "Nova conversa"),
+        notebookId: notebookId ?? undefined,
+      });
       await runAssistant(conversationId, text, mode);
     },
-    [notebookId, patchConversation, runAssistant],
+    [conversations, notebookId, patchConversation, runAssistant],
   );
 
   const retry = useCallback(

@@ -32,11 +32,13 @@ function PlansPage() {
   const [days, setDays] = useState(["Terça", "Quinta", "Sábado"]);
 
   useEffect(() => {
-    setPlans(studyPlanRepository.list());
-    setLoaded(true);
+    studyPlanRepository
+      .list()
+      .then(setPlans)
+      .finally(() => setLoaded(true));
   }, []);
 
-  const createPlan = () => {
+  const createPlan = async () => {
     const id = `plan-${Date.now()}`;
     const createdAt = new Date().toISOString();
     const plan = generateStudyPlan(
@@ -50,8 +52,8 @@ function PlansPage() {
       },
       learningRepository.getMastery(),
     );
-    studyPlanRepository.save(plan);
-    artifactRepository.save({
+    await studyPlanRepository.save(plan);
+    await artifactRepository.save({
       id: `artifact-${id}`,
       kind: "study-plan",
       title: `Plano ${plan.input.targetOlympiad}`,
@@ -68,10 +70,11 @@ function PlansPage() {
     setPlans((current) => [plan, ...current]);
   };
 
-  const toggle = (planId: string, sessionId: string) => {
-    const updated = studyPlanRepository.toggleSession(planId, sessionId);
-    if (updated)
-      setPlans((current) => current.map((plan) => (plan.id === planId ? updated : plan)));
+  const toggle = async (planId: string, sessionId: string) => {
+    const plan = plans.find((item) => item.id === planId);
+    if (!plan) return;
+    const updated = await studyPlanRepository.toggleSession(plan, sessionId);
+    setPlans((current) => current.map((item) => (item.id === planId ? updated : item)));
   };
 
   if (!loaded) {
@@ -168,7 +171,7 @@ function PlansPage() {
                   <button
                     key={session.id}
                     type="button"
-                    onClick={() => toggle(plan.id, session.id)}
+                    onClick={() => void toggle(plan.id, session.id)}
                     className={`flex items-start gap-3 rounded-xl border p-3 text-left text-sm transition ${
                       session.completed
                         ? "border-emerald-500/30 bg-emerald-500/10"
@@ -193,8 +196,7 @@ function PlansPage() {
         })}
       </div>
       <p className="mt-6 text-xs text-muted-foreground">
-        Persistência local temporária. O plano será associado ao usuário no Firestore após o
-        provisionamento.
+        Seus planos e sessões concluídas são persistidos na sua conta.
       </p>
     </main>
   );

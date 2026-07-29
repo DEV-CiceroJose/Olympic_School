@@ -16,8 +16,10 @@ function ArtifactsPage() {
   const [artifacts, setArtifacts] = useState<StudyArtifact[]>([]);
 
   useEffect(() => {
-    setArtifacts(artifactRepository.list());
-    setLoaded(true);
+    artifactRepository
+      .list()
+      .then(setArtifacts)
+      .finally(() => setLoaded(true));
   }, []);
 
   if (!loaded) {
@@ -72,7 +74,7 @@ function ArtifactsPage() {
         </Card>
       )}
       <p className="mt-6 text-xs text-muted-foreground">
-        Persistência local temporária; nenhum conteúdo é enviado ao Firebase nesta etapa.
+        Seus materiais são privados e persistidos na sua conta.
       </p>
     </main>
   );
