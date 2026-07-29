@@ -1,4 +1,5 @@
-import { MoreHorizontal, PanelsTopLeft } from "lucide-react";
+import { LogOut, MoreHorizontal, PanelsTopLeft } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { NotebookSelect } from "./notebook-select";
 import {
   DropdownMenu,
@@ -6,8 +7,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export function ChatHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className="flex items-center gap-3 border-b border-border bg-background/80 px-3 py-3 backdrop-blur-xl md:px-6">
       <button
@@ -42,6 +47,15 @@ export function ChatHeader({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             <DropdownMenuItem>Renomear conversa</DropdownMenuItem>
             <DropdownMenuItem>Exportar conversa</DropdownMenuItem>
             <DropdownMenuItem>Limpar mensagens</DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={async () => {
+                await logout();
+                await navigate({ to: "/" });
+              }}
+            >
+              <LogOut className="size-4" />
+              Sair
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { completeProfileMock } from "@/lib/mock-auth";
 import { cn } from "@/lib/utils";
 
 type ProfileDialogProps = {
   open: boolean;
   defaultName?: string;
+  onSubmit: (input: { name: string; turma: string }) => Promise<void>;
   onCompleted: () => void;
 };
 
@@ -22,7 +22,12 @@ type ProfileDialogProps = {
  * First-access step: there is no separate sign-up button — the profile is
  * completed automatically right after the first Google sign-in.
  */
-export function ProfileDialog({ open, defaultName = "", onCompleted }: ProfileDialogProps) {
+export function ProfileDialog({
+  open,
+  defaultName = "",
+  onSubmit,
+  onCompleted,
+}: ProfileDialogProps) {
   const [name, setName] = useState(defaultName);
   const [turma, setTurma] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,7 +46,7 @@ export function ProfileDialog({ open, defaultName = "", onCompleted }: ProfileDi
     setError(null);
     setSaving(true);
     try {
-      await completeProfileMock({ name, turma });
+      await onSubmit({ name, turma });
       onCompleted();
     } catch {
       setError("Não foi possível salvar seu cadastro. Tente novamente.");

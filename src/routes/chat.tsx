@@ -4,6 +4,7 @@ import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatProvider } from "@/hooks/use-chat-store";
+import { RequireAuth } from "@/components/auth/require-auth";
 
 const title = "Assistente BiodoraIA — Estudo de Biologia com IA";
 const description =
@@ -27,23 +28,25 @@ function ChatLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <ChatProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
-        <aside className="hidden w-72 shrink-0 border-r border-sidebar-border md:block">
-          <ChatSidebar />
-        </aside>
+    <RequireAuth>
+      <ChatProvider>
+        <div className="flex h-screen w-full overflow-hidden bg-background">
+          <aside className="hidden w-72 shrink-0 border-r border-sidebar-border md:block">
+            <ChatSidebar />
+          </aside>
 
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left" className="w-72 border-sidebar-border p-0">
-            <ChatSidebar onNavigate={() => setMobileOpen(false)} />
-          </SheetContent>
-        </Sheet>
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetContent side="left" className="w-72 border-sidebar-border p-0">
+              <ChatSidebar onNavigate={() => setMobileOpen(false)} />
+            </SheetContent>
+          </Sheet>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <ChatHeader onOpenSidebar={() => setMobileOpen(true)} />
-          <Outlet />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <ChatHeader onOpenSidebar={() => setMobileOpen(true)} />
+            <Outlet />
+          </div>
         </div>
-      </div>
-    </ChatProvider>
+      </ChatProvider>
+    </RequireAuth>
   );
 }
