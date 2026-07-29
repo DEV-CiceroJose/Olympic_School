@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Target, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { diagnosticQuestions } from "@/data/diagnostic-questions";
@@ -26,9 +27,13 @@ function TrainingPage() {
   const startedAt = useRef(Date.now());
 
   useEffect(() => {
-    setMastery(learningRepository.getMastery());
-    setAttempts(learningRepository.getAttempts());
-    setLoaded(true);
+    learningRepository
+      .getSnapshot()
+      .then((snapshot) => {
+        setMastery(snapshot.mastery);
+        setAttempts(snapshot.attempts);
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   if (!loaded) {
@@ -60,7 +65,7 @@ function TrainingPage() {
     );
   }
 
-  const answer = (option: number) => {
+  const answer = async (option: number) => {
     if (selected !== null) return;
     const attempt = evaluateAnswer(question, option, Date.now() - startedAt.current);
     const existing = mastery.find((item) => item.skillId === question.skillId) ?? {
@@ -76,15 +81,21 @@ function TrainingPage() {
     setSelected(option);
     setAttempts((current) => [...current, attempt]);
     setMastery(nextMastery);
-    learningRepository.saveAttempt(attempt);
-    learningRepository.saveMastery(nextMastery);
-    learningRepository.saveEvent({
-      id: crypto.randomUUID(),
-      type: "training_attempt",
-      skillId: question.skillId,
-      score: updated.score,
-      occurredAt: attempt.answeredAt,
-    });
+    try {
+      await Promise.all([
+        learningRepository.saveAttempt(attempt),
+        learningRepository.saveMastery(nextMastery),
+        learningRepository.saveEvent({
+          id: crypto.randomUUID(),
+          type: "training_attempt",
+          skillId: question.skillId,
+          score: updated.score,
+          occurredAt: attempt.answeredAt,
+        }),
+      ]);
+    } catch {
+      toast.error("O treino ficou salvo localmente, mas a sincronização falhou.");
+    }
   };
 
   const next = () => {
@@ -121,7 +132,7 @@ function TrainingPage() {
               key={option}
               type="button"
               disabled={selected !== null}
-              onClick={() => answer(optionIndex)}
+              onClick={() => void answer(optionIndex)}
               className="w-full rounded-xl border border-border p-4 text-left text-sm transition hover:border-primary/50 hover:bg-primary/5 disabled:cursor-default"
             >
               {String.fromCharCode(65 + optionIndex)}. {option}

@@ -40,6 +40,7 @@ Validação:
 
 ```sh
 npm run lint
+npm run typecheck
 npm run test
 npm run build
 npm audit --omit=dev
@@ -60,7 +61,6 @@ VITE_FIREBASE_MEASUREMENT_ID=
 VITE_FIRESTORE_DATABASE_ID=biodoraia
 VITE_RECAPTCHA_ENTERPRISE_SITE_KEY=
 VITE_GEMINI_MODEL=gemini-3.6-flash
-VITE_USE_MOCKS=false
 ```
 
 As chaves do SDK Web identificam o app, mas não são segredos de servidor. A autorização é
@@ -130,8 +130,8 @@ autorização e deploy dos serviços gerenciados do Firebase. Consulte
 - cotas gratuitas da IA não são ilimitadas; quando atingidas, a interface pede para aguardar;
 - anexos são mantidos somente durante a conversa atual e não ficam armazenados após recarregar;
 - o enforcement do App Check só deve ser ligado depois da validação no domínio publicado;
-- tentativas e domínio ainda são calculados localmente; agregados no Firestore são somente leitura
-  para o cliente e precisam de uma função confiável antes de sincronizar progresso;
+- tentativas, domínio e eventos são sincronizados na área privada do usuário no Firestore e mantêm
+  uma cópia local de recuperação;
 - links específicos dos notebooks ainda dependem de cadastro pela equipe;
 
 Veja [docs/firebase-setup.md](./docs/firebase-setup.md),

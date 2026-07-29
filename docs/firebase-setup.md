@@ -56,6 +56,6 @@ em um `ownerId` fornecido pelo navegador.
 ## Segurança
 
 I've set up prototype Security Rules to keep the data in Firestore safe. They are designed to be
-secure for authenticated, owner-scoped student records, immutable attempts, server-only progress
-aggregates, bounded fields, and deny-by-default access. However, you should review and verify them
-before broadly sharing your app. If you'd like, I can help you harden these rules.
+secure for authenticated, owner-scoped student records, immutable attempts, validated private
+progress aggregates, bounded fields, and deny-by-default access. However, you should review and
+verify them before broadly sharing your app. If you'd like, I can help you harden these rules.

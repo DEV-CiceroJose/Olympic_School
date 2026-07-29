@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BookOpen, Brain, ListChecks, Map } from "lucide-react";
 import { Composer } from "@/components/chat/composer";
 import { NotebookSelect } from "@/components/chat/notebook-select";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useChatStore } from "@/hooks/use-chat-store";
-import { mockUser } from "@/mocks/chat";
 import type { Attachment, AssistantMode } from "@/types/chat";
 
 export const Route = createFileRoute("/chat/")({
@@ -31,7 +31,9 @@ const SUGGESTIONS = [
 
 function ChatWelcome() {
   const { createConversation, sendMessage, streamingId, stop } = useChatStore();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const firstName = (profile?.name || user?.displayName || "Estudante").trim().split(/\s+/)[0];
 
   const start = async (input: {
     text: string;
@@ -53,7 +55,7 @@ function ChatWelcome() {
       <div className="w-full max-w-3xl">
         <div className="mb-8 text-center">
           <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-            Olá, {mockUser.name.split(" ")[0]}
+            Olá, {firstName}
           </h2>
           <p className="mt-3 text-muted-foreground">
             Como posso ajudar nos seus estudos de Biologia hoje?

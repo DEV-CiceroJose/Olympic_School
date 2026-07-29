@@ -1,6 +1,6 @@
-import type { AssistantMode } from "@/types/chat";
+import type { AssistantMode, ChatExperienceMode } from "@/types/chat";
 
-export type ArtifactKind = Exclude<AssistantMode, "tutor" | "review">;
+export type ArtifactKind = Exclude<AssistantMode, ChatExperienceMode | "review">;
 
 export type StudyArtifact = {
   id: string;
@@ -20,5 +20,11 @@ export const artifactLabels: Record<ArtifactKind, string> = {
 };
 
 export function isArtifactMode(mode?: AssistantMode): mode is ArtifactKind {
-  return Boolean(mode && mode !== "tutor" && mode !== "review");
+  return (
+    mode === "summary" ||
+    mode === "questions" ||
+    mode === "flashcards" ||
+    mode === "mindmap" ||
+    mode === "study-plan"
+  );
 }

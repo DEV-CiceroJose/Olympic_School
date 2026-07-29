@@ -4,60 +4,31 @@ Data: 2026-07-29
 
 ## Implementado
 
-- Repositório local recuperado do ZIP e conectado ao remote correto.
-- Branch `feat/mvp-biodoraia`.
-- Especificação integral na raiz.
-- Landing page e identidade visual preservadas.
-- Área de estudos responsiva em `/app`.
-- Diagnóstico inicial com 15 questões e dez habilidades.
-- Correção objetiva determinística.
-- Registro de resposta, tempo, dificuldade, acerto e tipo de erro.
-- Domínio por habilidade entre 0 e 100.
-- Classificação de lacunas e confiança conforme volume de evidências.
-- Seleção adaptativa da próxima questão.
-- Painel de progresso básico.
-- Gerador determinístico de planos com prioridade por lacuna.
-- Conclusão de sessões de estudo.
-- Área de notebooks externos com aviso explícito de ausência de sincronização.
-- Persistência e cópia de artefatos gerados no chat.
-- Persistência local encapsulada, marcada explicitamente como temporária.
-- Oito testes unitários do motor de aprendizagem e planos.
+- Repositório conectado a `DEV-CiceroJose/BiodoraIA`.
+- Estrutura separada em `frontend/` e `backend/`.
+- Login Google, perfil individual, logout e rotas protegidas.
+- Indicador real do usuário no assistente e na área de estudos.
+- Seletor superior entre os modos Assistente e Tutor.
+- Firebase AI Logic com Gemini, streaming e ferramentas de estudo.
+- Conversas, mensagens, planos e artefatos privados no Firestore.
+- Diagnóstico, treino adaptativo, domínio por habilidade e progresso sincronizados no Firestore.
+- Migração automática da persistência local anterior e cache de recuperação.
+- App Check com reCAPTCHA Enterprise.
+- Anexos inline para IA sem Firebase Storage ou plano Blaze.
+- Regras com isolamento por usuário, validação de esquema e bloqueio por padrão.
 
-## Não implementado
+## Limitações conhecidas
 
-- Projeto e Web App Firebase.
-- Login Google real e rotas protegidas.
-- Perfil no Firestore.
-- Firestore, Storage, App Check e regras.
-- Firebase AI Logic e respostas Gemini reais.
-- Correção discursiva assistida por IA.
-- Persistência remota de planos e notebooks externos.
-- Upload de PDF, TXT e Markdown.
-- Persistência remota de artefatos de estudo.
-- Emuladores e testes de Security Rules.
-- Deploy e push remoto.
+- Anexos não são armazenados após a sessão.
+- Notebooks externos são um catálogo somente leitura.
+- Cotas gratuitas da IA são limitadas.
+- O enforcement do App Check deve ser ativado gradualmente no domínio publicado.
 
-## Validações executadas
+## Validação
 
-- `npm run lint`: aprovado, com sete avisos preexistentes de Fast Refresh.
-- `npm run test`: oito testes aprovados.
-- `npm run build`: aprovado.
-- `npm audit --omit=dev`: zero vulnerabilidades de produção.
-- HTTP local em `/app`: status 200.
-- Scan local de padrões de segredo: nenhuma ocorrência.
-
-## Bloqueio atual
-
-A conta Firebase autenticada não contém um projeto BiodoraIA. As instruções oficiais exigem uma escolha explícita entre um Project ID existente e a criação de um novo projeto antes de provisionar serviços. O único projeto encontrado pertence a outro produto e não foi alterado.
-
-## Próximo passo
-
-Receber um Project ID novo e disponível para a BiodoraIA. Depois disso:
-
-1. criar ou selecionar o projeto;
-2. registrar o Web App;
-3. identificar a edição do Firestore;
-4. configurar Auth, Firestore, Storage e App Check;
-5. auditar e testar as regras;
-6. provisionar AI Logic;
-7. substituir a persistência local e os mocks por integrações reais.
+- Login, navegação e uso principal validados manualmente.
+- Lint sem erros.
+- TypeScript aprovado com `tsc --noEmit`.
+- Testes essenciais aprovados.
+- Build de produção aprovado.
+- Regras do Firestore compiladas e auditadas antes do deploy.

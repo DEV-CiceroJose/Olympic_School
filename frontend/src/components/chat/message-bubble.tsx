@@ -59,6 +59,8 @@ export function MessageBubble({
     );
   }
 
+  const artifactMode = isArtifactMode(message.mode) ? message.mode : null;
+
   const isPending = message.status === "sending" && !message.content;
 
   return (
@@ -112,14 +114,14 @@ export function MessageBubble({
                 Tentar novamente
               </button>
             ) : null}
-            {message.status === "completed" && isArtifactMode(message.mode) ? (
+            {message.status === "completed" && artifactMode ? (
               <button
                 type="button"
                 onClick={async () => {
                   await artifactRepository.save({
                     id: `artifact-${message.id}`,
-                    kind: message.mode,
-                    title: `${artifactLabels[message.mode]} — ${new Date(message.createdAt).toLocaleDateString("pt-BR")}`,
+                    kind: artifactMode,
+                    title: `${artifactLabels[artifactMode]} — ${new Date(message.createdAt).toLocaleDateString("pt-BR")}`,
                     content: message.content,
                     createdAt: new Date().toISOString(),
                   });

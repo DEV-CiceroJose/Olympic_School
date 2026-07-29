@@ -41,6 +41,7 @@ function PlansPage() {
   const createPlan = async () => {
     const id = `plan-${Date.now()}`;
     const createdAt = new Date().toISOString();
+    const mastery = await learningRepository.getMastery();
     const plan = generateStudyPlan(
       id,
       createdAt,
@@ -50,7 +51,7 @@ function PlansPage() {
         availableDays: days,
         minutesPerDay: Math.max(15, minutes),
       },
-      learningRepository.getMastery(),
+      mastery,
     );
     await studyPlanRepository.save(plan);
     await artifactRepository.save({

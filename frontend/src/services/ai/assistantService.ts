@@ -31,7 +31,7 @@ export const assistantService = {
     try {
       yield* streamBiodoraResponse(
         payload.message,
-        payload.mode ?? "tutor",
+        payload.mode ?? "assistant",
         payload.attachments,
         options?.signal,
       );

@@ -17,9 +17,13 @@ function ProgressPage() {
   const [events, setEvents] = useState<ProgressEvent[]>([]);
 
   useEffect(() => {
-    setMastery(learningRepository.getMastery().sort((a, b) => a.score - b.score));
-    setEvents(learningRepository.getEvents());
-    setLoaded(true);
+    learningRepository
+      .getSnapshot()
+      .then((snapshot) => {
+        setMastery(snapshot.mastery.sort((a, b) => a.score - b.score));
+        setEvents(snapshot.events);
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   if (!loaded) {
@@ -55,7 +59,7 @@ function ProgressPage() {
         <div>
           <h1 className="font-display text-4xl font-semibold">{average} de domínio médio</h1>
           <p className="mt-2 text-muted-foreground">
-            Calculado a partir de {events.length} eventos registrados neste dispositivo.
+            Calculado a partir de {events.length} eventos sincronizados com sua conta.
           </p>
         </div>
         <Button asChild>
@@ -87,8 +91,8 @@ function ProgressPage() {
         ))}
       </div>
       <p className="mt-6 rounded-xl border border-border bg-muted/40 p-4 text-xs text-muted-foreground">
-        Persistência local temporária: os dados serão migrados para a área privada do usuário no
-        Firestore após o projeto Firebase ser provisionado.
+        Seu progresso fica na área privada da sua conta e também mantém uma cópia local para
+        recuperação em caso de falha temporária de conexão.
       </p>
     </main>
   );

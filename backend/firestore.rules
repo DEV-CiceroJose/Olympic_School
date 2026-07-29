@@ -2,8 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Data model: public catalogs are authenticated read-only. Every student-owned
-    // record lives below users/{uid}; authorization always comes from request.auth.uid.
+    // Assumed data model:
+    // - Public catalogs are authenticated read-only.
+    // - Profile, conversations, plans, artifacts and learning records live below
+    //   users/{uid}. Authorization always comes from request.auth.uid.
+    // - attempts are immutable answer events.
+    // - skillMastery contains one validated aggregate per skill.
+    // - progressEvents are immutable diagnostic/training timeline entries.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -28,6 +33,99 @@ service cloud.firestore {
       return data.createdAt == request.time;
     }
 
+    function validStringListItem(values, index, maxSize) {
+      return values.size() <= index || validShortString(values[index], maxSize);
+    }
+
+    function validAttachmentIds(data) {
+      return !('attachmentIds' in data)
+        || (data.attachmentIds is list
+          && data.attachmentIds.size() <= 5
+          && validStringListItem(data.attachmentIds, 0, 128)
+          && validStringListItem(data.attachmentIds, 1, 128)
+          && validStringListItem(data.attachmentIds, 2, 128)
+          && validStringListItem(data.attachmentIds, 3, 128)
+          && validStringListItem(data.attachmentIds, 4, 128));
+    }
+
+    function validAvailableDays(values) {
+      return values is list
+        && values.size() > 0
+        && values.size() <= 7
+        && validStringListItem(values, 0, 32)
+        && validStringListItem(values, 1, 32)
+        && validStringListItem(values, 2, 32)
+        && validStringListItem(values, 3, 32)
+        && validStringListItem(values, 4, 32)
+        && validStringListItem(values, 5, 32)
+        && validStringListItem(values, 6, 32);
+    }
+
+    function validPriorityTopics(data) {
+      return !('priorityTopics' in data)
+        || (data.priorityTopics is list
+          && data.priorityTopics.size() <= 10
+          && validStringListItem(data.priorityTopics, 0, 160)
+          && validStringListItem(data.priorityTopics, 1, 160)
+          && validStringListItem(data.priorityTopics, 2, 160)
+          && validStringListItem(data.priorityTopics, 3, 160)
+          && validStringListItem(data.priorityTopics, 4, 160)
+          && validStringListItem(data.priorityTopics, 5, 160)
+          && validStringListItem(data.priorityTopics, 6, 160)
+          && validStringListItem(data.priorityTopics, 7, 160)
+          && validStringListItem(data.priorityTopics, 8, 160)
+          && validStringListItem(data.priorityTopics, 9, 160));
+    }
+
+    function validStudySession(session) {
+      return session is map
+        && session.keys().hasOnly([
+          'id', 'day', 'week', 'topic', 'minutes', 'activity', 'completed'
+        ])
+        && validShortString(session.id, 128)
+        && validShortString(session.day, 32)
+        && session.week is int
+        && session.week >= 1
+        && session.week <= 53
+        && validShortString(session.topic, 160)
+        && session.minutes is int
+        && session.minutes >= 10
+        && session.minutes <= 600
+        && session.activity in ['concept', 'questions', 'review', 'simulation']
+        && session.completed is bool;
+    }
+
+    function validStudySessionItem(sessions, index) {
+      return sessions.size() <= index || validStudySession(sessions[index]);
+    }
+
+    function validStudySessions(sessions) {
+      return sessions is list
+        && sessions.size() >= 1
+        && sessions.size() <= 21
+        && validStudySessionItem(sessions, 0)
+        && validStudySessionItem(sessions, 1)
+        && validStudySessionItem(sessions, 2)
+        && validStudySessionItem(sessions, 3)
+        && validStudySessionItem(sessions, 4)
+        && validStudySessionItem(sessions, 5)
+        && validStudySessionItem(sessions, 6)
+        && validStudySessionItem(sessions, 7)
+        && validStudySessionItem(sessions, 8)
+        && validStudySessionItem(sessions, 9)
+        && validStudySessionItem(sessions, 10)
+        && validStudySessionItem(sessions, 11)
+        && validStudySessionItem(sessions, 12)
+        && validStudySessionItem(sessions, 13)
+        && validStudySessionItem(sessions, 14)
+        && validStudySessionItem(sessions, 15)
+        && validStudySessionItem(sessions, 16)
+        && validStudySessionItem(sessions, 17)
+        && validStudySessionItem(sessions, 18)
+        && validStudySessionItem(sessions, 19)
+        && validStudySessionItem(sessions, 20);
+    }
+
     function createdAtUnchanged() {
       return request.resource.data.createdAt == resource.data.createdAt;
     }
@@ -39,6 +137,7 @@ service cloud.firestore {
           'createdAt', 'updatedAt'
         ])
         && data.uid == uid
+        && data.email == request.auth.token.email
         && validShortString(data.email, 320)
         && validShortString(data.name, 120)
         && validOptionalString(data, 'avatarUrl', 2048)
@@ -95,9 +194,12 @@ service cloud.firestore {
               ])
               && data.role in ['user', 'assistant']
               && validShortString(data.content, 20000)
-              && validOptionalString(data, 'mode', 32)
-              && (!('attachmentIds' in data)
-                || (data.attachmentIds is list && data.attachmentIds.size() <= 5))
+              && (!('mode' in data)
+                || data.mode in [
+                  'assistant', 'tutor', 'summary', 'questions', 'flashcards',
+                  'mindmap', 'study-plan', 'review'
+                ])
+              && validAttachmentIds(data)
               && (!('status' in data)
                 || data.status in ['sending', 'streaming', 'completed', 'error']);
           }
@@ -119,11 +221,10 @@ service cloud.firestore {
             && validShortString(data.title, 160)
             && validShortString(data.targetOlympiad, 160)
             && validOptionalString(data, 'examDate', 32)
-            && data.availableDays is list && data.availableDays.size() <= 7
+            && validAvailableDays(data.availableDays)
             && data.minutesPerDay is int && data.minutesPerDay >= 10 && data.minutesPerDay <= 600
-            && (!('priorityTopics' in data)
-              || (data.priorityTopics is list && data.priorityTopics.size() <= 30))
-            && data.sessions is list && data.sessions.size() <= 100
+            && validPriorityTopics(data)
+            && validStudySessions(data.sessions)
             && data.updatedAt == request.time;
         }
 
@@ -150,57 +251,99 @@ service cloud.firestore {
       }
 
       match /uploads/{uploadId} {
-        function validUpload() {
-          let data = request.resource.data;
-          return hasOnly(data, [
-              'ownerId', 'fileName', 'fileType', 'fileSize', 'storagePath', 'createdAt'
-            ])
-            && data.ownerId == uid
-            && validShortString(data.fileName, 255)
-            && data.fileType in ['application/pdf', 'text/plain', 'text/markdown']
-            && data.fileSize is int && data.fileSize > 0 && data.fileSize <= 10 * 1024 * 1024
-            && validShortString(data.storagePath, 1024);
-        }
-
-        allow read: if isOwner(uid);
-        allow create: if isOwner(uid) && validUpload() && validRecentCreate(request.resource.data);
-        allow update: if false;
-        allow delete: if isOwner(uid);
+        // Files are sent inline to AI Logic and are intentionally not persisted.
+        allow read, write: if false;
       }
 
-      // Attempts are immutable objective events. Mastery and progress events are
-      // intentionally server-only so students cannot forge progress from a client.
+      // Attempts are immutable objective events. They affect only the authenticated
+      // student's private learning experience.
       match /attempts/{attemptId} {
         function validAttempt() {
           let data = request.resource.data;
           return hasOnly(data, [
-              'questionId', 'skillId', 'answer', 'correctAnswer', 'durationMs',
-              'isCorrect', 'errorType', 'difficulty', 'createdAt'
+              'questionId', 'skillId', 'selectedOption', 'correct', 'difficulty',
+              'responseTimeMs', 'answeredAt', 'errorType', 'createdAt'
             ])
             && validShortString(data.questionId, 128)
             && validShortString(data.skillId, 128)
-            && validShortString(data.answer, 10000)
-            && validShortString(data.correctAnswer, 10000)
-            && data.durationMs is int && data.durationMs >= 0 && data.durationMs <= 86400000
-            && data.isCorrect is bool
-            && validOptionalString(data, 'errorType', 64)
-            && data.difficulty in ['easy', 'medium', 'hard'];
+            && data.selectedOption is int
+            && data.selectedOption >= 0
+            && data.selectedOption <= 10
+            && data.correct is bool
+            && data.difficulty is int
+            && data.difficulty >= 1
+            && data.difficulty <= 3
+            && data.responseTimeMs is int
+            && data.responseTimeMs >= 0
+            && data.responseTimeMs <= 86400000
+            && data.answeredAt is timestamp
+            && data.answeredAt <= request.time + duration.value(5, 'm')
+            && (!('errorType' in data)
+              || data.errorType == null
+              || data.errorType in ['conceptual', 'interpretation', 'incomplete_reasoning']);
         }
 
         allow read: if isOwner(uid);
         allow create: if isOwner(uid) && validAttempt() && validRecentCreate(request.resource.data);
         allow update: if false;
-        allow delete: if false;
+        allow delete: if isOwner(uid);
       }
 
       match /skillMastery/{skillId} {
+        function validMastery() {
+          let data = request.resource.data;
+          return hasOnly(data, [
+              'skillId', 'label', 'score', 'attempts', 'correctAttempts',
+              'lastAttemptAt', 'confidence', 'updatedAt'
+            ])
+            && data.skillId == skillId
+            && validShortString(data.skillId, 128)
+            && validShortString(data.label, 120)
+            && data.score is int
+            && data.score >= 0
+            && data.score <= 100
+            && data.attempts is int
+            && data.attempts >= 0
+            && data.correctAttempts is int
+            && data.correctAttempts >= 0
+            && data.correctAttempts <= data.attempts
+            && (!('lastAttemptAt' in data)
+              || (data.lastAttemptAt is timestamp
+                && data.lastAttemptAt <= request.time + duration.value(5, 'm')))
+            && data.confidence in ['low', 'medium', 'high']
+            && data.updatedAt == request.time;
+        }
+
         allow read: if isOwner(uid);
-        allow write: if false;
+        allow create: if isOwner(uid) && validMastery();
+        allow update: if isOwner(uid) && validMastery();
+        allow delete: if isOwner(uid);
       }
 
       match /progressEvents/{eventId} {
+        function validProgressEvent() {
+          let data = request.resource.data;
+          return hasOnly(data, ['type', 'skillId', 'score', 'occurredAt', 'createdAt'])
+            && data.type in ['diagnostic_completed', 'training_attempt']
+            && validOptionalString(data, 'skillId', 128)
+            && (!('score' in data)
+              || (data.score is int && data.score >= 0 && data.score <= 100))
+            && data.occurredAt is timestamp
+            && data.occurredAt <= request.time + duration.value(5, 'm')
+            && ((data.type == 'diagnostic_completed'
+                && !('skillId' in data)
+                && 'score' in data)
+              || (data.type == 'training_attempt'
+                && 'skillId' in data
+                && 'score' in data));
+        }
+
         allow read: if isOwner(uid);
-        allow write: if false;
+        allow create: if isOwner(uid)
+          && validProgressEvent()
+          && validRecentCreate(request.resource.data);
+        allow update: if false;
+        allow delete: if isOwner(uid);
       }
 
       match /{unknownSubcollection}/{document=**} {

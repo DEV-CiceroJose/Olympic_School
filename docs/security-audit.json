@@ -1,24 +1,12 @@
 {
-  "score": 90,
-  "summary": "As regras usam negação por padrão, autorização pelo uid autenticado, validação de campos e isolamento forte dos dados estudantis. O principal risco remanescente é de integridade: tentativas são criadas pelo cliente e só devem alimentar domínio persistido após validação por backend confiável.",
+  "score": 4,
+  "summary": "As regras aplicam negação por padrão, isolamento estrito por request.auth.uid, esquemas fechados, limites de tamanho, validação de tipos e os mesmos validadores em create/update. Não foi encontrada leitura, escrita ou escalada de privilégio entre usuários. O risco residual é limitado à integridade do progresso do próprio estudante, pois uma aplicação sem servidor confiável precisa aceitar eventos calculados no cliente.",
   "findings": [
     {
-      "severity": "medium",
-      "area": "progress-integrity",
-      "finding": "O cliente pode criar tentativas com resultado declarado por ele próprio.",
-      "mitigation": "skillMastery e progressEvents bloqueiam escritas do cliente. Antes de sincronizar domínio, validar tentativas em um backend confiável que permaneça no nível gratuito."
-    },
-    {
-      "severity": "low",
-      "area": "app-check",
-      "finding": "App Check e reCAPTCHA Enterprise estão configurados, mas o enforcement permanece desligado durante a validação.",
-      "mitigation": "Observar métricas no domínio publicado e habilitar enforcement gradualmente."
-    },
-    {
-      "severity": "low",
-      "area": "account-deletion",
-      "finding": "Excluir users/{uid} não remove automaticamente subcoleções.",
-      "mitigation": "Adicionar uma rotina confiável de exclusão de conta e dados."
+      "check": "Business Logic vs. Rules",
+      "severity": "minor",
+      "issue": "O usuário autenticado pode fabricar tentativas e agregados de progresso dentro da própria área privada. Isso não concede acesso a dados de terceiros nem privilégios administrativos, mas impede tratar o placar como prova competitiva inviolável.",
+      "recommendation": "Manter o progresso como ferramenta pessoal. Se futuramente ele for usado para ranking, certificação ou premiação, validar respostas em um backend confiável antes de atualizar os agregados."
     }
   ]
 }

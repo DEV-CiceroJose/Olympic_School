@@ -1,5 +1,7 @@
+export type ChatExperienceMode = "assistant" | "tutor";
+
 export type AssistantMode =
-  "tutor" | "summary" | "questions" | "flashcards" | "mindmap" | "study-plan" | "review";
+  ChatExperienceMode | "summary" | "questions" | "flashcards" | "mindmap" | "study-plan" | "review";
 
 export type MessageStatus = "sending" | "streaming" | "completed" | "error";
 

@@ -1,13 +1,13 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { MessageSquarePlus, Search, Settings, Sparkle, NotebookPen, X } from "lucide-react";
+import { MessageSquarePlus, Search, Sparkle, NotebookPen, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Logo } from "@/components/landing/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/hooks/use-chat-store";
-import { mockUser } from "@/mocks/chat";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/types/chat";
+import { UserMenu } from "@/components/auth/user-menu";
 
 function groupByDate(conversations: Conversation[]) {
   const day = 86_400_000;
@@ -152,25 +152,7 @@ export function ChatSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <div className="border-t border-sidebar-border p-3">
-        <div className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-sidebar-accent">
-          <span
-            aria-hidden="true"
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary ring-1 ring-primary/30"
-          >
-            {mockUser.initials}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">{mockUser.name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{mockUser.plan}</span>
-          </span>
-          <button
-            type="button"
-            aria-label="Configurações"
-            className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <Settings className="size-4" />
-          </button>
-        </div>
+        <UserMenu />
       </div>
     </div>
   );

@@ -10,7 +10,14 @@ import {
 import { assistantService } from "@/services/assistantService";
 import { conversationService } from "@/services/conversationService";
 import { notebookService } from "@/services/notebookService";
-import type { Attachment, AssistantMode, ChatMessage, Conversation, Notebook } from "@/types/chat";
+import type {
+  Attachment,
+  AssistantMode,
+  ChatExperienceMode,
+  ChatMessage,
+  Conversation,
+  Notebook,
+} from "@/types/chat";
 
 type ChatStore = {
   conversations: Conversation[];
@@ -18,6 +25,8 @@ type ChatStore = {
   loading: boolean;
   notebookId: string | null;
   setNotebookId: (id: string | null) => void;
+  experienceMode: ChatExperienceMode;
+  setExperienceMode: (mode: ChatExperienceMode) => void;
   createConversation: () => Promise<string>;
   sendMessage: (input: {
     conversationId: string;
@@ -39,8 +48,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [loading, setLoading] = useState(true);
   const [notebookId, setNotebookId] = useState<string | null>(null);
+  const [experienceMode, setExperienceModeState] = useState<ChatExperienceMode>("assistant");
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const savedMode = window.localStorage.getItem("biodoraia.chat.experienceMode");
+    if (savedMode === "assistant" || savedMode === "tutor") {
+      setExperienceModeState(savedMode);
+    }
+  }, []);
+
+  const setExperienceMode = useCallback((mode: ChatExperienceMode) => {
+    setExperienceModeState(mode);
+    window.localStorage.setItem("biodoraia.chat.experienceMode", mode);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -150,12 +172,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const sendMessage = useCallback<ChatStore["sendMessage"]>(
     async ({ conversationId, text, mode, attachments }) => {
+      const effectiveMode = mode ?? experienceMode;
       const userMessage: ChatMessage = {
         id: uid("msg"),
         role: "user",
         content: text,
         createdAt: new Date().toISOString(),
         status: "completed",
+        mode: effectiveMode,
         attachments,
       };
 
@@ -174,9 +198,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           current?.messages.length === 0 ? text.slice(0, 42) : (current?.title ?? "Nova conversa"),
         notebookId: notebookId ?? undefined,
       });
-      await runAssistant(conversationId, text, mode, attachments);
+      await runAssistant(conversationId, text, effectiveMode, attachments);
     },
-    [conversations, notebookId, patchConversation, runAssistant],
+    [conversations, experienceMode, notebookId, patchConversation, runAssistant],
   );
 
   const retry = useCallback(
@@ -209,6 +233,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       loading,
       notebookId,
       setNotebookId,
+      experienceMode,
+      setExperienceMode,
       createConversation,
       sendMessage,
       retry,
@@ -220,6 +246,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       notebooks,
       loading,
       notebookId,
+      experienceMode,
+      setExperienceMode,
       createConversation,
       sendMessage,
       retry,

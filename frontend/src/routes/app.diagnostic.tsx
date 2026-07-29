@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,33 +27,48 @@ function DiagnosticPage() {
   const question = diagnosticQuestions[index];
   const finished = index >= diagnosticQuestions.length;
 
-  const answer = (option: number) => {
+  const answer = async (option: number) => {
     if (selected !== null) return;
     const attempt = evaluateAnswer(question, option, Date.now() - startedAt.current);
     setSelected(option);
     setAttempts((current) => [...current, attempt]);
-    learningRepository.saveAttempt(attempt);
+    try {
+      await learningRepository.saveAttempt(attempt);
+    } catch {
+      toast.error("A resposta ficou salva neste navegador, mas não sincronizou com sua conta.");
+    }
   };
 
-  const next = () => {
+  const next = async () => {
     const nextIndex = index + 1;
     if (nextIndex === diagnosticQuestions.length) {
       const mastery = masteryFromDiagnostic(diagnosticQuestions, attempts);
-      learningRepository.saveMastery(mastery);
-      learningRepository.saveEvent({
-        id: crypto.randomUUID(),
-        type: "diagnostic_completed",
-        score: diagnosticPercentage(attempts),
-        occurredAt: new Date().toISOString(),
-      });
+      try {
+        await Promise.all([
+          learningRepository.saveMastery(mastery),
+          learningRepository.saveEvent({
+            id: crypto.randomUUID(),
+            type: "diagnostic_completed",
+            score: diagnosticPercentage(attempts),
+            occurredAt: new Date().toISOString(),
+          }),
+        ]);
+      } catch {
+        toast.error("O resultado ficou salvo localmente, mas a sincronização falhou.");
+      }
     }
     setIndex(nextIndex);
     setSelected(null);
     startedAt.current = Date.now();
   };
 
-  const restart = () => {
-    learningRepository.resetDiagnostic();
+  const restart = async () => {
+    try {
+      await learningRepository.resetDiagnostic();
+    } catch {
+      toast.error("Não foi possível apagar o diagnóstico da sua conta.");
+      return;
+    }
     setIndex(0);
     setSelected(null);
     setAttempts([]);
@@ -93,7 +109,7 @@ function DiagnosticPage() {
           <Button asChild>
             <Link to="/app/training">Iniciar treino adaptativo</Link>
           </Button>
-          <Button variant="outline" onClick={restart}>
+          <Button variant="outline" onClick={() => void restart()}>
             <RotateCcw /> Refazer diagnóstico
           </Button>
         </div>
@@ -124,7 +140,7 @@ function DiagnosticPage() {
                 key={option}
                 type="button"
                 disabled={selected !== null}
-                onClick={() => answer(optionIndex)}
+                onClick={() => void answer(optionIndex)}
                 className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm transition ${
                   isCorrect
                     ? "border-emerald-500/60 bg-emerald-500/10"
@@ -151,7 +167,7 @@ function DiagnosticPage() {
                 {currentAttempt?.correct ? "Resposta correta" : "Revise este conceito"}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">{question.explanation}</p>
-              <Button className="mt-4" onClick={next}>
+              <Button className="mt-4" onClick={() => void next()}>
                 {index === diagnosticQuestions.length - 1 ? "Ver resultado" : "Próxima questão"}
               </Button>
             </div>
