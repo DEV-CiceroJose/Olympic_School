@@ -16,8 +16,12 @@ Data: 2026-07-29
 - Classificação de lacunas e confiança conforme volume de evidências.
 - Seleção adaptativa da próxima questão.
 - Painel de progresso básico.
+- Gerador determinístico de planos com prioridade por lacuna.
+- Conclusão de sessões de estudo.
+- Área de notebooks externos com aviso explícito de ausência de sincronização.
+- Persistência e cópia de artefatos gerados no chat.
 - Persistência local encapsulada, marcada explicitamente como temporária.
-- Seis testes unitários do motor de aprendizagem.
+- Oito testes unitários do motor de aprendizagem e planos.
 
 ## Não implementado
 
@@ -27,17 +31,16 @@ Data: 2026-07-29
 - Firestore, Storage, App Check e regras.
 - Firebase AI Logic e respostas Gemini reais.
 - Correção discursiva assistida por IA.
-- Planos de estudo persistentes.
-- Notebooks externos persistentes.
+- Persistência remota de planos e notebooks externos.
 - Upload de PDF, TXT e Markdown.
-- Artefatos de estudo.
+- Persistência remota de artefatos de estudo.
 - Emuladores e testes de Security Rules.
 - Deploy e push remoto.
 
 ## Validações executadas
 
 - `npm run lint`: aprovado, com sete avisos preexistentes de Fast Refresh.
-- `npm run test`: seis testes aprovados.
+- `npm run test`: oito testes aprovados.
 - `npm run build`: aprovado.
 - `npm audit --omit=dev`: zero vulnerabilidades de produção.
 - HTTP local em `/app`: status 200.

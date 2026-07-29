@@ -12,6 +12,9 @@ MVP de treinamento adaptativo para estudantes que se preparam para olimpíadas c
 - cálculo determinístico de domínio entre 0 e 100;
 - treino adaptativo orientado pela habilidade com menor domínio;
 - progresso com quantidade de tentativas, acertos e confiança da medição;
+- planos determinísticos que priorizam as lacunas registradas;
+- biblioteca externa de notebooks, sem alegar sincronização;
+- salvamento local de resumos, questões, flashcards, mapas mentais e planos;
 - interface de chat existente com serviços simulados;
 - persistência local temporária para diagnóstico e treino;
 - testes unitários do motor de aprendizagem.
@@ -47,6 +50,9 @@ npm audit --omit=dev
 | `/app/diagnostic`       | Diagnóstico de 15 questões |
 | `/app/training`         | Treino adaptativo          |
 | `/app/progress`         | Progresso por habilidade   |
+| `/app/plans`            | Planos de estudo           |
+| `/app/notebooks`        | Links externos             |
+| `/app/artifacts`        | Materiais salvos           |
 | `/chat`                 | Interface do assistente    |
 | `/chat/:conversationId` | Conversa existente         |
 
@@ -84,7 +90,7 @@ As chaves públicas de configuração do SDK Web não substituem as regras de au
 - dados de aprendizagem ficam somente no navegador atual;
 - chat usa respostas simuladas por padrão;
 - uploads não são enviados ao Firebase Storage;
-- notebooks externos, planos e artefatos ainda não estão persistidos;
+- notebooks externos, planos e artefatos ainda não estão persistidos no Firebase;
 - Firebase AI Logic ainda não está provisionado;
 - não houve validação visual automatizada porque o navegador interno não conseguiu acessar o perfil local do Windows.
 
