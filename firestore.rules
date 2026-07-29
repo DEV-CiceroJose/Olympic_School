@@ -1,0 +1,235 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Data model: public catalogs are authenticated read-only. Every student-owned
+    // record lives below users/{uid}; authorization always comes from request.auth.uid.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function hasOnly(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function validShortString(value, maxSize) {
+      return value is string && value.size() > 0 && value.size() <= maxSize;
+    }
+
+    function validOptionalString(data, field, maxSize) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxSize);
+    }
+
+    function validRecentCreate(data) {
+      return data.createdAt == request.time;
+    }
+
+    function createdAtUnchanged() {
+      return request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validUserCreate(uid) {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'uid', 'email', 'name', 'avatarUrl', 'turma', 'profileCompleted',
+          'createdAt', 'updatedAt'
+        ])
+        && data.uid == uid
+        && validShortString(data.email, 320)
+        && validShortString(data.name, 120)
+        && validOptionalString(data, 'avatarUrl', 2048)
+        && validOptionalString(data, 'turma', 80)
+        && data.profileCompleted is bool
+        && validRecentCreate(data)
+        && data.updatedAt == request.time;
+    }
+
+    function validUserUpdate(uid) {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'uid', 'email', 'name', 'avatarUrl', 'turma', 'profileCompleted',
+          'createdAt', 'updatedAt'
+        ])
+        && data.uid == uid
+        && data.uid == resource.data.uid
+        && data.email == resource.data.email
+        && validShortString(data.email, 320)
+        && validShortString(data.name, 120)
+        && validOptionalString(data, 'avatarUrl', 2048)
+        && validOptionalString(data, 'turma', 80)
+        && data.profileCompleted is bool
+        && createdAtUnchanged()
+        && data.updatedAt == request.time;
+    }
+
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create: if isOwner(uid) && validUserCreate(uid);
+      allow update: if isOwner(uid) && validUserUpdate(uid);
+      allow delete: if isOwner(uid);
+
+      match /conversations/{conversationId} {
+        function validConversation() {
+          let data = request.resource.data;
+          return hasOnly(data, ['title', 'notebookId', 'createdAt', 'updatedAt'])
+            && validShortString(data.title, 160)
+            && validOptionalString(data, 'notebookId', 128)
+            && data.updatedAt == request.time;
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validConversation() && validRecentCreate(request.resource.data);
+        allow update: if isOwner(uid) && validConversation() && createdAtUnchanged();
+        allow delete: if isOwner(uid);
+
+        match /messages/{messageId} {
+          function validMessage() {
+            let data = request.resource.data;
+            return hasOnly(data, [
+                'role', 'content', 'mode', 'attachmentIds', 'status', 'createdAt'
+              ])
+              && data.role in ['user', 'assistant']
+              && validShortString(data.content, 20000)
+              && validOptionalString(data, 'mode', 32)
+              && (!('attachmentIds' in data)
+                || (data.attachmentIds is list && data.attachmentIds.size() <= 5))
+              && (!('status' in data)
+                || data.status in ['sending', 'streaming', 'completed', 'error']);
+          }
+
+          allow read: if isOwner(uid);
+          allow create: if isOwner(uid) && validMessage() && validRecentCreate(request.resource.data);
+          allow update: if isOwner(uid) && validMessage() && createdAtUnchanged();
+          allow delete: if isOwner(uid);
+        }
+      }
+
+      match /studyPlans/{planId} {
+        function validPlan() {
+          let data = request.resource.data;
+          return hasOnly(data, [
+              'title', 'targetOlympiad', 'examDate', 'availableDays',
+              'minutesPerDay', 'priorityTopics', 'sessions', 'createdAt', 'updatedAt'
+            ])
+            && validShortString(data.title, 160)
+            && validShortString(data.targetOlympiad, 160)
+            && validOptionalString(data, 'examDate', 32)
+            && data.availableDays is list && data.availableDays.size() <= 7
+            && data.minutesPerDay is int && data.minutesPerDay >= 10 && data.minutesPerDay <= 600
+            && (!('priorityTopics' in data)
+              || (data.priorityTopics is list && data.priorityTopics.size() <= 30))
+            && data.sessions is list && data.sessions.size() <= 100
+            && data.updatedAt == request.time;
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validPlan() && validRecentCreate(request.resource.data);
+        allow update: if isOwner(uid) && validPlan() && createdAtUnchanged();
+        allow delete: if isOwner(uid);
+      }
+
+      match /artifacts/{artifactId} {
+        function validArtifact() {
+          let data = request.resource.data;
+          return hasOnly(data, ['type', 'title', 'content', 'sourceConversationId', 'createdAt'])
+            && data.type in ['summary', 'questions', 'flashcards', 'mindmap', 'study-plan']
+            && validShortString(data.title, 160)
+            && validShortString(data.content, 50000)
+            && validOptionalString(data, 'sourceConversationId', 128);
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validArtifact() && validRecentCreate(request.resource.data);
+        allow update: if false;
+        allow delete: if isOwner(uid);
+      }
+
+      match /uploads/{uploadId} {
+        function validUpload() {
+          let data = request.resource.data;
+          return hasOnly(data, [
+              'ownerId', 'fileName', 'fileType', 'fileSize', 'storagePath', 'createdAt'
+            ])
+            && data.ownerId == uid
+            && validShortString(data.fileName, 255)
+            && data.fileType in ['application/pdf', 'text/plain', 'text/markdown']
+            && data.fileSize is int && data.fileSize > 0 && data.fileSize <= 10 * 1024 * 1024
+            && validShortString(data.storagePath, 1024);
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validUpload() && validRecentCreate(request.resource.data);
+        allow update: if false;
+        allow delete: if isOwner(uid);
+      }
+
+      // Attempts are immutable objective events. Mastery and progress events are
+      // intentionally server-only so students cannot forge progress from a client.
+      match /attempts/{attemptId} {
+        function validAttempt() {
+          let data = request.resource.data;
+          return hasOnly(data, [
+              'questionId', 'skillId', 'answer', 'correctAnswer', 'durationMs',
+              'isCorrect', 'errorType', 'difficulty', 'createdAt'
+            ])
+            && validShortString(data.questionId, 128)
+            && validShortString(data.skillId, 128)
+            && validShortString(data.answer, 10000)
+            && validShortString(data.correctAnswer, 10000)
+            && data.durationMs is int && data.durationMs >= 0 && data.durationMs <= 86400000
+            && data.isCorrect is bool
+            && validOptionalString(data, 'errorType', 64)
+            && data.difficulty in ['easy', 'medium', 'hard'];
+        }
+
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && validAttempt() && validRecentCreate(request.resource.data);
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      match /skillMastery/{skillId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      match /progressEvents/{eventId} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      match /{unknownSubcollection}/{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    match /skills/{skillId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /notebooks/{notebookId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /externalNotebooks/{notebookId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

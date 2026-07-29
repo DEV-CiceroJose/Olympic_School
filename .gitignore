@@ -16,6 +16,7 @@ dist-ssr
 .nitro
 *.local
 *.tsbuildinfo
+.firebase-rules-analysis.md
 
 # Local source package and recovered Lovable worktree metadata
 biodoraia-frontend.zip
