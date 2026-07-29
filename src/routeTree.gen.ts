@@ -10,14 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppDiagnosticRouteImport } from './routes/app.diagnostic'
+import { Route as AppProgressRouteImport } from './routes/app.progress'
+import { Route as AppTrainingRouteImport } from './routes/app.training'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat.$conversationId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -29,6 +39,26 @@ const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDiagnosticRoute = AppDiagnosticRouteImport.update({
+  id: '/diagnostic',
+  path: '/diagnostic',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProgressRoute = AppProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTrainingRoute = AppTrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
+  getParentRoute: () => AppRoute,
 } as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
@@ -43,35 +73,79 @@ const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/progress': typeof AppProgressRoute
+  '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/app/': typeof AppIndexRoute
   '/chat/': typeof ChatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/progress': typeof AppProgressRoute
+  '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/app': typeof AppIndexRoute
   '/chat': typeof ChatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/progress': typeof AppProgressRoute
+  '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/app/': typeof AppIndexRoute
   '/chat/': typeof ChatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/chat' | '/chat/$conversationId' | '/chat/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/chat'
+    | '/app/diagnostic'
+    | '/app/progress'
+    | '/app/training'
+    | '/chat/$conversationId'
+    | '/app/'
+    | '/chat/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/chat/$conversationId' | '/chat'
-  id: '__root__' | '/' | '/auth' | '/chat' | '/chat/$conversationId' | '/chat/'
+  to:
+    | '/'
+    | '/auth'
+    | '/app/diagnostic'
+    | '/app/progress'
+    | '/app/training'
+    | '/chat/$conversationId'
+    | '/app'
+    | '/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/chat'
+    | '/app/diagnostic'
+    | '/app/progress'
+    | '/app/training'
+    | '/chat/$conversationId'
+    | '/app/'
+    | '/chat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRouteWithChildren
 }
@@ -83,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -98,6 +179,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/diagnostic': {
+      id: '/app/diagnostic'
+      path: '/diagnostic'
+      fullPath: '/app/diagnostic'
+      preLoaderRoute: typeof AppDiagnosticRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/progress': {
+      id: '/app/progress'
+      path: '/progress'
+      fullPath: '/app/progress'
+      preLoaderRoute: typeof AppProgressRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/training': {
+      id: '/app/training'
+      path: '/training'
+      fullPath: '/app/training'
+      preLoaderRoute: typeof AppTrainingRouteImport
+      parentRoute: typeof AppRoute
     }
     '/chat/': {
       id: '/chat/'
@@ -116,6 +225,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppRouteChildren {
+  AppDiagnosticRoute: typeof AppDiagnosticRoute
+  AppProgressRoute: typeof AppProgressRoute
+  AppTrainingRoute: typeof AppTrainingRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDiagnosticRoute: AppDiagnosticRoute,
+  AppProgressRoute: AppProgressRoute,
+  AppTrainingRoute: AppTrainingRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 interface ChatRouteChildren {
   ChatConversationIdRoute: typeof ChatConversationIdRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -130,6 +255,7 @@ const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRouteWithChildren,
 }
