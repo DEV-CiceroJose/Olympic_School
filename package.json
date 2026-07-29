@@ -10,7 +10,6 @@
     "build": "npm run build --workspace biodoraia-frontend",
     "build:dev": "npm run build:dev --workspace biodoraia-frontend",
     "lint": "npm run lint --workspace biodoraia-frontend",
-    "typecheck": "npm run typecheck --workspace biodoraia-frontend",
     "test": "npm run test --workspace biodoraia-frontend",
     "format": "npm run format --workspace biodoraia-frontend",
     "firebase:use": "npm run firebase:use --workspace biodoraia-backend",

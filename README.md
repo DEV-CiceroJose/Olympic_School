@@ -12,7 +12,7 @@ a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso
 - landing page responsiva preservada;
 - Login Google real, perfil com nome e turma, logout e rotas protegidas;
 - chat com Firebase AI Logic e modelo configurável;
-- modos tutor, resumo, questões, flashcards, mapa mental, plano e correção;
+- assistente com resumo, questões, flashcards, mapa mental, plano e correção;
 - histórico de conversas e mensagens persistido no Firestore;
 - correção discursiva assistida por IA com saída JSON estruturada;
 - diagnóstico inicial com 15 questões e resultado por habilidade;
@@ -40,7 +40,6 @@ Validação:
 
 ```sh
 npm run lint
-npm run typecheck
 npm run test
 npm run build
 npm audit --omit=dev

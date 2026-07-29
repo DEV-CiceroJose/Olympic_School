@@ -233,7 +233,7 @@ Após a verificação, criar um relatório curto contendo:
 Utilizar, sempre que compatível com o frontend existente:
 
 - React;
-- TypeScript;
+- JavaScript e JSX;
 - Vite;
 - Firebase Authentication;
 - Cloud Firestore;
@@ -748,7 +748,7 @@ Resumos, flashcards, mapas mentais e planos gerados.
 Criar um serviço isolado:
 
 ```text
-src/services/ai/firebaseAiLogic.ts
+src/services/ai/firebaseAiLogic.js
 ```
 
 O serviço deve:
@@ -765,15 +765,15 @@ O serviço deve:
 
 Criar uma camada:
 
-```ts
-src / services / ai / assistantService.ts;
+```js
+src / services / ai / assistantService.js;
 ```
 
 O frontend não deve chamar diretamente funções espalhadas.
 
 Exemplo:
 
-```ts
+```js
 assistantService.sendMessage({
   conversationId,
   message,
@@ -918,7 +918,7 @@ Após cada tarefa, executar os testes relacionados.
 ## Testes técnicos
 
 - instalação de dependências;
-- TypeScript;
+- validação de JavaScript e JSX;
 - build;
 - lint;
 - testes unitários;
@@ -1228,7 +1228,7 @@ Não criar um commit único com todo o projeto.
 Nenhuma tarefa pode ser commitada se:
 
 - o projeto não compilar;
-- o TypeScript apresentar erros;
+- o JavaScript ou JSX apresentar erros de sintaxe;
 - os testes principais falharem;
 - houver segredo exposto;
 - houver rota quebrada;
