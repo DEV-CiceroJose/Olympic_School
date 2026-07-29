@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { buildContentParts, buildPrompt } from "./firebaseAiLogic";
 
 describe("Firebase AI Logic prompt policy", () => {
-  it("separa as experiências de assistente e tutor", () => {
+  it("usa a conversa direta como padrão", () => {
     expect(buildPrompt("Explique mitose", "assistant")).toContain("forma direta");
-    expect(buildPrompt("Explique mitose", "tutor")).toContain("progressivamente");
+    expect(buildPrompt("Explique mitose")).toContain("forma direta");
   });
 
   it("inclui a instrução do modo solicitado", () => {
@@ -21,7 +21,7 @@ describe("Firebase AI Logic prompt policy", () => {
   });
 
   it("inclui um anexo válido no pedido multimodal", () => {
-    const parts = buildContentParts("Analise o material", "tutor", [
+    const parts = buildContentParts("Analise o material", "assistant", [
       {
         id: "file-1",
         name: "material.txt",

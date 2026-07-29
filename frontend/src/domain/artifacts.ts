@@ -1,6 +1,6 @@
-import type { AssistantMode, ChatExperienceMode } from "@/types/chat";
+import type { AssistantMode } from "@/types/chat";
 
-export type ArtifactKind = Exclude<AssistantMode, ChatExperienceMode | "review">;
+export type ArtifactKind = Exclude<AssistantMode, "assistant" | "review">;
 
 export type StudyArtifact = {
   id: string;

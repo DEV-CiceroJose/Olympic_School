@@ -21,7 +21,6 @@ import {
 import { fileService } from "@/services/fileService";
 import type { Attachment, AssistantMode } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { useChatStore } from "@/hooks/use-chat-store";
 
 const RESOURCES: { mode: AssistantMode; label: string; icon: typeof FileText }[] = [
   { mode: "summary", label: "Gerar resumo", icon: FileText },
@@ -42,7 +41,6 @@ export function Composer({
   onStop: () => void;
   autoFocus?: boolean;
 }) {
-  const { experienceMode } = useChatStore();
   const [value, setValue] = useState("");
   const [mode, setMode] = useState<AssistantMode | undefined>(undefined);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -166,11 +164,7 @@ export function Composer({
               submit();
             }
           }}
-          placeholder={
-            experienceMode === "tutor"
-              ? "O que você quer aprender passo a passo?"
-              : "Pergunte qualquer coisa sobre Biologia..."
-          }
+          placeholder="Pergunte qualquer coisa sobre Biologia..."
           aria-label="Mensagem"
           className="max-h-[200px] min-h-10 flex-1 resize-none bg-transparent py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
@@ -207,9 +201,7 @@ export function Composer({
       </div>
 
       <p className="mt-2 text-center text-xs text-muted-foreground/70">
-        {experienceMode === "tutor"
-          ? "Modo Tutor: explicação guiada com checagem de entendimento."
-          : "Modo Assistente: respostas diretas e ferramentas de estudo."}
+        A IA pode cometer erros. Confira informações importantes.
       </p>
     </div>
   );

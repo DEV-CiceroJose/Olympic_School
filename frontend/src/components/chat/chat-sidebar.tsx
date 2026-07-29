@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { MessageSquarePlus, Search, Sparkle, NotebookPen, X } from "lucide-react";
+import { MessageSquarePlus, Search, NotebookPen, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Logo } from "@/components/landing/logo";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function ChatSidebar({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
         <Link
-          to="/"
+          to="/app"
           className="min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Logo />
@@ -72,16 +72,7 @@ export function ChatSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Button>
       </div>
 
-      <nav className="mt-4 space-y-1 px-3" aria-label="Navegação do assistente">
-        <Link
-          to="/chat"
-          onClick={onNavigate}
-          activeOptions={{ exact: true }}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground [&.active]:bg-sidebar-accent [&.active]:text-foreground"
-        >
-          <Sparkle className="size-4" />
-          Assistente
-        </Link>
+      <nav className="mt-4 space-y-1 px-3" aria-label="Ferramentas da conversa">
         <Link
           to="/app/notebooks"
           onClick={onNavigate}

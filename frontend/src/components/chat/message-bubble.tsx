@@ -1,6 +1,9 @@
 import { BookmarkPlus, Copy, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import "katex/dist/katex.min.css";
 import { toast } from "sonner";
 import type { ChatMessage } from "@/types/chat";
 import { artifactLabels, isArtifactMode } from "@/domain/artifacts";
@@ -80,14 +83,13 @@ export function MessageBubble({
         ) : (
           <div
             className={cn(
-              "prose prose-sm prose-invert max-w-none text-foreground",
-              "prose-headings:font-display prose-headings:tracking-tight",
-              "prose-a:text-primary prose-strong:text-foreground",
-              "prose-table:overflow-hidden prose-th:text-left",
+              "chat-markdown max-w-none text-sm text-foreground sm:text-[0.9375rem]",
               message.status === "error" && "text-destructive",
             )}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+              {message.content}
+            </ReactMarkdown>
           </div>
         )}
 

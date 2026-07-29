@@ -10,7 +10,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import type { ChatMessage, Conversation, ConversationSummary } from "@/types/chat";
+import type { AssistantMode, ChatMessage, Conversation, ConversationSummary } from "@/types/chat";
 
 function currentUid() {
   const uid = auth.currentUser?.uid;
@@ -34,6 +34,22 @@ function toIso(value: unknown): string {
   return new Date().toISOString();
 }
 
+function toAssistantMode(value: unknown): AssistantMode | undefined {
+  if (value === "tutor") return "assistant";
+  if (
+    value === "assistant" ||
+    value === "summary" ||
+    value === "questions" ||
+    value === "flashcards" ||
+    value === "mindmap" ||
+    value === "study-plan" ||
+    value === "review"
+  ) {
+    return value;
+  }
+  return undefined;
+}
+
 async function loadMessages(uid: string, conversationId: string): Promise<ChatMessage[]> {
   const snapshot = await getDocs(
     query(
@@ -49,7 +65,7 @@ async function loadMessages(uid: string, conversationId: string): Promise<ChatMe
       content: data.content,
       createdAt: toIso(data.createdAt),
       status: data.status,
-      mode: data.mode,
+      mode: toAssistantMode(data.mode),
       attachments: [],
     } as ChatMessage;
   });

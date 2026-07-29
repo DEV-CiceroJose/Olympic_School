@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { GraduationCap, LogOut, MessageSquare } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   DropdownMenu,
@@ -76,15 +76,6 @@ export function UserMenu({
           <span className="block truncate text-sm font-medium">{name}</span>
           <span className="block truncate text-xs text-muted-foreground">{email}</span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate({ to: "/chat" })}>
-          <MessageSquare />
-          Assistente
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate({ to: "/app" })}>
-          <GraduationCap />
-          Área de estudos
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
