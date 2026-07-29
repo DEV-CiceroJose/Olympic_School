@@ -82,13 +82,14 @@ export function ChatSidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Sparkle className="size-4" />
           Assistente
         </Link>
-        <button
-          type="button"
+        <Link
+          to="/app/notebooks"
+          onClick={onNavigate}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
         >
           <NotebookPen className="size-4" />
           Meus notebooks
-        </button>
+        </Link>
         <button
           type="button"
           onClick={() => setSearching((value) => !value)}

@@ -14,7 +14,10 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppArtifactsRouteImport } from './routes/app.artifacts'
 import { Route as AppDiagnosticRouteImport } from './routes/app.diagnostic'
+import { Route as AppNotebooksRouteImport } from './routes/app.notebooks'
+import { Route as AppPlansRouteImport } from './routes/app.plans'
 import { Route as AppProgressRouteImport } from './routes/app.progress'
 import { Route as AppTrainingRouteImport } from './routes/app.training'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
@@ -45,9 +48,24 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppArtifactsRoute = AppArtifactsRouteImport.update({
+  id: '/artifacts',
+  path: '/artifacts',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDiagnosticRoute = AppDiagnosticRouteImport.update({
   id: '/diagnostic',
   path: '/diagnostic',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotebooksRoute = AppNotebooksRouteImport.update({
+  id: '/notebooks',
+  path: '/notebooks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlansRoute = AppPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProgressRoute = AppProgressRouteImport.update({
@@ -76,7 +94,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/app/artifacts': typeof AppArtifactsRoute
   '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/notebooks': typeof AppNotebooksRoute
+  '/app/plans': typeof AppPlansRoute
   '/app/progress': typeof AppProgressRoute
   '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -86,7 +107,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/artifacts': typeof AppArtifactsRoute
   '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/notebooks': typeof AppNotebooksRoute
+  '/app/plans': typeof AppPlansRoute
   '/app/progress': typeof AppProgressRoute
   '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -99,7 +123,10 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/app/artifacts': typeof AppArtifactsRoute
   '/app/diagnostic': typeof AppDiagnosticRoute
+  '/app/notebooks': typeof AppNotebooksRoute
+  '/app/plans': typeof AppPlansRoute
   '/app/progress': typeof AppProgressRoute
   '/app/training': typeof AppTrainingRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -113,7 +140,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/chat'
+    | '/app/artifacts'
     | '/app/diagnostic'
+    | '/app/notebooks'
+    | '/app/plans'
     | '/app/progress'
     | '/app/training'
     | '/chat/$conversationId'
@@ -123,7 +153,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/app/artifacts'
     | '/app/diagnostic'
+    | '/app/notebooks'
+    | '/app/plans'
     | '/app/progress'
     | '/app/training'
     | '/chat/$conversationId'
@@ -135,7 +168,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/chat'
+    | '/app/artifacts'
     | '/app/diagnostic'
+    | '/app/notebooks'
+    | '/app/plans'
     | '/app/progress'
     | '/app/training'
     | '/chat/$conversationId'
@@ -187,11 +223,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/artifacts': {
+      id: '/app/artifacts'
+      path: '/artifacts'
+      fullPath: '/app/artifacts'
+      preLoaderRoute: typeof AppArtifactsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/diagnostic': {
       id: '/app/diagnostic'
       path: '/diagnostic'
       fullPath: '/app/diagnostic'
       preLoaderRoute: typeof AppDiagnosticRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/notebooks': {
+      id: '/app/notebooks'
+      path: '/notebooks'
+      fullPath: '/app/notebooks'
+      preLoaderRoute: typeof AppNotebooksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/plans': {
+      id: '/app/plans'
+      path: '/plans'
+      fullPath: '/app/plans'
+      preLoaderRoute: typeof AppPlansRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/progress': {
@@ -226,14 +283,20 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppArtifactsRoute: typeof AppArtifactsRoute
   AppDiagnosticRoute: typeof AppDiagnosticRoute
+  AppNotebooksRoute: typeof AppNotebooksRoute
+  AppPlansRoute: typeof AppPlansRoute
   AppProgressRoute: typeof AppProgressRoute
   AppTrainingRoute: typeof AppTrainingRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppArtifactsRoute: AppArtifactsRoute,
   AppDiagnosticRoute: AppDiagnosticRoute,
+  AppNotebooksRoute: AppNotebooksRoute,
+  AppPlansRoute: AppPlansRoute,
   AppProgressRoute: AppProgressRoute,
   AppTrainingRoute: AppTrainingRoute,
   AppIndexRoute: AppIndexRoute,

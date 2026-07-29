@@ -1,5 +1,14 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { BarChart3, BrainCircuit, ClipboardCheck, MessageSquare, Sparkles } from "lucide-react";
+import {
+  BarChart3,
+  BrainCircuit,
+  CalendarDays,
+  ClipboardCheck,
+  Files,
+  Library,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react";
 import { Logo } from "@/components/landing/logo";
 
 const links = [
@@ -7,6 +16,9 @@ const links = [
   { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
   { to: "/app/training", label: "Treino adaptativo", icon: BrainCircuit },
   { to: "/app/progress", label: "Progresso", icon: BarChart3 },
+  { to: "/app/plans", label: "Plano de estudo", icon: CalendarDays },
+  { to: "/app/notebooks", label: "Notebooks", icon: Library },
+  { to: "/app/artifacts", label: "Artefatos", icon: Files },
   { to: "/chat", label: "Assistente", icon: MessageSquare },
 ] as const;
 

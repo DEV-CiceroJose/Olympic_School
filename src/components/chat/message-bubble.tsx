@@ -1,8 +1,10 @@
-import { Copy, RefreshCw } from "lucide-react";
+import { BookmarkPlus, Copy, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import type { ChatMessage } from "@/types/chat";
+import { artifactLabels, isArtifactMode } from "@/domain/artifacts";
+import { artifactRepository } from "@/services/artifact-repository";
 import { cn } from "@/lib/utils";
 
 function AssistantAvatar() {
@@ -108,6 +110,25 @@ export function MessageBubble({
               >
                 <RefreshCw className="size-3.5" />
                 Tentar novamente
+              </button>
+            ) : null}
+            {message.status === "completed" && isArtifactMode(message.mode) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  artifactRepository.save({
+                    id: `artifact-${message.id}`,
+                    kind: message.mode,
+                    title: `${artifactLabels[message.mode]} — ${new Date(message.createdAt).toLocaleDateString("pt-BR")}`,
+                    content: message.content,
+                    createdAt: new Date().toISOString(),
+                  });
+                  toast.success("Artefato salvo.");
+                }}
+                className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <BookmarkPlus className="size-3.5" />
+                Salvar
               </button>
             ) : null}
           </div>
