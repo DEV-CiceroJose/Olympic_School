@@ -19,7 +19,7 @@ Data: 2026-07-29
 - O diretório continha somente `biodoraia-frontend.zip`.
 - O ZIP foi listado antes da extração e permanece preservado, fora do versionamento.
 - O ponteiro Git exportado pelo Lovable referenciava um caminho temporário inválido; ele foi redirecionado para o metadado local recuperado.
-- O remote foi corrigido para `https://github.com/DEV-CiceroJose/BiodoraIA.git`.
+- O remote atual aponta para `https://github.com/DEV-CiceroJose/Olympic_School.git`.
 - O repositório remoto está vazio, sem branches ou commits.
 
 ## Riscos de integração

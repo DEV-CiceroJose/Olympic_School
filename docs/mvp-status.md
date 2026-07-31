@@ -4,7 +4,7 @@ Data: 2026-07-29
 
 ## Implementado
 
-- Repositório conectado a `DEV-CiceroJose/BiodoraIA`.
+- Repositório conectado a `DEV-CiceroJose/Olympic_School`.
 - Estrutura separada em `frontend/` e `backend/`.
 - Login Google, perfil individual, logout e rotas protegidas.
 - Indicador real do usuário no assistente e na área de estudos.

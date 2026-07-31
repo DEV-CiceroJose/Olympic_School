@@ -2,7 +2,7 @@
 
 Versão: 1.0.0  
 Status: Em desenvolvimento  
-Repositório: https://github.com/DEV-CiceroJose/BiodoraIA  
+Repositório: https://github.com/DEV-CiceroJose/Olympic_School  
 Branch principal: main  
 Branch de desenvolvimento recomendada: feat/mvp-biodoraia
 
@@ -1261,7 +1261,7 @@ git remote -v
 O remote esperado é:
 
 ```text
-https://github.com/DEV-CiceroJose/BiodoraIA
+https://github.com/DEV-CiceroJose/Olympic_School
 ```
 
 Não sobrescrever branches remotas.

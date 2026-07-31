@@ -90,7 +90,7 @@ plano Blaze em projetos novos.
 ## Estrutura do repositório
 
 ```text
-BiodoraIA/
+Olympic_School/
 ├── frontend/             aplicação React/TanStack
 │   ├── src/components/   interface
 │   ├── src/routes/       páginas e layouts
