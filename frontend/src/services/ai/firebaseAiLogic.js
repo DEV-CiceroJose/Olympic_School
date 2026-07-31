@@ -2,7 +2,7 @@ import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
 import { firebaseApp } from "@/lib/firebase";
 const MODEL = import.meta.env.VITE_GEMINI_MODEL || "gemini-3.6-flash";
 const MAX_INPUT_LENGTH = 12_000;
-const BIODORA_SYSTEM_INSTRUCTION = `Você é o BiodoraIA, uma treinadora inteligente de Biologia
+const OLYMPIC_SCHOOL_SYSTEM_INSTRUCTION = `Você é o assistente educacional da Olympic School, uma plataforma inteligente de Biologia
 para estudantes do ensino médio que se preparam para olimpíadas científicas. Explique com precisão
 científica e dificuldade progressiva. Ao corrigir, identifique o raciocínio, o ponto do erro, como
 melhorar e a próxima atividade. Ao gerar questões, informe tema, habilidade, dificuldade, gabarito
@@ -33,10 +33,10 @@ export function buildPrompt(message, mode = "assistant") {
   if (cleanMessage.length > MAX_INPUT_LENGTH) throw new Error("MESSAGE_TOO_LONG");
   return `${modeInstructions[mode]}\n\nSolicitação do estudante:\n${cleanMessage}`;
 }
-export function getBiodoraModel(mode = "assistant") {
+export function getOlympicSchoolModel(mode = "assistant") {
   return getGenerativeModel(ai, {
     model: MODEL,
-    systemInstruction: `${BIODORA_SYSTEM_INSTRUCTION}\n\nModo atual: ${mode}.`,
+    systemInstruction: `${OLYMPIC_SCHOOL_SYSTEM_INSTRUCTION}\n\nModo atual: ${mode}.`,
     generationConfig: {
       maxOutputTokens: 2048,
       temperature: mode === "review" ? 0.2 : 0.55,
@@ -56,13 +56,13 @@ export function buildContentParts(message, mode = "assistant", attachments = [])
   }
   return parts;
 }
-export async function* streamBiodoraResponse(
+export async function* streamOlympicSchoolResponse(
   message,
   mode = "assistant",
   attachments = [],
   signal,
 ) {
-  const model = getBiodoraModel(mode);
+  const model = getOlympicSchoolModel(mode);
   const result = await model.generateContentStream(buildContentParts(message, mode, attachments));
   for await (const chunk of result.stream) {
     if (signal?.aborted) return;
@@ -73,7 +73,7 @@ export async function* streamBiodoraResponse(
 export async function reviewDiscursiveAnswer(input) {
   const model = getGenerativeModel(ai, {
     model: MODEL,
-    systemInstruction: BIODORA_SYSTEM_INSTRUCTION,
+    systemInstruction: OLYMPIC_SCHOOL_SYSTEM_INSTRUCTION,
     generationConfig: {
       temperature: 0.1,
       maxOutputTokens: 1024,

@@ -12,7 +12,7 @@ function NotebooksPage() {
       <h1 className="mt-2 font-display text-4xl font-semibold">Gemini Notebook</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
         Estes materiais abrem em uma nova aba. O conteúdo externo não está sincronizado, indexado ou
-        disponível automaticamente para a IA da BiodoraIA.
+        disponível automaticamente para a IA da Olympic School.
       </p>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {externalNotebooks.map((notebook) => (

@@ -1,4 +1,4 @@
-# SPEC — BiodoraIA MVP
+# SPEC — Olympic School MVP
 
 Versão: 1.0.0  
 Status: Em desenvolvimento  
@@ -10,14 +10,14 @@ Branch de desenvolvimento recomendada: feat/mvp-biodoraia
 
 # 1. Objetivo
 
-Construir o MVP da BiodoraIA, uma plataforma de treinamento adaptativo para estudantes do ensino médio que se preparam para olimpíadas científicas de Biologia, como:
+Construir o MVP da Olympic School, uma plataforma de treinamento adaptativo para estudantes do ensino médio que se preparam para olimpíadas científicas de Biologia, como:
 
 - OBB;
 - OBBS;
 - TNBIO;
 - outras olimpíadas brasileiras de Biologia.
 
-A BiodoraIA não deve ser apenas um chatbot ou uma ferramenta de resumo.
+A Olympic School não deve ser apenas um chatbot ou uma ferramenta de resumo.
 
 O produto deve:
 
@@ -44,7 +44,7 @@ O estudante possui acesso a muitos materiais, mas normalmente não sabe:
 - como organizar o tempo até a olimpíada;
 - quais questões deve resolver em seguida.
 
-A BiodoraIA resolve esse problema transformando a IA em uma treinadora de Biologia.
+A Olympic School resolve esse problema transformando a IA em uma treinadora de Biologia.
 
 O Gemini Notebook será utilizado como recurso complementar para organizar fontes de estudo selecionadas pela equipe.
 
@@ -95,7 +95,7 @@ A aplicação deve armazenar apenas:
 
 O conteúdo dos notebooks externos não deve ser tratado como contexto automático da IA interna.
 
-Caso o estudante queira que o Gemini da BiodoraIA utilize determinado material, deverá:
+Caso o estudante queira que o Gemini da Olympic School utilize determinado material, deverá:
 
 - enviar o arquivo no sistema;
 - colar o conteúdo relevante;
@@ -267,7 +267,7 @@ Preservar a landing page existente.
 
 Garantir:
 
-- apresentação clara da BiodoraIA;
+- apresentação clara da Olympic School;
 - proposta voltada para olimpíadas de Biologia;
 - botão de login;
 - seção de diferenciais;
@@ -285,7 +285,7 @@ Não estude tudo. Estude o que você precisa melhorar.
 Mensagem secundária:
 
 ```text
-A BiodoraIA identifica suas lacunas em Biologia, cria um treino personalizado e acompanha sua evolução para olimpíadas científicas.
+A Olympic School identifica suas lacunas em Biologia, cria um treino personalizado e acompanha sua evolução para olimpíadas científicas.
 ```
 
 ---
@@ -357,7 +357,7 @@ Se o frontend já possuir rotas equivalentes, preservar os nomes existentes e ad
 
 # 9. Chat com IA
 
-O chat é a principal interface do BiodoraIA.
+O chat é a principal interface da Olympic School.
 
 O chat deve permitir:
 
@@ -672,7 +672,7 @@ A interface deve:
 - mostrar descrição;
 - mostrar tema;
 - abrir o link em nova aba;
-- permitir retornar à BiodoraIA.
+- permitir retornar à Olympic School.
 
 Não afirmar que o conteúdo do notebook está sincronizado com a IA interna.
 
@@ -798,12 +798,12 @@ Nunca apresentar uma resposta fictícia como se tivesse vindo da IA.
 
 ---
 
-# 18. Instruções do BiodoraIA
+# 18. Instruções da Olympic School
 
 Utilizar instruções semelhantes:
 
 ```text
-Você é o BiodoraIA, uma treinadora inteligente de Biologia para estudantes do ensino médio que se preparam para olimpíadas científicas.
+Você é o assistente educacional da Olympic School, uma plataforma inteligente de Biologia para estudantes do ensino médio que se preparam para olimpíadas científicas.
 
 Sua função não é apenas responder perguntas. Você deve ajudar o estudante a evoluir.
 

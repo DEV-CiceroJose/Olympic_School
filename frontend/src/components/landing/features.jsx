@@ -81,7 +81,7 @@ export function Features() {
 
           <p className="text-xs leading-relaxed text-muted-foreground sm:text-base">
             Conheça os recursos educacionais planejados para os próximos lançamentos da plataforma
-            BiodoraIA.
+            Olympic School.
           </p>
         </Reveal>
 

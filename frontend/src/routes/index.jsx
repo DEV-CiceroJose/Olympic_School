@@ -6,9 +6,9 @@ import { Solution } from "@/components/landing/solution";
 import { Features } from "@/components/landing/features";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Footer } from "@/components/landing/footer";
-const title = "BiodoraIA — Estudo com IA para Olimpíadas de Biologia";
+const title = "Olympic School — Estudo com IA para Olimpíadas de Biologia";
 const description =
-  "MVP em desenvolvimento: a BiodoraIA vai ajudar estudantes de OBB, OBBS e TNBIO a organizar os estudos com trilhas e materiais apoiados por inteligência artificial.";
+  "MVP em desenvolvimento: a Olympic School vai ajudar estudantes de OBB, OBBS e TNBIO a organizar os estudos com trilhas e materiais apoiados por inteligência artificial.";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [

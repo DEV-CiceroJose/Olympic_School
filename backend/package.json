@@ -1,5 +1,5 @@
 {
-  "name": "biodoraia-backend",
+  "name": "olympic-school-backend",
   "private": true,
   "scripts": {
     "firebase:use": "npx -y firebase-tools@latest use",

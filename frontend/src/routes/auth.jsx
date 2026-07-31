@@ -6,9 +6,9 @@ import { GoogleIcon } from "@/components/auth/google-icon";
 import { ProfileDialog } from "@/components/auth/profile-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/utils";
-const title = "Entrar na BiodoraIA — Acesso com Google";
+const title = "Entrar na Olympic School — Acesso com Google";
 const description =
-  "Entre na BiodoraIA com sua conta Google. No primeiro acesso, conclua o cadastro com nome e turma.";
+  "Entre na Olympic School com sua conta Google. No primeiro acesso, conclua o cadastro com nome e turma.";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
@@ -77,7 +77,7 @@ function AuthPage() {
             Acesso único
           </span>
           <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Entrar na BiodoraIA
+            Entrar na Olympic School
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Login e cadastro no mesmo lugar. Use sua conta Google — no primeiro acesso, pedimos
@@ -113,7 +113,9 @@ function AuthPage() {
           <ul className="mt-7 space-y-3 border-t border-border pt-6 text-sm text-muted-foreground">
             <li className="flex gap-3">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-              <span>Autenticação segura pelo Google, sem senha armazenada pela BiodoraIA.</span>
+              <span>
+                Autenticação segura pelo Google, sem senha armazenada pela Olympic School.
+              </span>
             </li>
             <li className="flex gap-3">
               <GraduationCap className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />

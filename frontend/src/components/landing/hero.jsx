@@ -29,15 +29,15 @@ export function Hero() {
 
           <Reveal delay={160}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              A BiodoraIA está sendo construída para ajudar estudantes de OBB, OBBS, TNBIO e outras
-              olimpíadas científicas a organizar os estudos, entender o que priorizar e evoluir com
-              materiais apoiados por IA.
+              A Olympic School está sendo construída para ajudar estudantes de OBB, OBBS, TNBIO e
+              outras olimpíadas científicas a organizar os estudos, entender o que priorizar e
+              evoluir com materiais apoiados por IA.
             </p>
           </Reveal>
 
           <Reveal delay={240}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <EnterButton label="Entrar na BiodoraIA" size="lg" />
+              <EnterButton label="Entrar na Olympic School" size="lg" />
               <p className="text-xs text-muted-foreground">
                 Acesso com Google · cadastro automático no primeiro login
               </p>

@@ -1,4 +1,4 @@
-# BiodoraIA
+# Olympic School
 
 MVP de treinamento adaptativo para estudantes que se preparam para olimpíadas científicas de
 Biologia. A plataforma transforma respostas reais em um mapa de domínio por habilidade, seleciona
@@ -68,7 +68,7 @@ garantida pelo Firebase Authentication, Security Rules e, quando ativado, App Ch
 ## Firebase
 
 - projeto: `biodoraia`;
-- app Web: `BiodoraIA Web`;
+- app Web: `Olympic School Web`;
 - Firestore Enterprise / Native mode: banco nomeado `biodoraia`;
 - região: `southamerica-east1`;
 - Authentication: provedor Google habilitado;

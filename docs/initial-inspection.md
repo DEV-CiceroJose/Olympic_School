@@ -5,7 +5,7 @@ Data: 2026-07-29
 ## Baseline encontrado
 
 - Framework: TanStack Start com React 19, TypeScript 5.8 e Vite 8.
-- Estilos: Tailwind CSS 4, componentes Radix UI e identidade visual própria da BiodoraIA.
+- Estilos: Tailwind CSS 4, componentes Radix UI e identidade visual própria da Olympic School.
 - Package manager do artefato: Bun (`bun.lock`), porém Bun não está instalado neste ambiente; a validação local usa npm.
 - Rotas existentes: `/`, `/auth`, `/chat` e `/chat/:conversationId`.
 - Componentes principais: landing page, fluxo visual de login, sidebar, composer, histórico e mensagens do chat.
@@ -25,7 +25,7 @@ Data: 2026-07-29
 ## Riscos de integração
 
 - Autenticação, conversas, arquivos e respostas da IA são simulados.
-- Ainda não existe projeto Firebase da BiodoraIA na conta autenticada.
+- Ainda não existe projeto Firebase da Olympic School na conta autenticada.
 - Firestore, Storage, App Check e AI Logic não estão provisionados.
 - Não há testes automatizados nem emuladores configurados.
 - O frontend usa rotas de arquivo do TanStack Start; `frontend/src/routeTree.gen.ts` deve continuar

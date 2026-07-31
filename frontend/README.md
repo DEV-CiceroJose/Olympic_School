@@ -1,6 +1,6 @@
 # Frontend
 
-Aplicação Web da BiodoraIA construída com React, TanStack Start, JavaScript, Vite e Tailwind CSS.
+Aplicação Web da Olympic School construída com React, TanStack Start, JavaScript, Vite e Tailwind CSS.
 
 ## Estrutura
 

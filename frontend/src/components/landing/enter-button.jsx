@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
 /**
  * The single entry point of the product. There is intentionally no separate
@@ -17,12 +16,14 @@ export function EnterButton({ label = "Entrar", size = "md", className }) {
         className,
       )}
     >
-      <Leaf
-        className={cn(
-          "transition-transform duration-300 group-hover:rotate-12",
-          size === "lg" ? "size-5" : "size-4",
-        )}
+      <img
+        src="/brand/olympic-school-mark.png"
+        alt=""
         aria-hidden="true"
+        className={cn(
+          "rounded-full bg-white object-contain p-0.5 transition-transform duration-300 group-hover:scale-110",
+          size === "lg" ? "size-6" : "size-5",
+        )}
       />
       {label}
     </Link>

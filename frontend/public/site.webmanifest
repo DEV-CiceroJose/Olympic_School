@@ -1,0 +1,21 @@
+{
+  "name": "Olympic School",
+  "short_name": "Olympic School",
+  "description": "Plataforma educacional com IA para estudantes de Olimpíadas Científicas de Biologia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#03140d",
+  "theme_color": "#0b6b3a",
+  "icons": [
+    {
+      "src": "/brand/olympic-school-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/olympic-school-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

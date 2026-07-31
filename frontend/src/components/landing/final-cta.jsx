@@ -12,14 +12,14 @@ export function FinalCta() {
             />
             <div className="relative mx-auto max-w-2xl">
               <h2 className="text-balance text-3xl font-semibold sm:text-4xl">
-                Faça parte do início da <span className="text-gradient">BiodoraIA</span>
+                Faça parte do início da <span className="text-gradient">Olympic School</span>
               </h2>
               <p className="mt-5 text-muted-foreground">
                 Entre agora e acompanhe de perto cada etapa do desenvolvimento. Os primeiros
                 estudantes ajudam a moldar a plataforma que estamos construindo.
               </p>
               <div className="mt-9 flex flex-col items-center gap-3">
-                <EnterButton label="Entrar na BiodoraIA" size="lg" />
+                <EnterButton label="Entrar na Olympic School" size="lg" />
                 <p className="text-xs text-muted-foreground">
                   Um único acesso. O cadastro acontece automaticamente no primeiro login.
                 </p>

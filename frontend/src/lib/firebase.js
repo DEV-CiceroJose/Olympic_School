@@ -21,7 +21,7 @@ export const db = getFirestore(
   import.meta.env.VITE_FIRESTORE_DATABASE_ID || "biodoraia",
 );
 let appCheck = null;
-export function initializeBiodoraAppCheck() {
+export function initializeOlympicSchoolAppCheck() {
   if (typeof window === "undefined" || appCheck) return appCheck;
   const siteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY;
   if (!siteKey) return null;

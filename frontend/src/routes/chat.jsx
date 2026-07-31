@@ -5,9 +5,9 @@ import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatProvider } from "@/hooks/use-chat-store";
 import { RequireAuth } from "@/components/auth/require-auth";
-const title = "Assistente BiodoraIA — Estudo de Biologia com IA";
+const title = "Assistente Olympic School — Estudo de Biologia com IA";
 const description =
-  "Converse com o assistente da BiodoraIA para organizar seus estudos de Olimpíadas Científicas de Biologia. Protótipo de interface em desenvolvimento.";
+  "Converse com o assistente da Olympic School para organizar seus estudos de Olimpíadas Científicas de Biologia. Protótipo de interface em desenvolvimento.";
 export const Route = createFileRoute("/chat")({
   head: () => ({
     meta: [

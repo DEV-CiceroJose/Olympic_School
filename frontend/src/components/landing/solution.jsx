@@ -33,7 +33,7 @@ export function Solution() {
             A visão que estamos construindo
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Estes três pilares fazem parte da visão do projeto BiodoraIA. Ainda estão em
+            Estes três pilares fazem parte da visão do projeto Olympic School. Ainda estão em
             desenvolvimento e serão liberados por etapas.
           </p>
         </Reveal>

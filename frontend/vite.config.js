@@ -31,7 +31,7 @@ function isGeneratedRouteTree(id) {
 }
 
 const javascriptRouteTreePlugin = {
-  name: "biodoraia:javascript-route-tree",
+  name: "olympic-school:javascript-route-tree",
   // TanStack Start writes a TypeScript-only registration footer even when
   // disableTypes is enabled. Run before React/OXC so SSR never parses that footer.
   enforce: "pre",

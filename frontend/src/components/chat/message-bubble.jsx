@@ -10,19 +10,14 @@ import { artifactRepository } from "@/services/artifact-repository";
 import { cn } from "@/lib/utils";
 function AssistantAvatar() {
   return (
-    <span
-      aria-hidden="true"
-      className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-primary/15 ring-1 ring-primary/25"
-    >
-      <svg viewBox="0 0 24 24" className="size-4 text-primary" fill="none">
-        <path
-          d="M4 20c0-8 6-14 16-14 0 10-6 14-12 14H4Z"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
-        <circle cx="17" cy="7" r="1.5" fill="currentColor" />
-      </svg>
+    <span aria-hidden="true" className="mt-0.5 grid size-9 shrink-0 place-items-center">
+      <img
+        src="/brand/olympic-school-mark.png"
+        width="36"
+        height="36"
+        alt=""
+        className="size-9 object-contain"
+      />
     </span>
   );
 }

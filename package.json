@@ -1,19 +1,19 @@
 {
-  "name": "biodoraia-workspace",
+  "name": "olympic-school-workspace",
   "private": true,
   "workspaces": [
     "frontend",
     "backend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace biodoraia-frontend",
-    "build": "npm run build --workspace biodoraia-frontend",
-    "build:dev": "npm run build:dev --workspace biodoraia-frontend",
-    "lint": "npm run lint --workspace biodoraia-frontend",
-    "test": "npm run test --workspace biodoraia-frontend",
-    "format": "npm run format --workspace biodoraia-frontend",
-    "firebase:use": "npm run firebase:use --workspace biodoraia-backend",
-    "firebase:deploy:auth": "npm run deploy:auth --workspace biodoraia-backend",
-    "firebase:deploy:firestore": "npm run deploy:firestore --workspace biodoraia-backend"
+    "dev": "npm run dev --workspace olympic-school-frontend",
+    "build": "npm run build --workspace olympic-school-frontend",
+    "build:dev": "npm run build:dev --workspace olympic-school-frontend",
+    "lint": "npm run lint --workspace olympic-school-frontend",
+    "test": "npm run test --workspace olympic-school-frontend",
+    "format": "npm run format --workspace olympic-school-frontend",
+    "firebase:use": "npm run firebase:use --workspace olympic-school-backend",
+    "firebase:deploy:auth": "npm run deploy:auth --workspace olympic-school-backend",
+    "firebase:deploy:firestore": "npm run deploy:firestore --workspace olympic-school-backend"
   }
 }

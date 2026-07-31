@@ -1,6 +1,6 @@
 # Backend
 
-O backend da BiodoraIA usa serviços gerenciados do Firebase, sem manter um servidor Node próprio.
+O backend da Olympic School usa serviços gerenciados do Firebase, sem manter um servidor Node próprio.
 
 ## Responsabilidades
 

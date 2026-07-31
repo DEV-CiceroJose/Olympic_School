@@ -76,7 +76,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} BiodoraIA. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Olympic School. Todos os direitos reservados.</p>
           <p>MVP em desenvolvimento · conteúdos e recursos ainda em construção.</p>
         </div>
       </div>

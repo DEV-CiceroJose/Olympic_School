@@ -2,7 +2,7 @@
 
 ## Recursos provisionados
 
-- Projeto `biodoraia` e app Web `BiodoraIA Web`.
+- Projeto `biodoraia` e app Web `Olympic School Web`.
 - Firestore Enterprise em modo Native, banco `biodoraia`, região `southamerica-east1`.
 - Google Sign-In implantado com Firebase CLI.
 - Firebase AI Logic habilitado para o app Web, usando Gemini Developer API.

@@ -1,4 +1,4 @@
-import { streamBiodoraResponse } from "./firebaseAiLogic";
+import { streamOlympicSchoolResponse } from "./firebaseAiLogic";
 const MESSAGE_LIMIT_PER_SESSION = 60;
 let sentMessages = 0;
 function friendlyAiError(error) {
@@ -21,7 +21,7 @@ export const assistantService = {
     }
     sentMessages += 1;
     try {
-      yield* streamBiodoraResponse(
+      yield* streamOlympicSchoolResponse(
         payload.message,
         payload.mode ?? "assistant",
         payload.attachments,

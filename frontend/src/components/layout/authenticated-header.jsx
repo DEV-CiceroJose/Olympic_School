@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { GraduationCap, MessageSquareText, PanelsTopLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/landing/logo";
 export function AuthenticatedHeader({ activeArea, onOpenSidebar, actions }) {
   return (
     <header className="grid min-h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-border bg-background/80 px-3 py-2 backdrop-blur-xl md:px-5">
@@ -15,9 +16,7 @@ export function AuthenticatedHeader({ activeArea, onOpenSidebar, actions }) {
             <PanelsTopLeft className="size-5" />
           </button>
         ) : null}
-        <span className="hidden truncate text-sm font-medium text-muted-foreground lg:block">
-          BiodoraIA
-        </span>
+        <Logo className="hidden lg:block" />
       </div>
 
       <nav

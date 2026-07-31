@@ -9,7 +9,7 @@
   "auth": {
     "providers": {
       "googleSignIn": {
-        "oAuthBrandDisplayName": "BiodoraIA",
+        "oAuthBrandDisplayName": "Olympic School",
         "supportEmail": "fabiooliveiral2020@gmail.com"
       }
     }

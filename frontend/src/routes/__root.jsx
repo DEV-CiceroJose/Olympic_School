@@ -11,7 +11,7 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { initializeBiodoraAppCheck } from "@/lib/firebase";
+import { initializeOlympicSchoolAppCheck } from "@/lib/firebase";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -74,15 +74,34 @@ export const Route = createRootRouteWithContext()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BiodoraIA" },
+      { title: "Olympic School" },
       {
         name: "description",
         content:
           "Plataforma educacional com IA em desenvolvimento para estudantes de Olimpíadas Científicas de Biologia.",
       },
-      { name: "author", content: "BiodoraIA" },
+      { name: "author", content: "Olympic School" },
+      { name: "application-name", content: "Olympic School" },
+      { name: "theme-color", content: "#0b6b3a" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Olympic School" },
+      { property: "og:title", content: "Olympic School" },
+      {
+        property: "og:description",
+        content:
+          "Plataforma educacional com IA para estudantes de Olimpíadas Científicas de Biologia.",
+      },
+      { property: "og:image", content: "/brand/olympic-school-share.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Olympic School" },
+      {
+        name: "twitter:description",
+        content:
+          "Plataforma educacional com IA para estudantes de Olimpíadas Científicas de Biologia.",
+      },
+      { name: "twitter:image", content: "/brand/olympic-school-share.png" },
     ],
     links: [
       {
@@ -99,7 +118,11 @@ export const Route = createRootRouteWithContext()({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Figtree:wght@400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -123,7 +146,7 @@ function RootShell({ children }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useEffect(() => {
-    initializeBiodoraAppCheck();
+    initializeOlympicSchoolAppCheck();
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
