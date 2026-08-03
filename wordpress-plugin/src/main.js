@@ -18,6 +18,17 @@ function clear(root) {
   root.replaceChildren();
 }
 
+function readRuntimeSettings(root) {
+  const container = root.closest("[data-olympic-school-root]");
+  const node = container?.querySelector("[data-olympic-school-settings]");
+  if (!node?.textContent) return {};
+  try {
+    return JSON.parse(node.textContent);
+  } catch {
+    throw new Error("INVALID_WORDPRESS_SETTINGS");
+  }
+}
+
 function friendlyError(error) {
   const code = error?.code ?? "";
   if (code.includes("popup-closed")) return "O login foi cancelado antes de concluir.";
@@ -152,7 +163,7 @@ function renderDashboard(root, user, profile, logout) {
 }
 
 async function mount(root) {
-  const settings = normalizeRuntimeSettings(window.OlympicSchoolSettings);
+  const settings = normalizeRuntimeSettings(readRuntimeSettings(root));
   const missing = missingFirebaseFields(settings);
   if (missing.length) {
     renderNotice(

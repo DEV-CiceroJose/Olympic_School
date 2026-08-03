@@ -65,12 +65,14 @@ final class Olympic_School_Plugin
                 : '',
         ];
 
-        wp_add_inline_script(
-            'olympic-school-app',
-            'window.OlympicSchoolSettings = ' . wp_json_encode($runtime) . ';',
-            'before'
+        $runtime_json = wp_json_encode(
+            $runtime,
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
         );
 
-        return '<div class="os-app" data-olympic-school-app><noscript>Ative o JavaScript para usar o Olympic School.</noscript></div>';
+        return sprintf(
+            '<div data-olympic-school-root><script type="application/json" data-olympic-school-settings>%1$s</script><div class="os-app" data-olympic-school-app><noscript>Ative o JavaScript para usar o Olympic School.</noscript></div></div>',
+            $runtime_json
+        );
     }
 }

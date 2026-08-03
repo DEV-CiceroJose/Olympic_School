@@ -18,7 +18,7 @@ export function createOlympicSchoolApi(settings) {
   if (api) return api;
   initializeFirebase(settings);
   api = Object.freeze({
-    version: "0.2.0",
+    version: "0.2.1",
     auth: authService,
     conversations: conversationService,
     artifacts: artifactRepository,
