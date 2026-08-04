@@ -1,4 +1,5 @@
-import { streamOlympicSchoolResponse } from "./firebaseAiLogic";
+import { reviewDiscursiveAnswer, streamOlympicSchoolResponse } from "./firebaseAiLogic";
+import { promptPresetRepository } from "@/services/prompt-preset-repository";
 const MESSAGE_LIMIT_PER_SESSION = 60;
 let sentMessages = 0;
 function friendlyAiError(error) {
@@ -14,6 +15,44 @@ function friendlyAiError(error) {
   }
   return new Error("A IA não conseguiu responder agora. Tente novamente em instantes.");
 }
+
+function formatDiscursiveReview(review) {
+  const errorLabels = {
+    none: "Nenhum erro relevante",
+    conceptual: "Erro conceitual",
+    interpretation: "Erro de interpretação",
+    calculation: "Erro de cálculo",
+    incomplete_reasoning: "Raciocínio incompleto",
+  };
+  const percentage = Math.round(review.score * 100);
+  const strengths = review.strengths.length
+    ? review.strengths.map((item) => `- ${item}`).join("\n")
+    : "- Nenhum ponto forte específico foi identificado.";
+  const mistakes = review.mistakes.length
+    ? review.mistakes.map((item) => `- ${item}`).join("\n")
+    : "- Nenhum erro específico foi identificado.";
+  return `## Correção discursiva assistida por IA
+
+**Resultado:** ${review.isCorrect ? "Correta" : "Precisa de revisão"} · **Pontuação estimada:** ${percentage}% · **Classificação:** ${errorLabels[review.errorType] ?? review.errorType}
+
+### Pontos fortes
+
+${strengths}
+
+### O que melhorar
+
+${mistakes}
+
+### Explicação
+
+${review.explanation}
+
+### Próximo passo
+
+${review.recommendation}
+
+> Esta correção foi gerada por IA e deve ser usada como apoio ao estudo.`;
+}
 export const assistantService = {
   async *sendMessage(payload, options) {
     if (sentMessages >= MESSAGE_LIMIT_PER_SESSION) {
@@ -21,11 +60,19 @@ export const assistantService = {
     }
     sentMessages += 1;
     try {
+      const mode = payload.mode ?? "assistant";
+      const focus = await promptPresetRepository.get(mode);
+      if (payload.mode === "review") {
+        const review = await reviewDiscursiveAnswer(payload.message, payload.attachments, focus);
+        yield formatDiscursiveReview(review);
+        return;
+      }
       yield* streamOlympicSchoolResponse(
         payload.message,
-        payload.mode ?? "assistant",
+        mode,
         payload.attachments,
         options?.signal,
+        focus,
       );
     } catch (error) {
       throw friendlyAiError(error);

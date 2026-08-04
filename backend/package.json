@@ -1,9 +1,11 @@
 {
   "name": "olympic-school-backend",
   "private": true,
+  "type": "module",
   "scripts": {
     "firebase:use": "npx -y firebase-tools@latest use",
     "deploy:auth": "npx -y firebase-tools@latest deploy --only auth --project biodoraia",
-    "deploy:firestore": "npx -y firebase-tools@latest deploy --only firestore --project biodoraia"
+    "deploy:firestore": "npx -y firebase-tools@latest deploy --only firestore --project biodoraia",
+    "teacher:set-claim": "node scripts/set-teacher-claim.mjs"
   }
 }

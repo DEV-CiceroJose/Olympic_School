@@ -1,6 +1,6 @@
 import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 function profileRef(uid) {
@@ -28,6 +28,7 @@ async function ensureStudentProfile(user) {
   return profile;
 }
 export async function signInWithGoogle() {
+  if (!isFirebaseConfigured) throw new Error("FIREBASE_NOT_CONFIGURED");
   const credential = await signInWithPopup(auth, provider);
   return ensureStudentProfile(credential.user);
 }

@@ -4,36 +4,63 @@ import { CheckCircle2, Target, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { diagnosticQuestions } from "@/data/diagnostic-questions";
-import { evaluateAnswer, masteryLevel, selectNextQuestion, updateMastery } from "@/domain/learning";
+import { useQuestionBank } from "@/hooks/use-question-bank";
+import {
+  adaptiveReasonFor,
+  evaluateAnswer,
+  masteryLevel,
+  selectNextQuestion,
+  updateMastery,
+} from "@/domain/learning";
 import { learningRepository } from "@/services/learning-repository";
+import { studyPlanRepository } from "@/services/study-plan-repository";
 export const Route = createFileRoute("/app/training")({
   component: TrainingPage,
 });
 function TrainingPage() {
+  const { questions, loading: questionsLoading } = useQuestionBank();
   const [loaded, setLoaded] = useState(false);
   const [mastery, setMastery] = useState([]);
   const [attempts, setAttempts] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [selected, setSelected] = useState(null);
   const startedAt = useRef(Date.now());
   useEffect(() => {
-    learningRepository
-      .getSnapshot()
-      .then((snapshot) => {
+    Promise.all([learningRepository.getSnapshot(), studyPlanRepository.list().catch(() => [])])
+      .then(([snapshot, savedPlans]) => {
         setMastery(snapshot.mastery);
         setAttempts(snapshot.attempts);
+        setPlans(savedPlans);
       })
       .finally(() => setLoaded(true));
   }, []);
-  if (!loaded) {
+  if (!loaded || questionsLoading) {
     return (
       <main className="mx-auto max-w-3xl animate-pulse px-5 py-10 text-muted-foreground">
         Carregando seu treino…
       </main>
     );
   }
-  const question = selectNextQuestion(diagnosticQuestions, mastery, attempts);
+  const currentPlan = plans[0];
+  const adaptiveContext = {
+    targetOlympiad: currentPlan?.input.targetOlympiad,
+    priorityTopics: [
+      ...(currentPlan?.input.priorityTopics ?? []),
+      ...(currentPlan?.sessions
+        .filter((session) => !session.completed)
+        .map((session) => session.topic) ?? []),
+    ],
+  };
+  const question = selectNextQuestion(questions, mastery, attempts, adaptiveContext);
+  if (!question) {
+    return (
+      <main className="mx-auto max-w-3xl px-5 py-10 text-muted-foreground">
+        Nenhuma questão ativa está disponível para o treino.
+      </main>
+    );
+  }
   const currentSkill = mastery.find((item) => item.skillId === question.skillId);
+  const adaptiveReason = adaptiveReasonFor(question, mastery, attempts, adaptiveContext);
   const latestAttempt = attempts.at(-1);
   if (!mastery.length) {
     return (
@@ -98,6 +125,9 @@ function TrainingPage() {
           Domínio {currentSkill?.score ?? 0} · {masteryLevel(currentSkill?.score ?? 0)}
         </span>
       </div>
+      <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+        <strong className="text-foreground">Por que esta atividade?</strong> {adaptiveReason}
+      </p>
       <Card className="mt-7 bg-card/70">
         <CardHeader>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">

@@ -19,6 +19,7 @@ export function ChatProvider({ children }) {
   const [notebookId, setNotebookId] = useState(null);
   const [streamingId, setStreamingId] = useState(null);
   const abortRef = useRef(null);
+  const loadingConversationIdsRef = useRef(new Set());
   useEffect(() => {
     let active = true;
     Promise.all([conversationService.list(), notebookService.list()])
@@ -44,6 +45,22 @@ export function ChatProvider({ children }) {
     setConversations((prev) => [conversation, ...prev]);
     return conversation.id;
   }, [notebookId]);
+  const loadConversation = useCallback(async (conversationId) => {
+    if (loadingConversationIdsRef.current.has(conversationId)) return;
+    loadingConversationIdsRef.current.add(conversationId);
+    try {
+      const conversation = await conversationService.get(conversationId);
+      if (!conversation) {
+        setConversations((current) => current.filter((item) => item.id !== conversationId));
+        return;
+      }
+      setConversations((current) =>
+        current.map((item) => (item.id === conversationId ? conversation : item)),
+      );
+    } finally {
+      loadingConversationIdsRef.current.delete(conversationId);
+    }
+  }, []);
   const runAssistant = useCallback(
     async (conversationId, message, mode, attachments) => {
       const assistantId = uid("msg");
@@ -98,10 +115,10 @@ export function ChatProvider({ children }) {
         };
         updateAssistant({ status: "completed" });
         await conversationService.saveMessage(conversationId, completedMessage);
-      } catch {
+      } catch (error) {
         updateAssistant({
           status: "error",
-          content: "Não foi possível gerar a resposta.",
+          content: error instanceof Error ? error.message : "Não foi possível gerar a resposta.",
         });
       } finally {
         abortRef.current = null;
@@ -130,16 +147,41 @@ export function ChatProvider({ children }) {
         messages: [...conversation.messages, userMessage],
       }));
       const current = conversations.find((conversation) => conversation.id === conversationId);
+      const nextTitle = current?.messages.length ? current.title : text.slice(0, 42);
       await conversationService.saveMessage(conversationId, userMessage);
       await conversationService.updateSummary(conversationId, {
-        title:
-          current?.messages.length === 0 ? text.slice(0, 42) : (current?.title ?? "Nova conversa"),
+        title: nextTitle,
         notebookId: notebookId ?? undefined,
       });
       await runAssistant(conversationId, text, effectiveMode, attachments);
     },
     [conversations, notebookId, patchConversation, runAssistant],
   );
+  const renameConversation = useCallback(async (conversationId, title) => {
+    const cleanTitle = await conversationService.rename(conversationId, title);
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, title: cleanTitle, updatedAt: new Date().toISOString() }
+          : conversation,
+      ),
+    );
+  }, []);
+  const clearConversation = useCallback(async (conversationId) => {
+    await conversationService.clearMessages(conversationId);
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? {
+              ...conversation,
+              messages: [],
+              messagesLoaded: true,
+              updatedAt: new Date().toISOString(),
+            }
+          : conversation,
+      ),
+    );
+  }, []);
   const retry = useCallback(
     async (conversationId) => {
       const conversation = conversations.find((item) => item.id === conversationId);
@@ -169,8 +211,11 @@ export function ChatProvider({ children }) {
       notebookId,
       setNotebookId,
       createConversation,
+      loadConversation,
       sendMessage,
       retry,
+      renameConversation,
+      clearConversation,
       streamingId,
       stop,
     }),
@@ -180,8 +225,11 @@ export function ChatProvider({ children }) {
       loading,
       notebookId,
       createConversation,
+      loadConversation,
       sendMessage,
       retry,
+      renameConversation,
+      clearConversation,
       streamingId,
       stop,
     ],

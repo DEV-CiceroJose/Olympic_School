@@ -1,4 +1,6 @@
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+export const MAX_ATTACHMENTS = 5;
+export const MAX_TOTAL_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["application/pdf", "text/plain", "text/markdown"]);
 function normalizedType(file) {
   const extension = file.name.toLowerCase().split(".").pop();
@@ -33,5 +35,19 @@ export const fileService = {
       type,
       data: await readAsBase64(file),
     };
+  },
+  async uploadMany(files, existingAttachments = []) {
+    const selectedFiles = Array.from(files ?? []);
+    if (existingAttachments.length + selectedFiles.length > MAX_ATTACHMENTS) {
+      throw new Error(`Você pode enviar no máximo ${MAX_ATTACHMENTS} anexos por mensagem.`);
+    }
+    const totalSize = [...existingAttachments, ...selectedFiles].reduce(
+      (sum, item) => sum + item.size,
+      0,
+    );
+    if (totalSize > MAX_TOTAL_ATTACHMENT_SIZE) {
+      throw new Error("O conjunto de anexos deve ter no máximo 20 MB.");
+    }
+    return Promise.all(selectedFiles.map((file) => this.upload(file)));
   },
 };

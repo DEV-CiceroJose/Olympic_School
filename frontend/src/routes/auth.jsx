@@ -27,6 +27,9 @@ function friendlyAuthError(error) {
   if (code.includes("popup-closed-by-user")) return "A janela de acesso foi fechada.";
   if (code.includes("popup-blocked")) return "Permita pop-ups para entrar com o Google.";
   if (code.includes("unauthorized-domain")) return "Este domínio ainda não foi autorizado.";
+  if (code.includes("FIREBASE_NOT_CONFIGURED")) {
+    return "O Firebase ainda não foi configurado neste ambiente.";
+  }
   return "Não foi possível concluir o acesso. Tente novamente.";
 }
 function AuthPage() {

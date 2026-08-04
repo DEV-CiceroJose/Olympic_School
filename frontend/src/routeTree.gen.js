@@ -18,6 +18,7 @@ import { Route as AppDiagnosticRouteImport } from './routes/app.diagnostic'
 import { Route as AppNotebooksRouteImport } from './routes/app.notebooks'
 import { Route as AppPlansRouteImport } from './routes/app.plans'
 import { Route as AppProgressRouteImport } from './routes/app.progress'
+import { Route as AppTeacherRouteImport } from './routes/app.teacher'
 import { Route as AppTrainingRouteImport } from './routes/app.training'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat.$conversationId'
@@ -72,6 +73,11 @@ const AppProgressRoute = AppProgressRouteImport.update({
   path: '/progress',
   getParentRoute: () => AppRoute,
 })
+const AppTeacherRoute = AppTeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
+  getParentRoute: () => AppRoute,
+})
 const AppTrainingRoute = AppTrainingRouteImport.update({
   id: '/training',
   path: '/training',
@@ -94,6 +100,7 @@ const AppRouteChildren = {
   AppNotebooksRoute: AppNotebooksRoute,
   AppPlansRoute: AppPlansRoute,
   AppProgressRoute: AppProgressRoute,
+  AppTeacherRoute: AppTeacherRoute,
   AppTrainingRoute: AppTrainingRoute,
   AppIndexRoute: AppIndexRoute,
 }

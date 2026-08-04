@@ -11,17 +11,21 @@ a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso
 
 - landing page responsiva preservada;
 - Login Google real, perfil com nome e turma, logout e rotas protegidas;
-- chat com Firebase AI Logic e modelo configurável;
-- assistente com resumo, questões, flashcards, mapa mental, plano e correção;
+- chat com Firebase AI Logic, modelo configurável e focos predefinidos;
+- assistente, tutor, resumo, questões, flashcards, mapa mental, plano e correção discursiva estruturada;
 - histórico de conversas e mensagens persistido no Firestore;
 - correção discursiva assistida por IA com saída JSON estruturada;
 - diagnóstico inicial com 15 questões e resultado por habilidade;
 - cálculo determinístico de domínio entre 0 e 100;
-- treino adaptativo e progresso por habilidade;
+- treino adaptativo por domínio, erros recentes, tempo de resposta e prioridades do plano;
 - planos e artefatos privados persistidos por usuário;
 - notebooks externos claramente identificados como não sincronizados;
 - anexos PDF, TXT e Markdown enviados diretamente à IA na sessão, sem bucket pago;
 - regras de segurança com isolamento por `request.auth.uid`.
+- cache local isolado por UID, sem reutilização automática entre contas;
+- histórico paginado, carregado sob demanda, com renomeação, limpeza e exportação Markdown.
+- área exclusiva do professor para gerenciar questões, notebooks e prompts dos focos da IA;
+- autorização docente em duas camadas: custom claim `teacher` e regras do Firestore.
 
 ## Desenvolvimento
 
@@ -44,6 +48,10 @@ npm run test
 npm run build
 npm audit --omit=dev
 ```
+
+Os testes usam uma configuração Firebase local não roteável quando as variáveis `VITE_*` não estão
+presentes. Operações reais de login, Firestore, App Check e IA continuam bloqueadas até que o
+ambiente seja configurado.
 
 ## Variáveis de ambiente
 
@@ -81,6 +89,23 @@ Deploy:
 ```sh
 npm run firebase:deploy:auth
 npm run firebase:deploy:firestore
+```
+
+Para conceder acesso à área do professor, instale a Google Cloud CLI, autentique as credenciais
+locais (`gcloud auth application-default login`) com uma conta autorizada e execute:
+
+```sh
+npm run teacher:set-claim -- professor@escola.com true
+```
+
+Use `false` no último argumento para remover o acesso. A pessoa deve sair e entrar novamente depois
+da alteração para renovar o token. O comando usa a API administrativa oficial e não grava a
+credencial no projeto.
+
+O build gera um worker compatível com Cloudflare. Para publicar depois de autenticar o Wrangler:
+
+```sh
+npm run deploy:cloudflare
 ```
 
 O `gemini-3.6-flash` está disponível na Gemini Developer API sem exigir faturamento, respeitando as
@@ -121,6 +146,7 @@ autorização e deploy dos serviços gerenciados do Firebase. Consulte
 | `/app/plans`            | Planos persistidos         |
 | `/app/notebooks`        | Links externos             |
 | `/app/artifacts`        | Materiais persistidos      |
+| `/app/teacher`          | Gestão exclusiva docente   |
 | `/chat`                 | Assistente com Gemini      |
 | `/chat/:conversationId` | Histórico de uma conversa  |
 
@@ -130,9 +156,11 @@ autorização e deploy dos serviços gerenciados do Firebase. Consulte
 - anexos são mantidos somente durante a conversa atual e não ficam armazenados após recarregar;
 - o enforcement do App Check só deve ser ligado depois da validação no domínio publicado;
 - tentativas, domínio e eventos são sincronizados na área privada do usuário no Firestore e mantêm
-  uma cópia local de recuperação;
+  uma cópia local de recuperação separada por UID;
 - links específicos dos notebooks ainda dependem de cadastro pela equipe;
+- a listagem inicial mostra as 30 conversas mais recentes e cada conversa carrega até 100 mensagens;
 
 Veja [docs/firebase-setup.md](./docs/firebase-setup.md),
 [docs/security-audit.json](./docs/security-audit.json) e
-[docs/final-report.md](./docs/final-report.md).
+[docs/final-report.md](./docs/final-report.md). Antes de publicar, siga
+[docs/production-checklist.md](./docs/production-checklist.md).
