@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   confidenceFor,
+  adaptiveReasonFor,
+  diagnosticAreaResults,
   diagnosticPercentage,
+  diagnosticRecommendations,
   masteryFromDiagnostic,
   masteryLevel,
   selectNextQuestion,
@@ -92,5 +95,48 @@ describe("learning domain", () => {
     expect(confidenceFor(3)).toBe("low");
     expect(confidenceFor(4)).toBe("medium");
     expect(confidenceFor(8)).toBe("high");
+  });
+  it("prioritizes a topic selected in the current study plan", () => {
+    const questions = [
+      { ...diagnosticQuestions[2], id: "gen-priority", difficulty: 2 },
+      { ...diagnosticQuestions[6], id: "eco-priority", difficulty: 2 },
+    ];
+    const selected = selectNextQuestion(
+      questions,
+      [
+        { ...mastery, skillId: questions[0].skillId, score: 50 },
+        { ...mastery, skillId: questions[1].skillId, score: 50 },
+      ],
+      [],
+      { priorityTopics: ["Ecologia"] },
+    );
+    expect(selected.id).toBe("eco-priority");
+    expect(adaptiveReasonFor(selected, [], [], { priorityTopics: ["Ecologia"] })).toContain(
+      "priorizado",
+    );
+  });
+  it("returns to introductory difficulty after repeated errors", () => {
+    const questions = [
+      { ...diagnosticQuestions[0], id: "guided", difficulty: 1 },
+      { ...diagnosticQuestions[0], id: "advanced", difficulty: 3 },
+    ];
+    const attempts = [
+      attempt({ id: "error-1", questionId: "old-1", correct: false }),
+      attempt({ id: "error-2", questionId: "old-2", correct: false }),
+    ];
+    expect(selectNextQuestion(questions, [{ ...mastery, score: 90 }], attempts).id).toBe("guided");
+  });
+  it("summarizes areas, strengths, gaps and next steps", () => {
+    const questions = diagnosticQuestions.slice(0, 2);
+    const attempts = [attempt(), attempt({ questionId: "cell-02", correct: false })];
+    const areas = diagnosticAreaResults(questions, attempts);
+    const insights = diagnosticRecommendations([
+      { ...mastery, score: 90 },
+      { ...mastery, skillId: "metabolismo", label: "Metabolismo", score: 20 },
+    ]);
+    expect(areas).toHaveLength(2);
+    expect(insights.strengths[0].label).toBe("Estrutura celular");
+    expect(insights.gaps[0].label).toBe("Metabolismo");
+    expect(insights.nextSteps).toHaveLength(2);
   });
 });

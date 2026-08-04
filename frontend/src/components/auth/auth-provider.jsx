@@ -7,21 +7,30 @@ import {
   signInWithGoogle,
   signOut,
 } from "@/services/auth-service";
+import { hasTeacherAccess } from "@/domain/auth-claims";
 const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [isTeacher, setIsTeacher] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
+      setLoading(true);
       setUser(nextUser);
       if (!nextUser) {
         setProfile(null);
+        setIsTeacher(false);
         setLoading(false);
         return;
       }
       try {
-        setProfile(await getStudentProfile(nextUser.uid));
+        const [nextProfile, token] = await Promise.all([
+          getStudentProfile(nextUser.uid),
+          nextUser.getIdTokenResult(),
+        ]);
+        setProfile(nextProfile);
+        setIsTeacher(hasTeacherAccess(token.claims));
       } finally {
         setLoading(false);
       }
@@ -32,17 +41,27 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       profile,
+      isTeacher,
       loading,
       login: async () => {
         const nextProfile = await signInWithGoogle();
         setUser(auth.currentUser);
         setProfile(nextProfile);
+        const token = await auth.currentUser?.getIdTokenResult();
+        setIsTeacher(hasTeacherAccess(token?.claims));
         return nextProfile;
       },
       logout: async () => {
         await signOut();
         setUser(null);
         setProfile(null);
+        setIsTeacher(false);
+      },
+      refreshAccess: async () => {
+        const token = await auth.currentUser?.getIdTokenResult(true);
+        const nextIsTeacher = hasTeacherAccess(token?.claims);
+        setIsTeacher(nextIsTeacher);
+        return nextIsTeacher;
       },
       completeProfile: async (input) => {
         const nextProfile = await completeStudentProfile(input);
@@ -50,7 +69,7 @@ export function AuthProvider({ children }) {
         return nextProfile;
       },
     }),
-    [loading, profile, user],
+    [isTeacher, loading, profile, user],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

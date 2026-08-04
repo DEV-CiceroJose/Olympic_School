@@ -17,6 +17,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
+    function isTeacher() {
+      return isAuthenticated() && request.auth.token.teacher == true;
+    }
+
     function hasOnly(data, fields) {
       return data.keys().hasOnly(fields);
     }
@@ -128,6 +132,72 @@ service cloud.firestore {
 
     function createdAtUnchanged() {
       return request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validQuestionOptions(values) {
+      return values is list
+        && values.size() >= 2
+        && values.size() <= 6
+        && validStringListItem(values, 0, 500)
+        && validStringListItem(values, 1, 500)
+        && validStringListItem(values, 2, 500)
+        && validStringListItem(values, 3, 500)
+        && validStringListItem(values, 4, 500)
+        && validStringListItem(values, 5, 500);
+    }
+
+    function validTeacherQuestion() {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'area', 'skillId', 'skillLabel', 'prompt', 'options', 'correctOption',
+          'explanation', 'difficulty', 'isActive', 'source', 'createdAt', 'updatedAt'
+        ])
+        && validShortString(data.area, 120)
+        && validShortString(data.skillId, 128)
+        && validShortString(data.skillLabel, 120)
+        && validShortString(data.prompt, 5000)
+        && validQuestionOptions(data.options)
+        && data.correctOption is int
+        && data.correctOption >= 0
+        && data.correctOption < data.options.size()
+        && validShortString(data.explanation, 5000)
+        && data.difficulty is int
+        && data.difficulty >= 1
+        && data.difficulty <= 3
+        && data.isActive is bool
+        && data.source == 'teacher'
+        && data.updatedAt == request.time;
+    }
+
+    function validExternalNotebook() {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'title', 'description', 'subject', 'url', 'isActive', 'source',
+          'createdAt', 'updatedAt'
+        ])
+        && validShortString(data.title, 160)
+        && validShortString(data.description, 2000)
+        && validShortString(data.subject, 160)
+        && data.url is string
+        && data.url.size() <= 2048
+        && (!data.isActive || data.url.matches('https://.*'))
+        && data.isActive is bool
+        && data.source == 'teacher'
+        && data.updatedAt == request.time;
+    }
+
+    function validPromptPreset(mode) {
+      let data = request.resource.data;
+      return hasOnly(data, ['mode', 'description', 'instruction', 'createdAt', 'updatedAt'])
+        && mode in [
+          'assistant', 'tutor', 'summary', 'questions', 'flashcards',
+          'mindmap', 'study-plan', 'review'
+        ]
+        && data.mode == mode
+        && validShortString(data.description, 240)
+        && validShortString(data.instruction, 8000)
+        && data.instruction.size() >= 50
+        && data.updatedAt == request.time;
     }
 
     function validUserCreate(uid) {
@@ -358,7 +428,9 @@ service cloud.firestore {
 
     match /questions/{questionId} {
       allow read: if isAuthenticated();
-      allow write: if false;
+      allow create: if isTeacher() && validTeacherQuestion() && validRecentCreate(request.resource.data);
+      allow update: if isTeacher() && validTeacherQuestion() && createdAtUnchanged();
+      allow delete: if isTeacher();
     }
 
     match /notebooks/{notebookId} {
@@ -368,7 +440,16 @@ service cloud.firestore {
 
     match /externalNotebooks/{notebookId} {
       allow read: if isAuthenticated();
-      allow write: if false;
+      allow create: if isTeacher() && validExternalNotebook() && validRecentCreate(request.resource.data);
+      allow update: if isTeacher() && validExternalNotebook() && createdAtUnchanged();
+      allow delete: if isTeacher();
+    }
+
+    match /promptPresets/{mode} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher() && validPromptPreset(mode) && validRecentCreate(request.resource.data);
+      allow update: if isTeacher() && validPromptPreset(mode) && createdAtUnchanged();
+      allow delete: if false;
     }
 
     match /{document=**} {

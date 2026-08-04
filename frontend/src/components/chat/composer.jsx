@@ -1,7 +1,9 @@
 import {
   ArrowUp,
   BrainCircuit,
+  ClipboardCheck,
   FileText,
+  GraduationCap,
   ListChecks,
   Loader2,
   Map,
@@ -19,14 +21,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { fileService } from "@/services/fileService";
+import { AI_FOCUS_PRESETS } from "@/domain/ai-focus-presets";
 import { cn } from "@/lib/utils";
-const RESOURCES = [
-  { mode: "summary", label: "Gerar resumo", icon: FileText },
-  { mode: "flashcards", label: "Criar flashcards", icon: ListChecks },
-  { mode: "questions", label: "Praticar questões", icon: BrainCircuit },
-  { mode: "mindmap", label: "Mapa mental", icon: Map },
-  { mode: "study-plan", label: "Plano de estudos", icon: ListChecks },
-];
+const FOCUS_ICONS = {
+  tutor: GraduationCap,
+  summary: FileText,
+  flashcards: ListChecks,
+  questions: BrainCircuit,
+  mindmap: Map,
+  "study-plan": ListChecks,
+  review: ClipboardCheck,
+};
+const RESOURCES = Object.entries(FOCUS_ICONS).map(([mode, icon]) => ({
+  mode,
+  icon,
+  ...AI_FOCUS_PRESETS[mode],
+}));
 export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
   const [value, setValue] = useState("");
   const [mode, setMode] = useState(undefined);
@@ -58,7 +68,7 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
     if (!files?.length) return;
     setUploading(true);
     try {
-      const uploaded = await Promise.all(Array.from(files).map((file) => fileService.upload(file)));
+      const uploaded = await fileService.uploadMany(files, attachments);
       setAttachments((prev) => [...prev, ...uploaded]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível anexar o arquivo.");
@@ -75,7 +85,7 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
           {activeResource ? (
             <span className="flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs text-primary ring-1 ring-primary/30">
               <activeResource.icon className="size-3.5" />
-              {activeResource.label}
+              Foco: {activeResource.label}
               <button type="button" onClick={() => setMode(undefined)} aria-label="Remover recurso">
                 <X className="size-3.5" />
               </button>
@@ -112,9 +122,18 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             {RESOURCES.map((resource) => (
-              <DropdownMenuItem key={resource.mode} onSelect={() => setMode(resource.mode)}>
-                <resource.icon className="size-4 text-primary" />
-                {resource.label}
+              <DropdownMenuItem
+                key={resource.mode}
+                onSelect={() => setMode(resource.mode)}
+                className="items-start py-2.5"
+              >
+                <resource.icon className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>
+                  <span className="block font-medium text-foreground">{resource.label}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {resource.description}
+                  </span>
+                </span>
               </DropdownMenuItem>
             ))}
             <DropdownMenuItem onSelect={() => fileRef.current?.click()}>

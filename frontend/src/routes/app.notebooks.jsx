@@ -1,11 +1,20 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowUpRight, BookOpen, CloudOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { externalNotebooks } from "@/data/external-notebooks";
+import { notebookRepository } from "@/services/notebook-repository";
 export const Route = createFileRoute("/app/notebooks")({
   component: NotebooksPage,
 });
 function NotebooksPage() {
+  const [notebooks, setNotebooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    notebookRepository
+      .list({ includeInactive: true })
+      .then(setNotebooks)
+      .finally(() => setLoading(false));
+  }, []);
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <p className="text-sm font-medium text-primary">Biblioteca externa</p>
@@ -15,7 +24,8 @@ function NotebooksPage() {
         disponível automaticamente para a IA da Olympic School.
       </p>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {externalNotebooks.map((notebook) => (
+        {loading ? <p className="text-sm text-muted-foreground">Carregando notebooks…</p> : null}
+        {notebooks.map((notebook) => (
           <Card key={notebook.id} className="bg-card/70">
             <CardHeader>
               <div className="flex items-start justify-between gap-3">

@@ -8,11 +8,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-const KEYS = {
-  attempts: "biodoraia.learning.attempts",
-  mastery: "biodoraia.learning.mastery",
-  events: "biodoraia.learning.events",
-};
+import { learningCacheKeys } from "@/services/learning-cache";
 function currentUid() {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error("Faça login para acessar seu progresso.");
@@ -31,11 +27,12 @@ function writeLocal(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
   }
 }
-function localSnapshot() {
+function localSnapshot(uid) {
+  const keys = learningCacheKeys(uid);
   return {
-    attempts: readLocal(KEYS.attempts, []),
-    mastery: readLocal(KEYS.mastery, []),
-    events: readLocal(KEYS.events, []),
+    attempts: readLocal(keys.attempts, []),
+    mastery: readLocal(keys.mastery, []),
+    events: readLocal(keys.events, []),
   };
 }
 function asIso(value) {
@@ -146,7 +143,7 @@ async function readRemote(uid) {
   };
 }
 async function migrateLocalIfNeeded(uid, remote) {
-  const local = localSnapshot();
+  const local = localSnapshot(uid);
   const attempts = remote.attempts.length ? remote.attempts : local.attempts;
   const mastery = remote.mastery.length ? remote.mastery : local.mastery;
   const events = remote.events.length ? remote.events : local.events;
@@ -164,14 +161,15 @@ async function migrateLocalIfNeeded(uid, remote) {
 export const learningRepository = {
   async getSnapshot() {
     const uid = currentUid();
+    const keys = learningCacheKeys(uid);
     try {
       const snapshot = await migrateLocalIfNeeded(uid, await readRemote(uid));
-      writeLocal(KEYS.attempts, snapshot.attempts);
-      writeLocal(KEYS.mastery, snapshot.mastery);
-      writeLocal(KEYS.events, snapshot.events);
+      writeLocal(keys.attempts, snapshot.attempts);
+      writeLocal(keys.mastery, snapshot.mastery);
+      writeLocal(keys.events, snapshot.events);
       return snapshot;
     } catch {
-      return localSnapshot();
+      return localSnapshot(uid);
     }
   },
   async getAttempts() {
@@ -184,18 +182,23 @@ export const learningRepository = {
     return (await this.getSnapshot()).events;
   },
   async saveAttempt(attempt) {
-    const local = readLocal(KEYS.attempts, []);
-    writeLocal(KEYS.attempts, [...local.filter((item) => item.id !== attempt.id), attempt]);
-    await saveAttemptRemote(currentUid(), attempt);
+    const uid = currentUid();
+    const key = learningCacheKeys(uid).attempts;
+    const local = readLocal(key, []);
+    writeLocal(key, [...local.filter((item) => item.id !== attempt.id), attempt]);
+    await saveAttemptRemote(uid, attempt);
   },
   async saveMastery(mastery) {
-    writeLocal(KEYS.mastery, mastery);
-    await saveMasteryRemote(currentUid(), mastery);
+    const uid = currentUid();
+    writeLocal(learningCacheKeys(uid).mastery, mastery);
+    await saveMasteryRemote(uid, mastery);
   },
   async saveEvent(event) {
-    const local = readLocal(KEYS.events, []);
-    writeLocal(KEYS.events, [...local.filter((item) => item.id !== event.id), event]);
-    await saveEventRemote(currentUid(), event);
+    const uid = currentUid();
+    const key = learningCacheKeys(uid).events;
+    const local = readLocal(key, []);
+    writeLocal(key, [...local.filter((item) => item.id !== event.id), event]);
+    await saveEventRemote(uid, event);
   },
   async resetDiagnostic() {
     const uid = currentUid();
@@ -212,8 +215,9 @@ export const learningRepository = {
       }
       await batch.commit();
     }
-    writeLocal(KEYS.attempts, []);
-    writeLocal(KEYS.mastery, []);
-    writeLocal(KEYS.events, []);
+    const keys = learningCacheKeys(uid);
+    writeLocal(keys.attempts, []);
+    writeLocal(keys.mastery, []);
+    writeLocal(keys.events, []);
   },
 };
