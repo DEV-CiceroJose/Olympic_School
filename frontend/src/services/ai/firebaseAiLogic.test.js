@@ -9,6 +9,16 @@ describe("Firebase AI Logic prompt policy", () => {
     expect(buildPrompt("Explique mitose", "summary")).toContain("Gere um resumo");
     expect(buildPrompt("Explique mitose", "summary")).toContain("Explique mitose");
   });
+  it("combina o texto original com o preset de mapa mental", () => {
+    const prompt = buildPrompt("Fotossíntese", "mindmap");
+    expect(prompt).toContain("Foco escolhido pelo estudante: Mapa mental");
+    expect(prompt).toContain("mapa mental hierárquico");
+    expect(prompt).toContain("Solicitação original do estudante:\nFotossíntese");
+  });
+  it("aplica presets diferentes para tutor e correção discursiva", () => {
+    expect(buildPrompt("Explique osmose", "tutor")).toContain("tutor socrático");
+    expect(buildPrompt("Corrija minha resposta", "review")).toContain("erros conceituais");
+  });
   it("recusa mensagem vazia", () => {
     expect(() => buildPrompt("   ")).toThrow("EMPTY_MESSAGE");
   });

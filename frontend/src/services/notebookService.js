@@ -1,12 +1,10 @@
-import { externalNotebooks } from "@/data/external-notebooks";
+import { notebookRepository } from "@/services/notebook-repository";
 export const notebookService = {
   async list() {
-    return externalNotebooks
-      .filter((notebook) => notebook.isActive)
-      .map((notebook) => ({
-        id: notebook.id,
-        name: notebook.title,
-        description: notebook.description,
-      }));
+    return (await notebookRepository.list()).map((notebook) => ({
+      id: notebook.id,
+      name: notebook.title,
+      description: notebook.description,
+    }));
   },
 };

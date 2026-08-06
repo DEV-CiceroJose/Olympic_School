@@ -3,11 +3,13 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   orderBy,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 function currentUid() {
@@ -30,9 +32,9 @@ function toIso(value) {
   return new Date().toISOString();
 }
 function toAssistantMode(value) {
-  if (value === "tutor") return "assistant";
   if (
     value === "assistant" ||
+    value === "tutor" ||
     value === "summary" ||
     value === "questions" ||
     value === "flashcards" ||
@@ -48,10 +50,11 @@ async function loadMessages(uid, conversationId) {
   const snapshot = await getDocs(
     query(
       collection(db, "users", uid, "conversations", conversationId, "messages"),
-      orderBy("createdAt", "asc"),
+      orderBy("createdAt", "desc"),
+      limit(100),
     ),
   );
-  return snapshot.docs.map((message) => {
+  return [...snapshot.docs].reverse().map((message) => {
     const data = message.data();
     return {
       id: message.id,
@@ -68,20 +71,19 @@ export const conversationService = {
   async list() {
     const uid = currentUid();
     const snapshot = await getDocs(
-      query(collection(db, "users", uid, "conversations"), orderBy("updatedAt", "desc")),
+      query(collection(db, "users", uid, "conversations"), orderBy("updatedAt", "desc"), limit(30)),
     );
-    return Promise.all(
-      snapshot.docs.map(async (item) => {
-        const data = item.data();
-        return {
-          id: item.id,
-          title: data.title,
-          notebookId: data.notebookId,
-          updatedAt: toIso(data.updatedAt),
-          messages: await loadMessages(uid, item.id),
-        };
-      }),
-    );
+    return snapshot.docs.map((item) => {
+      const data = item.data();
+      return {
+        id: item.id,
+        title: data.title,
+        notebookId: data.notebookId,
+        updatedAt: toIso(data.updatedAt),
+        messages: [],
+        messagesLoaded: false,
+      };
+    });
   },
   async get(id) {
     const uid = currentUid();
@@ -94,6 +96,7 @@ export const conversationService = {
       notebookId: data.notebookId,
       updatedAt: toIso(data.updatedAt),
       messages: await loadMessages(uid, id),
+      messagesLoaded: true,
     };
   },
   async create(input) {
@@ -112,6 +115,7 @@ export const conversationService = {
       updatedAt: new Date().toISOString(),
       notebookId: input?.notebookId,
       messages: [],
+      messagesLoaded: true,
     };
   },
   async saveMessage(conversationId, message) {
@@ -138,6 +142,27 @@ export const conversationService = {
     };
     if (input.notebookId) data.notebookId = input.notebookId;
     await updateDoc(conversationRef(uid, conversationId), data);
+  },
+  async rename(conversationId, title) {
+    const cleanTitle = title.trim().slice(0, 160);
+    if (!cleanTitle) throw new Error("CONVERSATION_TITLE_REQUIRED");
+    await updateDoc(conversationRef(currentUid(), conversationId), {
+      title: cleanTitle,
+      updatedAt: serverTimestamp(),
+    });
+    return cleanTitle;
+  },
+  async clearMessages(conversationId) {
+    const uid = currentUid();
+    const snapshot = await getDocs(
+      collection(db, "users", uid, "conversations", conversationId, "messages"),
+    );
+    for (let index = 0; index < snapshot.docs.length; index += 400) {
+      const batch = writeBatch(db);
+      for (const message of snapshot.docs.slice(index, index + 400)) batch.delete(message.ref);
+      await batch.commit();
+    }
+    await updateDoc(conversationRef(uid, conversationId), { updatedAt: serverTimestamp() });
   },
   toSummary(conversation) {
     const { messages: _messages, ...summary } = conversation;

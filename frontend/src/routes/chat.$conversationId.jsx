@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Composer } from "@/components/chat/composer";
 import { MessageList } from "@/components/chat/message-list";
 import { useChatStore } from "@/hooks/use-chat-store";
@@ -7,9 +8,13 @@ export const Route = createFileRoute("/chat/$conversationId")({
 });
 function ConversationPage() {
   const { conversationId } = Route.useParams();
-  const { conversations, loading, sendMessage, retry, streamingId, stop } = useChatStore();
+  const { conversations, loading, loadConversation, sendMessage, retry, streamingId, stop } =
+    useChatStore();
   const conversation = conversations.find((item) => item.id === conversationId);
-  if (loading && !conversation) {
+  useEffect(() => {
+    if (conversation && !conversation.messagesLoaded) void loadConversation(conversationId);
+  }, [conversation, conversationId, loadConversation]);
+  if (loading || (conversation && !conversation.messagesLoaded)) {
     return (
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-4 px-4 py-8">
         {Array.from({ length: 3 }).map((_, index) => (

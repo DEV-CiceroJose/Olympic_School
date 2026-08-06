@@ -1,3 +1,8 @@
+## Histórico do protótipo inicial de chat
+
+> Este arquivo descreve a base recebida do Lovable e não representa o estado atual do MVP.
+> Consulte `README.md`, `SPEC.md` e `docs/final-report.md` para a implementação vigente.
+
 ## BiodoraIA — Interface de Chat (somente frontend)
 
 Somente o cliente de chat. Sem backend, sem banco, sem autenticação, sem chamadas a modelos de IA. A landing atual em `/` permanece intacta.

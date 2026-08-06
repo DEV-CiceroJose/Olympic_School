@@ -14,7 +14,18 @@ const firebaseConfig = {
 export const isFirebaseConfigured = Boolean(
   firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId,
 );
-export const firebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
+// Firebase Auth validates the API-key shape as soon as the module is imported.
+// A local, non-routable fallback keeps builds and unit tests independent from
+// production configuration; the authentication service still rejects user-facing
+// operations when the real VITE_* values are absent.
+const testSafeFallbackConfig = {
+  apiKey: `AIza${"A".repeat(35)}`,
+  authDomain: "olympic-school-unconfigured.invalid",
+  projectId: "olympic-school-unconfigured",
+  appId: "1:0:web:unconfigured",
+};
+export const firebaseApp =
+  getApps()[0] ?? initializeApp(isFirebaseConfigured ? firebaseConfig : testSafeFallbackConfig);
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(
   firebaseApp,
