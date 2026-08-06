@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   orderBy,
   query,
   serverTimestamp,
@@ -28,8 +29,7 @@ function toIso(value) {
 }
 
 function normalizeMode(value) {
-  if (value === "tutor") return "assistant";
-  return ["assistant", "summary", "questions", "flashcards", "mindmap", "study-plan", "review"].includes(value)
+  return ["assistant", "tutor", "summary", "questions", "flashcards", "mindmap", "study-plan", "review"].includes(value)
     ? value
     : undefined;
 }
@@ -38,10 +38,11 @@ async function loadMessages(db, uid, conversationId) {
   const snapshot = await getDocs(
     query(
       collection(db, "users", uid, "conversations", conversationId, "messages"),
-      orderBy("createdAt", "asc"),
+      orderBy("createdAt", "desc"),
+      limit(100),
     ),
   );
-  return snapshot.docs.map((item) => {
+  return [...snapshot.docs].reverse().map((item) => {
     const data = item.data();
     return {
       id: item.id,
@@ -59,18 +60,19 @@ export const conversationService = Object.freeze({
   async list() {
     const { db, uid } = context();
     const snapshot = await getDocs(
-      query(collection(db, "users", uid, "conversations"), orderBy("updatedAt", "desc")),
+      query(collection(db, "users", uid, "conversations"), orderBy("updatedAt", "desc"), limit(30)),
     );
-    return Promise.all(snapshot.docs.map(async (item) => {
+    return snapshot.docs.map((item) => {
       const data = item.data();
       return {
         id: item.id,
         title: data.title,
         notebookId: data.notebookId,
         updatedAt: toIso(data.updatedAt),
-        messages: await loadMessages(db, uid, item.id),
+        messages: [],
+        messagesLoaded: false,
       };
-    }));
+    });
   },
 
   async get(id) {
@@ -84,6 +86,7 @@ export const conversationService = Object.freeze({
       notebookId: data.notebookId,
       updatedAt: toIso(data.updatedAt),
       messages: await loadMessages(db, uid, id),
+      messagesLoaded: true,
     };
   },
 

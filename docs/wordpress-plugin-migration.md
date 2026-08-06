@@ -26,9 +26,11 @@ Essa decisão preserva o modelo de dados, as regras publicadas e a gratuidade pl
 - anexos inline de até 10 MB;
 - chaves locais legadas `biodoraia.learning.*` para recuperar progresso existente.
 
-## Limites da migração
+## Estado da migração
 
-O plugin contém a camada de serviços, mas ainda precisa dos blocos Gutenberg que formarão as telas. Uma funcionalidade só deve ser considerada entregue depois de seu bloco ser construído e validado contra o projeto Firebase real.
+O plugin 0.4.0 contém as camadas de serviços e as interfaces em JavaScript sem React. As páginas podem usar a aplicação completa ou shortcodes individuais para painel, diagnóstico, treino, progresso, planos, notebooks, artefatos, assistente e gestão docente.
+
+Uma funcionalidade só deve ser considerada validada em produção depois de um teste manual no domínio final com Authentication, Firestore, App Check e Firebase AI Logic reais. Os testes automatizados não substituem essa validação externa.
 
 ## Segurança operacional
 
@@ -39,13 +41,17 @@ O plugin contém a camada de serviços, mas ainda precisa dos blocos Gutenberg q
 - ativar enforcement somente após login, Firestore e IA passarem no domínio final;
 - preservar as regras `backend/firestore.rules` como fonte de verdade.
 
-## Ordem do frontend
+## Interfaces fornecidas
 
-1. bloco de sessão/login;
-2. bloco de visão geral;
-3. bloco de diagnóstico;
-4. bloco de treino;
-5. bloco de progresso;
-6. bloco de planos;
-7. bloco de artefatos;
-8. bloco do assistente.
+1. sessão, login e perfil;
+2. visão geral;
+3. diagnóstico;
+4. treino adaptativo;
+5. progresso;
+6. planos;
+7. notebooks;
+8. artefatos;
+9. assistente e histórico;
+10. gestão docente.
+
+Consulte `docs/wordpress-plugin-pages.md` para montar as páginas no Editor de Blocos.

@@ -1,5 +1,6 @@
 import {
   GoogleAuthProvider,
+  getIdTokenResult,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -86,6 +87,12 @@ export function getCurrentUser() {
   return getFirebaseRuntime().auth.currentUser;
 }
 
+export async function getClaims(forceRefresh = false) {
+  const user = getCurrentUser();
+  if (!user) return {};
+  return (await getIdTokenResult(user, forceRefresh)).claims;
+}
+
 export function signOut() {
   return firebaseSignOut(getFirebaseRuntime().auth);
 }
@@ -94,6 +101,7 @@ export const authService = Object.freeze({
   completeStudentProfile,
   ensureStudentProfile,
   getCurrentUser,
+  getClaims,
   getStudentProfile,
   observe: observeAuth,
   signInWithGoogle,

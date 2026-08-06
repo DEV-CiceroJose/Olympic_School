@@ -4,6 +4,8 @@ import {
   GoogleAIBackend,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-ai.js";
 import { getFirebaseRuntime } from "../runtime/firebase.js";
+import { AI_FOCUS_PRESETS, normalizeAiFocus } from "../domain/ai-focus-presets.js";
+import { promptPresetRepository } from "./prompts.js";
 
 const MAX_INPUT_LENGTH = 12_000;
 const MESSAGE_LIMIT_PER_SESSION = 60;
@@ -20,22 +22,12 @@ Formate toda resposta em Markdown válido e legível. Separe títulos, parágraf
 linha em branco e use marcadores consistentes. Para fórmulas, use LaTeX entre $...$ em linha ou
 $$...$$ em bloco, com comandos corretos como \\Delta, K_m e V_{\\max}.`;
 
-const MODE_INSTRUCTIONS = Object.freeze({
-  assistant: "Responda de forma direta, organizada e útil. Adapte a profundidade ao pedido.",
-  summary: "Gere um resumo com conceitos, relações, termos importantes, exemplos, erros comuns e perguntas de revisão.",
-  questions: "Gere questões objetivas e discursivas com dificuldade, habilidade, gabarito e explicação sem ambiguidades.",
-  flashcards: "Gere flashcards curtos no formato Pergunta / Resposta.",
-  mindmap: "Gere um mapa mental hierárquico em Markdown, com relações explícitas.",
-  "study-plan": "Crie um plano realista com sessões, exercícios, revisões e simulado; não invente desempenho.",
-  review: "Corrija a resposta, classifique o erro, explique a resposta correta e recomende a próxima revisão.",
-});
-
-function model(mode = "assistant", generationConfig = {}) {
+function model(mode = "assistant", generationConfig = {}, instruction = "") {
   const runtime = getFirebaseRuntime();
   const ai = getAI(runtime.app, { backend: new GoogleAIBackend() });
   return getGenerativeModel(ai, {
     model: runtime.geminiModel,
-    systemInstruction: `${SYSTEM_INSTRUCTION}\n\nModo atual: ${mode}.`,
+    systemInstruction: `${SYSTEM_INSTRUCTION}\n\nModo atual: ${mode}.\n\n${instruction}`,
     generationConfig: {
       maxOutputTokens: 2048,
       temperature: mode === "review" ? 0.2 : 0.55,
@@ -44,17 +36,17 @@ function model(mode = "assistant", generationConfig = {}) {
   });
 }
 
-export function buildPrompt(message, mode = "assistant") {
+export function buildPrompt(message, mode = "assistant", instruction = "") {
   const cleanMessage = String(message ?? "").trim();
   if (!cleanMessage) throw new Error("EMPTY_MESSAGE");
   if (cleanMessage.length > MAX_INPUT_LENGTH) throw new Error("MESSAGE_TOO_LONG");
-  const instruction = MODE_INSTRUCTIONS[mode] ?? MODE_INSTRUCTIONS.assistant;
-  return `${instruction}\n\nSolicitação do estudante:\n${cleanMessage}`;
+  const fallback = AI_FOCUS_PRESETS[normalizeAiFocus(mode)].instruction;
+  return `${instruction || fallback}\n\nSolicitação do estudante:\n${cleanMessage}`;
 }
 
-function buildContentParts(message, mode, attachments = []) {
+function buildContentParts(message, mode, attachments = [], instruction = "") {
   return [
-    buildPrompt(message, mode),
+    buildPrompt(message, mode, instruction),
     ...attachments.filter((item) => item.data).slice(0, 5).map((item) => ({
       inlineData: { mimeType: item.type, data: item.data },
     })),
@@ -70,14 +62,17 @@ function friendlyError(error) {
 }
 
 export const assistantService = Object.freeze({
-  modes: Object.keys(MODE_INSTRUCTIONS),
+  modes: Object.keys(AI_FOCUS_PRESETS),
+  presets: AI_FOCUS_PRESETS,
 
   async *sendMessage(payload, options = {}) {
     if (sentMessages >= MESSAGE_LIMIT_PER_SESSION) throw new Error("Limite de 60 mensagens por sessão atingido.");
     sentMessages += 1;
     try {
-      const result = await model(payload.mode).generateContentStream(
-        buildContentParts(payload.message, payload.mode ?? "assistant", payload.attachments),
+      const mode = normalizeAiFocus(payload.mode);
+      const preset = await promptPresetRepository.get(mode);
+      const result = await model(mode, {}, preset.instruction).generateContentStream(
+        buildContentParts(payload.message, mode, payload.attachments, preset.instruction),
       );
       for await (const chunk of result.stream) {
         if (options.signal?.aborted) return;
@@ -90,6 +85,7 @@ export const assistantService = Object.freeze({
   },
 
   async reviewDiscursiveAnswer(input) {
+    const preset = await promptPresetRepository.get("review");
     const reviewer = model("review", {
       temperature: 0.1,
       maxOutputTokens: 1024,
@@ -108,7 +104,7 @@ export const assistantService = Object.freeze({
           recommendation: { type: "string" },
         },
       },
-    });
+    }, preset.instruction);
     const prompt = `Questão: ${input.question}\nResposta esperada: ${input.expectedAnswer}\nResposta do estudante: ${input.studentAnswer}`;
     const result = await reviewer.generateContent(prompt);
     return JSON.parse(result.response.text());

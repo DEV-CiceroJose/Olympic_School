@@ -126,7 +126,7 @@ final class Olympic_School_Settings
         ?>
         <div class="wrap">
             <h1>Olympic School</h1>
-            <p>Configure o Firebase e adicione o shortcode <code>[olympic_school_app]</code> a uma página.</p>
+            <p>Configure o Firebase e adicione <code>[olympic_school_app]</code> à página Área do Estudante. Use o atributo <code>view</code> ou os shortcodes individuais para páginas separadas.</p>
             <form action="options.php" method="post">
                 <?php
                 settings_fields('olympic_school');
@@ -134,6 +134,25 @@ final class Olympic_School_Settings
                 submit_button('Salvar configuração');
                 ?>
             </form>
+            <hr>
+            <h2>Uso nas páginas</h2>
+            <p>Adicione um bloco <strong>Shortcode</strong> e use uma das opções abaixo:</p>
+            <table class="widefat striped" style="max-width: 900px">
+                <thead><tr><th>Área</th><th>Shortcode</th></tr></thead>
+                <tbody>
+                    <tr><td>Aplicação completa</td><td><code>[olympic_school_app]</code></td></tr>
+                    <tr><td>Login e visão geral</td><td><code>[olympic_school_dashboard]</code></td></tr>
+                    <tr><td>Diagnóstico</td><td><code>[olympic_school_diagnostic]</code></td></tr>
+                    <tr><td>Treino</td><td><code>[olympic_school_training]</code></td></tr>
+                    <tr><td>Progresso</td><td><code>[olympic_school_progress]</code></td></tr>
+                    <tr><td>Planos</td><td><code>[olympic_school_plans]</code></td></tr>
+                    <tr><td>Notebooks</td><td><code>[olympic_school_notebooks]</code></td></tr>
+                    <tr><td>Artefatos</td><td><code>[olympic_school_artifacts]</code></td></tr>
+                    <tr><td>Assistente</td><td><code>[olympic_school_assistant]</code></td></tr>
+                    <tr><td>Professor</td><td><code>[olympic_school_teacher]</code></td></tr>
+                </tbody>
+            </table>
+            <p>Acrescente <code>navigation="no"</code> quando a página usar apenas a navegação do tema WordPress.</p>
         </div>
         <?php
     }

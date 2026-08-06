@@ -125,6 +125,9 @@ Olympic_School/
 │   ├── firebase.json
 │   ├── firestore.rules
 │   └── firestore.indexes.json
+├── wordpress-plugin/     aplicação autenticada para páginas WordPress
+│   ├── includes/         integração PHP, configurações e shortcodes
+│   └── src/              Firebase, domínio, serviços e interfaces sem React
 ├── docs/                 relatórios e documentação
 └── package.json          comandos unificados do workspace
 ```
@@ -132,6 +135,13 @@ Olympic_School/
 Não existe um servidor pago escondido no frontend. O diretório `backend/` concentra configuração,
 autorização e deploy dos serviços gerenciados do Firebase. Consulte
 [frontend/README.md](./frontend/README.md) e [backend/README.md](./backend/README.md).
+
+## WordPress
+
+A landing page, navbar e páginas institucionais são construídas no Editor de Blocos. A área
+autenticada é fornecida pelo plugin em `wordpress-plugin/`, que preserva o mesmo backend Firebase e
+expõe a aplicação completa por `[olympic_school_app]` ou por shortcodes individuais. Consulte
+[docs/wordpress-plugin-pages.md](./docs/wordpress-plugin-pages.md) para instalar e montar as páginas.
 
 ## Rotas
 

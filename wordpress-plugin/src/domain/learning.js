@@ -65,18 +65,72 @@ export function masteryFromDiagnostic(questions, attempts) {
   }));
 }
 
-export function selectNextQuestion(questions, mastery, attempts) {
+function normalizedText(value) {
+  return String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function matchesPriority(question, priorityTopics = []) {
+  const searchable = normalizedText(
+    `${question.area} ${question.skillId} ${question.skillLabel} ${question.prompt}`,
+  );
+  return priorityTopics.some((topic) => searchable.includes(normalizedText(topic)));
+}
+
+function evidenceForSkill(attempts, skillId) {
+  const skillAttempts = attempts.filter((attempt) => attempt.skillId === skillId);
+  const recent = skillAttempts.slice(-4);
+  const consecutiveErrors = [...skillAttempts].reverse().findIndex((attempt) => attempt.correct);
+  return {
+    attempts: skillAttempts.length,
+    recentError: recent.some((attempt) => !attempt.correct),
+    repeatedErrors: skillAttempts.length > 0 && consecutiveErrors === -1
+      ? skillAttempts.length
+      : Math.max(0, consecutiveErrors),
+    averageResponseTimeMs: recent.length
+      ? recent.reduce((sum, attempt) => sum + attempt.responseTimeMs, 0) / recent.length
+      : 0,
+  };
+}
+
+function questionRank(question, masteryBySkill, attempts, context) {
+  const currentMastery = masteryBySkill.get(question.skillId)?.score ?? 0;
+  const evidence = evidenceForSkill(attempts, question.skillId);
+  const targetDifficulty = evidence.repeatedErrors >= 2 ? 1 : currentMastery < 40 ? 1 : currentMastery <= 70 ? 2 : 3;
+  const questionAttempts = attempts.filter((attempt) => attempt.questionId === question.id).length;
+  return currentMastery * 10
+    + Math.abs(question.difficulty - targetDifficulty) * 80
+    + questionAttempts * 35
+    + evidence.attempts * 3
+    - (evidence.recentError ? 60 : 0)
+    - Math.min(evidence.repeatedErrors, 3) * 90
+    - (evidence.averageResponseTimeMs >= 45_000 ? 40 : 0)
+    - (matchesPriority(question, context.priorityTopics) ? 100 : 0);
+}
+
+export function selectNextQuestion(questions, mastery, attempts, context = {}) {
   const masteryBySkill = new Map(mastery.map((item) => [item.skillId, item]));
-  const attemptedIds = new Set(attempts.map((attempt) => attempt.questionId));
   return [...questions].sort((a, b) => {
-    const aMastery = masteryBySkill.get(a.skillId)?.score ?? 0;
-    const bMastery = masteryBySkill.get(b.skillId)?.score ?? 0;
-    const aTarget = aMastery < 40 ? 1 : aMastery <= 70 ? 2 : 3;
-    const bTarget = bMastery < 40 ? 1 : bMastery <= 70 ? 2 : 3;
-    const aRank = aMastery * 100 + Math.abs(a.difficulty - aTarget) * 10 + (attemptedIds.has(a.id) ? 5 : 0);
-    const bRank = bMastery * 100 + Math.abs(b.difficulty - bTarget) * 10 + (attemptedIds.has(b.id) ? 5 : 0);
-    return aRank - bRank || a.id.localeCompare(b.id);
+    const difference = questionRank(a, masteryBySkill, attempts, context)
+      - questionRank(b, masteryBySkill, attempts, context);
+    return difference || a.id.localeCompare(b.id);
   })[0];
+}
+
+export function adaptiveReasonFor(question, mastery, attempts, context = {}) {
+  const evidence = evidenceForSkill(attempts, question.skillId);
+  if (evidence.repeatedErrors >= 2) {
+    return "Você repetiu erros nesta habilidade; voltamos a uma questão guiada para reconstruir o conceito.";
+  }
+  if (matchesPriority(question, context.priorityTopics)) {
+    return `Este tema está priorizado no seu plano${context.targetOlympiad ? ` para ${context.targetOlympiad}` : ""}.`;
+  }
+  if (evidence.averageResponseTimeMs >= 45_000) {
+    return "O tempo recente de resposta indica que vale consolidar esta habilidade.";
+  }
+  const score = mastery.find((item) => item.skillId === question.skillId)?.score ?? 0;
+  return score < 40
+    ? "Selecionada por ser uma das habilidades com maior lacuna registrada."
+    : "Selecionada para manter dificuldade progressiva e ampliar as evidências de domínio.";
 }
 
 export function diagnosticPercentage(attempts) {
@@ -84,9 +138,45 @@ export function diagnosticPercentage(attempts) {
   return Math.round((attempts.filter((attempt) => attempt.correct).length / attempts.length) * 100);
 }
 
+export function diagnosticAreaResults(questions, attempts) {
+  const results = new Map();
+  for (const question of questions) {
+    const current = results.get(question.area) ?? { area: question.area, attempts: 0, correct: 0 };
+    const attempt = attempts.find((item) => item.questionId === question.id);
+    if (attempt) {
+      current.attempts += 1;
+      current.correct += attempt.correct ? 1 : 0;
+    }
+    results.set(question.area, current);
+  }
+  return [...results.values()]
+    .map((result) => ({
+      ...result,
+      score: result.attempts ? Math.round((result.correct / result.attempts) * 100) : 0,
+    }))
+    .sort((a, b) => a.score - b.score || a.area.localeCompare(b.area));
+}
+
+export function diagnosticRecommendations(mastery) {
+  const ordered = [...mastery].sort((a, b) => a.score - b.score);
+  return {
+    gaps: ordered.filter((item) => item.score < 50),
+    strengths: ordered.filter((item) => item.score >= 80).reverse(),
+    nextSteps: ordered.slice(0, 3).map((item) => ({
+      skillId: item.skillId,
+      text: item.score < 25
+        ? `Recomece ${item.label} por conceitos fundamentais e questões introdutórias.`
+        : `Pratique ${item.label} com questões comentadas antes de aumentar a dificuldade.`,
+    })),
+  };
+}
+
 export const learningDomain = Object.freeze({
   confidenceFor,
+  adaptiveReasonFor,
+  diagnosticAreaResults,
   diagnosticPercentage,
+  diagnosticRecommendations,
   evaluateAnswer,
   masteryFromDiagnostic,
   masteryLevel,

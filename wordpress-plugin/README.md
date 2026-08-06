@@ -1,56 +1,78 @@
 # Olympic School para WordPress
 
-Plugin WordPress que migra progressivamente a área autenticada da Olympic School para um frontend próprio do WordPress, mantendo Firebase Authentication, Firestore, App Check e Firebase AI Logic como backend gerenciado.
+Plugin funcional da área autenticada da Olympic School. O WordPress controla a landing page e as páginas institucionais; o plugin fornece autenticação, aprendizagem adaptativa, assistente e gestão docente, mantendo Firebase Authentication, Firestore, App Check e Firebase AI Logic como backend.
 
-## Estado da migração do núcleo
+## Funcionalidades disponíveis
 
-- shortcode `[olympic_school_app]`;
-- tela de configuração no painel do WordPress;
-- inicialização isolada do aplicativo Firebase;
-- App Check com reCAPTCHA Enterprise quando configurado;
 - login e logout com Google;
-- criação e conclusão do perfil do estudante em `users/{uid}`;
-- repositório de conversas e mensagens, incluindo renomear, limpar e exportar;
-- repositórios de tentativas, domínio, eventos, planos e artefatos;
-- geração determinística de domínio e planos;
-- anexos PDF, TXT e Markdown processados somente no navegador;
-- Firebase AI Logic com streaming, modos do assistente e correção discursiva;
-- API JavaScript pública para os futuros blocos WordPress;
-- painel-base responsivo sem React.
+- criação e conclusão do perfil do estudante;
+- painel com indicadores da conta;
+- diagnóstico de até 15 questões e domínio por habilidade;
+- treino adaptativo por domínio, erros, tempo e prioridades do plano;
+- progresso, tentativas e eventos persistidos;
+- criação, conclusão e exclusão de planos de estudo;
+- biblioteca de notebooks externos;
+- artefatos privados de estudo;
+- assistente com streaming, oito focos pedagógicos e anexos PDF/TXT/Markdown;
+- histórico, renomeação, limpeza e exportação de conversas;
+- painel docente para questões, notebooks e prompts;
+- App Check e isolamento dos dados por UID;
+- API pública `window.OlympicSchool` para extensões futuras.
 
-As camadas de dados e regras foram migradas, mas Diagnóstico, Treino, Progresso, Planos, Artefatos e Assistente ainda não possuem blocos Gutenberg próprios. O frontend React atual continua sendo a referência visual até cada tela ser construída e validada no WordPress.
+## Shortcodes
 
-## API para o frontend WordPress
+Aplicação completa, com navegação interna:
 
-Quando o shortcode carrega, o plugin publica `window.OlympicSchool` e dispara o evento `olympic-school:ready`. Os futuros blocos do Gutenberg usarão estas áreas:
-
-- `auth`: sessão Google e perfil;
-- `conversations`: histórico e mensagens;
-- `assistant`: Gemini e correção discursiva;
-- `learning`: tentativas, domínio e eventos;
-- `studyPlans`: persistência dos planos;
-- `artifacts`: materiais salvos;
-- `files`: validação e leitura inline de anexos;
-- `domain`: regras determinísticas de aprendizagem e planos.
-
-Nenhuma senha ou service account é exposta. O SDK Web usa a configuração pública do app, enquanto Authentication, Security Rules e App Check protegem as operações.
-
-## Validar o JavaScript (opcional)
-
-Dentro da pasta do plugin, com Node.js 20 ou superior:
-
-```powershell
-npm test
-npm run check
+```text
+[olympic_school_app]
 ```
 
-## Instalar
+Aplicação iniciando em uma área específica:
 
-1. Compacte o conteúdo da pasta `wordpress-plugin` como `olympic-school.zip`, incluindo `src/`, `includes/`, `olympic-school.php` e `index.php`.
+```text
+[olympic_school_app view="assistant"]
+```
+
+Shortcodes individuais:
+
+```text
+[olympic_school_login]
+[olympic_school_dashboard]
+[olympic_school_diagnostic]
+[olympic_school_training]
+[olympic_school_progress]
+[olympic_school_plans]
+[olympic_school_notebooks]
+[olympic_school_artifacts]
+[olympic_school_assistant]
+[olympic_school_teacher]
+```
+
+Para esconder a navegação interna e usar somente o menu do WordPress:
+
+```text
+[olympic_school_diagnostic navigation="no"]
+```
+
+Consulte [`docs/wordpress-plugin-pages.md`](../docs/wordpress-plugin-pages.md) para o passo a passo completo.
+
+## Instalar ou atualizar
+
+1. Compacte o conteúdo desta pasta como `olympic-school.zip`, mantendo `src/`, `includes/`, `olympic-school.php` e `index.php` na raiz do ZIP.
 2. No WordPress, abra **Plugins → Adicionar plugin → Enviar plugin**.
-3. Ative **Olympic School**.
-4. Abra **Configurações → Olympic School** e informe a configuração pública do aplicativo Web do Firebase.
-5. Crie uma página e adicione o shortcode `[olympic_school_app]`.
-6. Adicione o domínio do WordPress aos domínios autorizados do Firebase Authentication e valide o App Check antes de ativar enforcement.
+3. Se já houver uma versão instalada, confirme **Substituir atual pela enviada**.
+4. Ative o plugin.
+5. Abra **Configurações → Olympic School** e salve a configuração pública do aplicativo Firebase Web.
+6. Adicione o domínio final ao Firebase Authentication e ao App Check antes de ativar enforcement.
+7. Para usar a área docente, publique as regras Firestore desta branch e conceda a custom claim `teacher` conforme o manual.
 
-Não coloque senhas, chaves privadas, service accounts ou tokens pessoais nos campos do plugin.
+Não coloque senhas, service accounts, chaves privadas ou tokens pessoais nos campos do plugin.
+
+## Desenvolvimento e validação
+
+```powershell
+npm.cmd test
+npm.cmd run check
+```
+
+As integrações externas ainda precisam de teste manual no WordPress com o projeto Firebase real.
