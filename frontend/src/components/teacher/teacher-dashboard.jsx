@@ -1,524 +1,320 @@
-import { useEffect, useState } from "react";
-import { BookOpen, Bot, Pencil, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Download, FileSpreadsheet, RefreshCw, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { DiagnosticReport } from "@/components/assessment/diagnostic-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { diagnosticQuestions } from "@/data/diagnostic-questions";
-import { externalNotebooks } from "@/data/external-notebooks";
-import { notebookRepository } from "@/services/notebook-repository";
-import { promptPresetRepository } from "@/services/prompt-preset-repository";
-import { questionRepository } from "@/services/question-repository";
+import { SCHOOL_CLASSES, SESSION_STATUS_LABELS } from "@/domain/assessment";
+import { assessmentAdminRepository } from "@/services/assessment-admin-repository";
+import { assessmentSpreadsheet } from "@/services/assessment-spreadsheet";
 
-const emptyQuestion = {
-  id: "",
-  area: "",
-  skillId: "",
-  skillLabel: "",
-  prompt: "",
-  optionsText: "",
-  correctOption: 0,
-  explanation: "",
-  difficulty: 1,
-  isActive: true,
-};
-
-const emptyNotebook = {
-  id: "",
-  title: "",
-  subject: "",
-  description: "",
-  url: "",
-  isActive: true,
-};
-
-function errorMessage(error) {
-  return error instanceof Error ? error.message : "Não foi possível salvar a alteração.";
-}
-
-function safeId(prefix, value) {
-  const slug = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 70);
-  return `${prefix}-${slug || crypto.randomUUID()}`;
-}
-
-function QuestionManager() {
-  const [questions, setQuestions] = useState([]);
-  const [form, setForm] = useState(emptyQuestion);
-  const [saving, setSaving] = useState(false);
-
-  const load = () => questionRepository.list({ includeInactive: true }).then(setQuestions);
-  useEffect(() => void load(), []);
-
-  const edit = (question) => {
-    setForm({ ...question, optionsText: question.options.join("\n") });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const save = async (event) => {
-    event.preventDefault();
-    setSaving(true);
-    try {
-      const id = form.id || safeId("question", form.prompt);
-      await questionRepository.save({
-        ...form,
-        id,
-        options: form.optionsText.split("\n"),
-        correctOption: Number(form.correctOption),
-        difficulty: Number(form.difficulty),
-      });
-      await load();
-      setForm(emptyQuestion);
-      toast.success("Questão salva e disponibilizada no banco.");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    } finally {
-      setSaving(false);
-    }
-  };
-  const remove = async (question) => {
-    const isDefault = diagnosticQuestions.some((item) => item.id === question.id);
-    if (
-      !window.confirm(
-        isDefault ? "Restaurar esta questão para a versão original?" : "Excluir esta questão?",
-      )
-    )
-      return;
-    try {
-      await questionRepository.remove(question.id);
-      await load();
-      toast.success(isDefault ? "Versão original restaurada." : "Questão excluída.");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    }
-  };
-
+function message(error) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <Card className="h-fit bg-card/70">
-        <CardHeader>
-          <CardTitle>{form.id ? "Editar questão" : "Nova questão"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={save}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Área">
-                <Input
-                  required
-                  value={form.area}
-                  onChange={(event) => setForm({ ...form, area: event.target.value })}
-                />
-              </Field>
-              <Field label="Nome da habilidade">
-                <Input
-                  required
-                  value={form.skillLabel}
-                  onChange={(event) => setForm({ ...form, skillLabel: event.target.value })}
-                />
-              </Field>
-            </div>
-            <Field label="Identificador da habilidade">
-              <Input
-                required
-                placeholder="ex.: genetica_mendeliana"
-                value={form.skillId}
-                onChange={(event) => setForm({ ...form, skillId: event.target.value })}
-              />
-            </Field>
-            <Field label="Enunciado">
-              <Textarea
-                required
-                rows={4}
-                value={form.prompt}
-                onChange={(event) => setForm({ ...form, prompt: event.target.value })}
-              />
-            </Field>
-            <Field label="Alternativas (uma por linha)">
-              <Textarea
-                required
-                rows={6}
-                value={form.optionsText}
-                onChange={(event) => setForm({ ...form, optionsText: event.target.value })}
-              />
-            </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Alternativa correta">
-                <select
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  value={form.correctOption}
-                  onChange={(event) => setForm({ ...form, correctOption: event.target.value })}
-                >
-                  {form.optionsText
-                    .split("\n")
-                    .filter(Boolean)
-                    .map((_, index) => (
-                      <option key={index} value={index}>
-                        {String.fromCharCode(65 + index)}
-                      </option>
-                    ))}
-                </select>
-              </Field>
-              <Field label="Dificuldade">
-                <select
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  value={form.difficulty}
-                  onChange={(event) => setForm({ ...form, difficulty: event.target.value })}
-                >
-                  <option value="1">1 — Introdutória</option>
-                  <option value="2">2 — Intermediária</option>
-                  <option value="3">3 — Avançada</option>
-                </select>
-              </Field>
-            </div>
-            <Field label="Explicação do gabarito">
-              <Textarea
-                required
-                rows={4}
-                value={form.explanation}
-                onChange={(event) => setForm({ ...form, explanation: event.target.value })}
-              />
-            </Field>
-            <CheckField
-              checked={form.isActive}
-              onChange={(isActive) => setForm({ ...form, isActive })}
-            >
-              Questão ativa para os alunos
-            </CheckField>
-            <div className="flex gap-2">
-              <Button disabled={saving} type="submit">
-                <Save /> {saving ? "Salvando…" : "Salvar questão"}
-              </Button>
-              {form.id ? (
-                <Button type="button" variant="outline" onClick={() => setForm(emptyQuestion)}>
-                  <RotateCcw /> Cancelar
-                </Button>
-              ) : null}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      <ContentList
-        title={`${questions.length} questões`}
-        items={questions}
-        render={(question) => (
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <strong>{question.skillLabel}</strong>
-                <Badge variant="outline">Nível {question.difficulty}</Badge>
-                {!question.isActive ? <Badge variant="secondary">Inativa</Badge> : null}
-              </div>
-              <p className="mt-2 text-sm">{question.prompt}</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {question.area} · {question.options.length} alternativas
-              </p>
-            </div>
-            <ItemActions onEdit={() => edit(question)} onDelete={() => void remove(question)} />
-          </div>
-        )}
-      />
-    </div>
-  );
-}
-
-function NotebookManager() {
-  const [notebooks, setNotebooks] = useState([]);
-  const [form, setForm] = useState(emptyNotebook);
-  const [saving, setSaving] = useState(false);
-  const load = () => notebookRepository.list({ includeInactive: true }).then(setNotebooks);
-  useEffect(() => void load(), []);
-  const save = async (event) => {
-    event.preventDefault();
-    setSaving(true);
-    try {
-      await notebookRepository.save({ ...form, id: form.id || safeId("notebook", form.title) });
-      await load();
-      setForm(emptyNotebook);
-      toast.success("Notebook salvo na biblioteca.");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    } finally {
-      setSaving(false);
-    }
-  };
-  const remove = async (notebook) => {
-    const isDefault = externalNotebooks.some((item) => item.id === notebook.id);
-    if (
-      !window.confirm(
-        isDefault ? "Restaurar este notebook para a versão original?" : "Excluir este notebook?",
-      )
-    )
-      return;
-    try {
-      await notebookRepository.remove(notebook.id);
-      await load();
-      toast.success(isDefault ? "Versão original restaurada." : "Notebook excluído.");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    }
-  };
-  return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-      <Card className="h-fit bg-card/70">
-        <CardHeader>
-          <CardTitle>{form.id ? "Editar notebook" : "Novo notebook"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={save}>
-            <Field label="Título">
-              <Input
-                required
-                value={form.title}
-                onChange={(event) => setForm({ ...form, title: event.target.value })}
-              />
-            </Field>
-            <Field label="Matéria">
-              <Input
-                required
-                value={form.subject}
-                onChange={(event) => setForm({ ...form, subject: event.target.value })}
-              />
-            </Field>
-            <Field label="Descrição">
-              <Textarea
-                required
-                rows={4}
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-              />
-            </Field>
-            <Field label="Link HTTPS">
-              <Input
-                type="url"
-                placeholder="https://..."
-                value={form.url}
-                onChange={(event) => setForm({ ...form, url: event.target.value })}
-              />
-            </Field>
-            <CheckField
-              checked={form.isActive}
-              onChange={(isActive) => setForm({ ...form, isActive })}
-            >
-              Notebook visível para os alunos
-            </CheckField>
-            <div className="flex gap-2">
-              <Button disabled={saving} type="submit">
-                <Save /> {saving ? "Salvando…" : "Salvar notebook"}
-              </Button>
-              {form.id ? (
-                <Button type="button" variant="outline" onClick={() => setForm(emptyNotebook)}>
-                  <RotateCcw /> Cancelar
-                </Button>
-              ) : null}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      <ContentList
-        title={`${notebooks.length} notebooks`}
-        items={notebooks}
-        render={(notebook) => (
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <strong>{notebook.title}</strong>
-                {!notebook.isActive ? <Badge variant="secondary">Inativo</Badge> : null}
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {notebook.subject} · {notebook.description}
-              </p>
-            </div>
-            <ItemActions onEdit={() => setForm(notebook)} onDelete={() => void remove(notebook)} />
-          </div>
-        )}
-      />
-    </div>
-  );
-}
-
-function PromptManager() {
-  const [presets, setPresets] = useState([]);
-  const [selectedMode, setSelectedMode] = useState("assistant");
-  const [form, setForm] = useState({ description: "", instruction: "" });
-  const selected = presets.find((preset) => preset.mode === selectedMode);
-  useEffect(() => {
-    void promptPresetRepository.list().then(setPresets);
-  }, []);
-  useEffect(() => {
-    if (selected) setForm({ description: selected.description, instruction: selected.instruction });
-  }, [selected]);
-  const save = async (event) => {
-    event.preventDefault();
-    if (form.instruction.trim().length < 50) {
-      toast.error("O prompt precisa ter pelo menos 50 caracteres.");
-      return;
-    }
-    try {
-      const saved = await promptPresetRepository.save(selectedMode, form);
-      setPresets((items) => items.map((item) => (item.mode === saved.mode ? saved : item)));
-      toast.success("Prompt atualizado. As próximas respostas já usarão esta instrução.");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    }
-  };
-  return (
-    <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-      <Card className="h-fit bg-card/70">
-        <CardHeader>
-          <CardTitle>Focos disponíveis</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {presets.map((preset) => (
-            <button
-              key={preset.mode}
-              type="button"
-              onClick={() => setSelectedMode(preset.mode)}
-              className={`w-full rounded-xl border p-3 text-left transition ${selectedMode === preset.mode ? "border-primary bg-primary/10" : "border-border hover:border-primary/40"}`}
-            >
-              <span className="font-medium">{preset.label}</span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {preset.customized ? "Personalizado pelo professor" : "Prompt padrão"}
-              </span>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
-      <Card className="bg-card/70">
-        <CardHeader>
-          <CardTitle>Prompt de {selected?.label ?? "foco"}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Esta instrução é enviada junto com o pedido do aluno. A regra-base de segurança da IA
-            permanece protegida no código.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={save}>
-            <Field label="Descrição curta">
-              <Input
-                required
-                maxLength={240}
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-              />
-            </Field>
-            <Field label="Instrução enviada à IA">
-              <Textarea
-                required
-                minLength={50}
-                maxLength={8000}
-                rows={16}
-                value={form.instruction}
-                onChange={(event) => setForm({ ...form, instruction: event.target.value })}
-              />
-            </Field>
-            <p className="text-xs text-muted-foreground">
-              {form.instruction.length}/8000 caracteres
-            </p>
-            <Button type="submit">
-              <Save /> Salvar prompt
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-function CheckField({ checked, onChange, children }) {
-  return (
-    <label className="flex items-center gap-3 text-sm">
-      <input
-        type="checkbox"
-        className="size-4 accent-primary"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-      {children}
-    </label>
-  );
-}
-function ItemActions({ onEdit, onDelete }) {
-  return (
-    <div className="flex shrink-0 gap-1">
-      <Button type="button" size="icon" variant="ghost" aria-label="Editar" onClick={onEdit}>
-        <Pencil />
-      </Button>
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        aria-label="Excluir ou restaurar"
-        onClick={onDelete}
-      >
-        <Trash2 />
-      </Button>
-    </div>
-  );
-}
-function ContentList({ title, items, render }) {
-  return (
-    <Card className="bg-card/70">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {items.map((item) => (
-          <div key={item.id} className="rounded-xl border border-border p-4">
-            {render(item)}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    error?.message?.replace(/^FirebaseError:\s*/, "") || "Não foi possível concluir a operação."
   );
 }
 
 export function TeacherDashboard() {
+  const [sessions, setSessions] = useState([]);
+  const [definitions, setDefinitions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [classFilter, setClassFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const [nextSessions, nextDefinitions] = await Promise.all([
+        assessmentAdminRepository.sessions(),
+        assessmentAdminRepository.definitions(),
+      ]);
+      setSessions(nextSessions);
+      setDefinitions(nextDefinitions);
+    } catch (error) {
+      toast.error(message(error));
+    }
+  }, []);
+  useEffect(() => void load(), [load]);
+
+  const filtered = useMemo(
+    () =>
+      sessions.filter((item) => {
+        const text = `${item.studentName} ${item.studentEmail}`.toLowerCase();
+        return (
+          (!classFilter || item.className === classFilter) &&
+          (!statusFilter || item.status === statusFilter) &&
+          (!search || text.includes(search.toLowerCase()))
+        );
+      }),
+    [classFilter, search, sessions, statusFilter],
+  );
+  const completed = sessions.filter((item) => item.status === "completed");
+  const average = completed.length
+    ? Math.round(
+        completed.reduce((sum, item) => sum + item.report.percentage, 0) / completed.length,
+      )
+    : 0;
+
+  const inspectFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    try {
+      setPreview(await assessmentSpreadsheet.parse(file));
+    } catch (error) {
+      toast.error(message(error));
+      setPreview(null);
+    } finally {
+      setBusy(false);
+      event.target.value = "";
+    }
+  };
+  const publish = async () => {
+    if (!preview || preview.errors.length) return;
+    setBusy(true);
+    try {
+      await assessmentAdminRepository.publish(preview);
+      toast.success("Avaliação publicada integralmente. Nenhuma linha foi importada parcialmente.");
+      setPreview(null);
+      await load();
+    } catch (error) {
+      toast.error(message(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <main className="mx-auto max-w-7xl px-5 py-10">
-      <p className="text-sm font-medium text-primary">Acesso exclusivo</p>
+      <p className="text-sm font-medium text-primary">Acesso administrativo</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Área do professor</h1>
       <p className="mt-3 max-w-3xl text-muted-foreground">
-        Gerencie o banco de questões, os materiais externos e as instruções usadas pelos focos da
-        IA. As alterações salvas entram em vigor para todos os alunos.
+        Central da avaliação diagnóstica: publicação das questões, acompanhamento das turmas,
+        respostas e relatórios.
       </p>
-      <Tabs defaultValue="questions" className="mt-8">
-        <TabsList className="grid h-auto w-full max-w-2xl grid-cols-3">
-          <TabsTrigger value="questions">
-            <Plus className="mr-2 size-4" /> Questões
-          </TabsTrigger>
-          <TabsTrigger value="notebooks">
-            <BookOpen className="mr-2 size-4" /> Notebooks
-          </TabsTrigger>
-          <TabsTrigger value="prompts">
-            <Bot className="mr-2 size-4" /> Prompts da IA
-          </TabsTrigger>
+      <Tabs defaultValue="overview" className="mt-8">
+        <TabsList className="grid h-auto w-full max-w-3xl grid-cols-3">
+          <TabsTrigger value="overview">Visão geral</TabsTrigger>
+          <TabsTrigger value="students">Alunos e respostas</TabsTrigger>
+          <TabsTrigger value="questions">Questões por XLSX</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview" className="mt-6 space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Metric label="Alunos registrados" value={sessions.length} />
+            <Metric label="Concluídos" value={completed.length} />
+            <Metric label="Em andamento" value={sessions.length - completed.length} />
+            <Metric label="Média geral" value={`${average}%`} />
+          </div>
+          <Card className="bg-card/70">
+            <CardHeader>
+              <CardTitle>Avaliações cadastradas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {definitions.length ? (
+                definitions.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
+                  >
+                    <div>
+                      <p className="font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Versão {item.version} · {item.questionCount} questões · código {item.id}
+                      </p>
+                    </div>
+                    <Badge variant={item.isActive ? "default" : "secondary"}>
+                      {item.isActive ? "Ativa" : "Inativa"}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhuma avaliação importada.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="students" className="mt-6 space-y-5">
+          <Card className="bg-card/70">
+            <CardContent className="grid gap-3 p-5 md:grid-cols-4">
+              <Input
+                placeholder="Buscar aluno ou e-mail"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <select
+                className="h-10 rounded-md border bg-background px-3 text-sm"
+                value={classFilter}
+                onChange={(event) => setClassFilter(event.target.value)}
+              >
+                <option value="">Todas as turmas</option>
+                {SCHOOL_CLASSES.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+              <select
+                className="h-10 rounded-md border bg-background px-3 text-sm"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="">Todas as situações</option>
+                <option value="in_progress">Em andamento</option>
+                <option value="completed">Concluído</option>
+              </select>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => void load()}>
+                  <RefreshCw /> Atualizar
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!filtered.length}
+                  onClick={() => void assessmentSpreadsheet.exportTeacher(filtered)}
+                >
+                  <Download /> XLSX
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="overflow-hidden bg-card/70">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/60">
+                    <tr>
+                      <th className="p-3">Aluno</th>
+                      <th className="p-3">Turma</th>
+                      <th className="p-3">Situação</th>
+                      <th className="p-3">Início</th>
+                      <th className="p-3">Resultado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="cursor-pointer border-t hover:bg-muted/30"
+                        onClick={() => item.report && setSelectedSession(item)}
+                      >
+                        <td className="p-3">
+                          <p className="font-medium">{item.studentName}</p>
+                          <p className="text-xs text-muted-foreground">{item.studentEmail}</p>
+                        </td>
+                        <td className="p-3">{item.className}</td>
+                        <td className="p-3">{SESSION_STATUS_LABELS[item.status]}</td>
+                        <td className="p-3">
+                          {item.startedAt?.toDate?.().toLocaleString("pt-BR") || "—"}
+                        </td>
+                        <td className="p-3">{item.report ? `${item.report.percentage}%` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+          {selectedSession ? (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-2xl font-semibold">
+                  Relatório de {selectedSession.studentName}
+                </h2>
+                <Button variant="ghost" onClick={() => setSelectedSession(null)}>
+                  Fechar
+                </Button>
+              </div>
+              <DiagnosticReport session={selectedSession} allowExport={false} />
+            </div>
+          ) : null}
+        </TabsContent>
         <TabsContent value="questions" className="mt-6">
-          <QuestionManager />
-        </TabsContent>
-        <TabsContent value="notebooks" className="mt-6">
-          <NotebookManager />
-        </TabsContent>
-        <TabsContent value="prompts" className="mt-6">
-          <PromptManager />
+          <Card className="bg-card/70">
+            <CardHeader>
+              <CardTitle>Importar avaliação por planilha</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <p className="text-sm text-muted-foreground">
+                Use o modelo para diagnóstico inicial, diagnóstico final ou simulado. A importação é
+                atômica: qualquer erro bloqueia todo o arquivo.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline">
+                  <a href={assessmentSpreadsheet.templateUrl} download>
+                    <FileSpreadsheet /> Baixar modelo XLSX
+                  </a>
+                </Button>
+                <Button asChild>
+                  <label className="cursor-pointer">
+                    <Upload /> {busy ? "Validando…" : "Selecionar XLSX"}
+                    <input
+                      className="sr-only"
+                      type="file"
+                      accept=".xlsx"
+                      disabled={busy}
+                      onChange={(event) => void inspectFile(event)}
+                    />
+                  </label>
+                </Button>
+              </div>
+              {preview ? (
+                <div className="rounded-xl border p-5">
+                  <div className="flex flex-wrap justify-between gap-3">
+                    <div>
+                      <p className="font-medium">
+                        {preview.assessment?.title || "Arquivo inválido"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {preview.questions.length} questões identificadas · {preview.errors.length}{" "}
+                        erros · {preview.warnings.length} avisos
+                      </p>
+                    </div>
+                    <Button
+                      disabled={busy || preview.errors.length > 0}
+                      onClick={() => void publish()}
+                    >
+                      Publicar avaliação
+                    </Button>
+                  </div>
+                  {[...preview.errors, ...preview.warnings].length ? (
+                    <ul className="mt-4 space-y-2 text-sm">
+                      {preview.errors.map((item, index) => (
+                        <li key={`error-${index}`} className="text-destructive">
+                          Erro · {item.sheet}
+                          {item.row ? ` linha ${item.row}` : ""}: {item.message}
+                        </li>
+                      ))}
+                      {preview.warnings.map((item, index) => (
+                        <li key={`warning-${index}`} className="text-amber-700">
+                          Aviso · {item.sheet}
+                          {item.row ? ` linha ${item.row}` : ""}: {item.message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-4 text-sm text-emerald-700">
+                      Planilha válida e pronta para publicação.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </main>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <Card className="bg-card/70">
+      <CardContent className="p-5">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="mt-2 text-3xl font-semibold">{value}</p>
+      </CardContent>
+    </Card>
   );
 }

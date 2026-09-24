@@ -5,6 +5,10 @@
     "frontend",
     "backend"
   ],
+  "overrides": {
+    "js-yaml": "^4.3.2",
+    "nanoid": "^3.3.18"
+  },
   "scripts": {
     "dev": "npm run dev --workspace olympic-school-frontend",
     "build": "npm run build --workspace olympic-school-frontend",

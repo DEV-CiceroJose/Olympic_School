@@ -22,4 +22,14 @@ describe("Firestore security contract", () => {
     expect(rules).toMatch(/match \/attempts\/\{attemptId\}[\s\S]*allow update: if false/);
     expect(rules).toMatch(/match \/progressEvents\/\{eventId\}[\s\S]*allow update: if false/);
   });
+
+  it("keeps diagnostic answers server-owned and answer keys teacher-only", () => {
+    expect(rules).toMatch(/match \/answerKeys\/\{questionId\}[\s\S]*allow read: if isTeacher\(\)/);
+    expect(rules).toMatch(
+      /match \/responses\/\{responseId\}[\s\S]*allow create, update, delete: if false/,
+    );
+    expect(rules).toMatch(
+      /match \/assessmentSessions\/\{sessionId\}[\s\S]*allow list: if isTeacher\(\)/,
+    );
+  });
 });
