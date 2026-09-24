@@ -1,14 +1,5 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import {
-  BarChart3,
-  BrainCircuit,
-  CalendarDays,
-  ClipboardCheck,
-  Files,
-  Library,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { CalendarDays, ClipboardCheck, Library, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/landing/logo";
 import { UserMenu } from "@/components/auth/user-menu";
 import { AuthenticatedHeader } from "@/components/layout/authenticated-header";
@@ -16,11 +7,8 @@ import { useAuth } from "@/components/auth/auth-provider";
 const links = [
   { to: "/app", label: "Visão geral", icon: Sparkles, exact: true },
   { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
-  { to: "/app/training", label: "Treino adaptativo", icon: BrainCircuit },
-  { to: "/app/progress", label: "Progresso", icon: BarChart3 },
-  { to: "/app/plans", label: "Plano de estudo", icon: CalendarDays },
-  { to: "/app/notebooks", label: "Notebooks", icon: Library },
-  { to: "/app/artifacts", label: "Artefatos", icon: Files },
+  { to: "/app/plans", label: "Plano de estudos", icon: CalendarDays },
+  { to: "/app/reds", label: "REDs", icon: Library },
 ];
 export function LearningShell() {
   const { isTeacher } = useAuth();
