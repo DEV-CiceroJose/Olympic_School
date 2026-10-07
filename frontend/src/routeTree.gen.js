@@ -13,13 +13,10 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppArtifactsRouteImport } from './routes/app.artifacts'
 import { Route as AppDiagnosticRouteImport } from './routes/app.diagnostic'
-import { Route as AppNotebooksRouteImport } from './routes/app.notebooks'
 import { Route as AppPlansRouteImport } from './routes/app.plans'
-import { Route as AppProgressRouteImport } from './routes/app.progress'
+import { Route as AppRedsRouteImport } from './routes/app.reds'
 import { Route as AppTeacherRouteImport } from './routes/app.teacher'
-import { Route as AppTrainingRouteImport } from './routes/app.training'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat.$conversationId'
 
@@ -48,19 +45,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 })
-const AppArtifactsRoute = AppArtifactsRouteImport.update({
-  id: '/artifacts',
-  path: '/artifacts',
-  getParentRoute: () => AppRoute,
-})
 const AppDiagnosticRoute = AppDiagnosticRouteImport.update({
   id: '/diagnostic',
   path: '/diagnostic',
-  getParentRoute: () => AppRoute,
-})
-const AppNotebooksRoute = AppNotebooksRouteImport.update({
-  id: '/notebooks',
-  path: '/notebooks',
   getParentRoute: () => AppRoute,
 })
 const AppPlansRoute = AppPlansRouteImport.update({
@@ -68,19 +55,14 @@ const AppPlansRoute = AppPlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => AppRoute,
 })
-const AppProgressRoute = AppProgressRouteImport.update({
-  id: '/progress',
-  path: '/progress',
+const AppRedsRoute = AppRedsRouteImport.update({
+  id: '/reds',
+  path: '/reds',
   getParentRoute: () => AppRoute,
 })
 const AppTeacherRoute = AppTeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
-  getParentRoute: () => AppRoute,
-})
-const AppTrainingRoute = AppTrainingRouteImport.update({
-  id: '/training',
-  path: '/training',
   getParentRoute: () => AppRoute,
 })
 const ChatIndexRoute = ChatIndexRouteImport.update({
@@ -95,13 +77,10 @@ const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
 })
 
 const AppRouteChildren = {
-  AppArtifactsRoute: AppArtifactsRoute,
   AppDiagnosticRoute: AppDiagnosticRoute,
-  AppNotebooksRoute: AppNotebooksRoute,
   AppPlansRoute: AppPlansRoute,
-  AppProgressRoute: AppProgressRoute,
+  AppRedsRoute: AppRedsRoute,
   AppTeacherRoute: AppTeacherRoute,
-  AppTrainingRoute: AppTrainingRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

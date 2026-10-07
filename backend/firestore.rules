@@ -9,6 +9,16 @@ service cloud.firestore {
     // - attempts are immutable answer events.
     // - skillMastery contains one validated aggregate per skill.
     // - progressEvents are immutable diagnostic/training timeline entries.
+    // - assessmentDefinitions/{assessmentId} stores teacher-created metadata:
+    //   string id/title/type/notes/source/createdBy; integer version/questionCount/
+    //   minMinutes/maxMinutes; bool isActive; bounded string-list questionIds;
+    //   immutable createdAt and server timestamp updatedAt. Imports use source=csv.
+    // - assessmentDefinitions/{assessmentId}/questions/{questionId} contains the
+    //   student-visible prompt/options/source fields. answerKeys/{questionId}
+    //   contains correctOption/explanation and is restricted to teachers/server.
+    // - assessmentSessions/{sessionId} and responses/{questionId} are created and
+    //   changed only by trusted Cloud Functions. Owners read their own records;
+    //   teachers may list/read all sessions for school reporting.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -183,6 +193,63 @@ service cloud.firestore {
         && (!data.isActive || data.url.matches('https://.*'))
         && data.isActive is bool
         && data.source == 'teacher'
+        && data.updatedAt == request.time;
+    }
+
+    function validAssessmentDefinition() {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'id', 'title', 'type', 'version', 'questionCount', 'minMinutes',
+          'maxMinutes', 'isActive', 'notes', 'questionIds', 'source',
+          'createdBy', 'createdAt', 'updatedAt'
+        ])
+        && validShortString(data.id, 128)
+        && validShortString(data.title, 160)
+        && data.type in ['diagnostico_inicial', 'diagnostico_final', 'simulado']
+        && data.version is int && data.version >= 1 && data.version <= 999
+        && data.questionCount is int && data.questionCount >= 1 && data.questionCount <= 100
+        && data.minMinutes is int && data.minMinutes >= 1
+        && data.maxMinutes is int && data.maxMinutes >= data.minMinutes && data.maxMinutes <= 360
+        && data.isActive is bool
+        && validOptionalString(data, 'notes', 2000)
+        && data.questionIds is list && data.questionIds.size() == data.questionCount
+        && data.source == 'csv'
+        && validShortString(data.createdBy, 128)
+        && data.updatedAt == request.time;
+    }
+
+    function validAssessmentQuestion() {
+      let data = request.resource.data;
+      return hasOnly(data, [
+          'id', 'order', 'examYear', 'phase', 'originalNumber', 'area',
+          'skillId', 'skillLabel', 'difficulty', 'prompt', 'supportText',
+          'imageUrl', 'options', 'sourceUrl', 'notes', 'isActive',
+          'createdAt', 'updatedAt'
+        ])
+        && validShortString(data.id, 128)
+        && data.order is int && data.order >= 1 && data.order <= 100
+        && data.examYear is int && data.examYear >= 2009 && data.examYear <= 2026
+        && data.phase == 1
+        && data.originalNumber is int && data.originalNumber >= 1
+        && validShortString(data.area, 120)
+        && validShortString(data.skillId, 128)
+        && validShortString(data.skillLabel, 120)
+        && data.difficulty in [1, 2, 3]
+        && validShortString(data.prompt, 5000)
+        && validOptionalString(data, 'supportText', 10000)
+        && validOptionalString(data, 'imageUrl', 2048)
+        && validQuestionOptions(data.options)
+        && validOptionalString(data, 'sourceUrl', 2048)
+        && validOptionalString(data, 'notes', 2000)
+        && data.isActive is bool
+        && data.updatedAt == request.time;
+    }
+
+    function validAnswerKey() {
+      let data = request.resource.data;
+      return hasOnly(data, ['correctOption', 'explanation', 'createdAt', 'updatedAt'])
+        && data.correctOption is int && data.correctOption >= 0 && data.correctOption <= 5
+        && validShortString(data.explanation, 5000)
         && data.updatedAt == request.time;
     }
 
@@ -450,6 +517,50 @@ service cloud.firestore {
       allow create: if isTeacher() && validPromptPreset(mode) && validRecentCreate(request.resource.data);
       allow update: if isTeacher() && validPromptPreset(mode) && createdAtUnchanged();
       allow delete: if false;
+    }
+
+    // Definitions and prompts are readable by students only while active. Answer
+    // keys never leave the teacher/server boundary before the final report.
+    match /assessmentDefinitions/{assessmentId} {
+      allow get, list: if isTeacher() || (isAuthenticated() && resource.data.isActive == true);
+      allow create: if isTeacher() && validAssessmentDefinition()
+        && validRecentCreate(request.resource.data);
+      allow update: if isTeacher() && validAssessmentDefinition() && createdAtUnchanged();
+      allow delete: if false;
+
+      match /questions/{questionId} {
+        allow read: if isTeacher()
+          || (isAuthenticated()
+            && get(/databases/$(database)/documents/assessmentDefinitions/$(assessmentId)).data.isActive == true);
+        allow create: if isTeacher() && validAssessmentQuestion()
+          && validRecentCreate(request.resource.data);
+        allow update: if isTeacher() && validAssessmentQuestion() && createdAtUnchanged();
+        allow delete: if false;
+      }
+
+      match /answerKeys/{questionId} {
+        allow read: if isTeacher();
+        allow create: if isTeacher() && validAnswerKey()
+          && validRecentCreate(request.resource.data);
+        allow update: if isTeacher() && validAnswerKey() && createdAtUnchanged();
+        allow delete: if false;
+      }
+    }
+
+    // All writes go through trusted Cloud Functions. Students can only read their
+    // own attempt; teachers can inspect every class and completed report.
+    match /assessmentSessions/{sessionId} {
+      allow get: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || isTeacher());
+      allow list: if isTeacher();
+      allow create, update, delete: if false;
+
+      match /responses/{responseId} {
+        allow read: if isAuthenticated()
+          && (get(/databases/$(database)/documents/assessmentSessions/$(sessionId)).data.userId == request.auth.uid
+            || isTeacher());
+        allow create, update, delete: if false;
+      }
     }
 
     match /{document=**} {

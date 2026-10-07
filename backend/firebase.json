@@ -1,4 +1,8 @@
 {
+  "functions": {
+    "source": ".",
+    "runtime": "nodejs22"
+  },
   "firestore": {
     "database": "biodoraia",
     "location": "southamerica-east1",

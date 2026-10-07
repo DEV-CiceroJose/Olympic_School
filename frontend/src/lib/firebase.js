@@ -2,6 +2,7 @@ import { initializeApp, getApps } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -31,6 +32,7 @@ export const db = getFirestore(
   firebaseApp,
   import.meta.env.VITE_FIRESTORE_DATABASE_ID || "biodoraia",
 );
+export const functions = getFunctions(firebaseApp, "southamerica-east1");
 let appCheck = null;
 export function initializeOlympicSchoolAppCheck() {
   if (typeof window === "undefined" || appCheck) return appCheck;

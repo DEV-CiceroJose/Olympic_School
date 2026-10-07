@@ -37,6 +37,22 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "assessmentDefinitions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "assessmentSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "deadlineAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
