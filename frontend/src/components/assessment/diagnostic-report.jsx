@@ -109,7 +109,7 @@ export function DiagnosticReport({ session, allowExport = true }) {
       </Card>
       {allowExport ? (
         <Button variant="outline" onClick={() => void assessmentSpreadsheet.exportStudent(session)}>
-          <Download /> Exportar relatório em XLSX
+          <Download /> Exportar relatório em CSV
         </Button>
       ) : null}
     </section>

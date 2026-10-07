@@ -1,5 +1,11 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { validateAssessmentImport } from "./assessment-spreadsheet";
+import {
+  parseAssessmentCsvText,
+  parseCsvText,
+  serializeCsv,
+  validateAssessmentImport,
+} from "./assessment-spreadsheet";
 
 function assessment(overrides = {}) {
   return {
@@ -48,6 +54,30 @@ function questions(count = 25) {
 }
 
 describe("assessment spreadsheet validation", () => {
+  it("reads the delivered semicolon-separated CSV template", () => {
+    const text = readFileSync(
+      new URL("../../public/templates/modelo-avaliacoes-olympic-school.csv", import.meta.url),
+      "utf8",
+    );
+    const result = parseAssessmentCsvText(text);
+    expect(result.errors).toEqual([]);
+    expect(result.questions).toHaveLength(25);
+    expect(result.warnings).toHaveLength(25);
+  });
+
+  it("preserves semicolons, quotes and line breaks inside quoted fields", () => {
+    const csv = serializeCsv(["id", "texto"], [{ id: "q1", texto: 'Linha 1; "citada"\nLinha 2' }]);
+    expect(parseCsvText(csv)).toEqual([
+      ["id", "texto"],
+      ["q1", 'Linha 1; "citada"\nLinha 2'],
+    ]);
+  });
+
+  it("neutralizes spreadsheet formulas in exported text", () => {
+    const csv = serializeCsv(["texto"], [{ texto: '=HYPERLINK("https://example.com")' }]);
+    expect(csv).toContain("'=HYPERLINK");
+  });
+
   it("accepts an exact 25-question initial diagnostic", () => {
     const result = validateAssessmentImport(assessment(), questions());
     expect(result.errors).toEqual([]);

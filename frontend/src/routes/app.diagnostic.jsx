@@ -201,7 +201,7 @@ function DiagnosticPage() {
               </Button>
             ) : (
               <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-700">
-                A avaliação ainda não foi publicada. O professor deve importar a planilha com as 25
+                A avaliação ainda não foi publicada. O professor deve importar o CSV com as 25
                 questões.
               </p>
             )}

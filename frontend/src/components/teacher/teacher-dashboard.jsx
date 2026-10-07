@@ -101,7 +101,7 @@ export function TeacherDashboard() {
         <TabsList className="grid h-auto w-full max-w-3xl grid-cols-3">
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="students">Alunos e respostas</TabsTrigger>
-          <TabsTrigger value="questions">Questões por XLSX</TabsTrigger>
+          <TabsTrigger value="questions">Questões por CSV</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-6 space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -174,7 +174,7 @@ export function TeacherDashboard() {
                   disabled={!filtered.length}
                   onClick={() => void assessmentSpreadsheet.exportTeacher(filtered)}
                 >
-                  <Download /> XLSX
+                  <Download /> CSV
                 </Button>
               </div>
             </CardContent>
@@ -233,26 +233,27 @@ export function TeacherDashboard() {
         <TabsContent value="questions" className="mt-6">
           <Card className="bg-card/70">
             <CardHeader>
-              <CardTitle>Importar avaliação por planilha</CardTitle>
+              <CardTitle>Importar avaliação por CSV</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <p className="text-sm text-muted-foreground">
-                Use o modelo para diagnóstico inicial, diagnóstico final ou simulado. A importação é
-                atômica: qualquer erro bloqueia todo o arquivo.
+                Use o modelo CSV UTF-8, separado por ponto e vírgula, para diagnóstico inicial,
+                diagnóstico final ou simulado. A importação é atômica: qualquer erro bloqueia todo o
+                arquivo.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="outline">
                   <a href={assessmentSpreadsheet.templateUrl} download>
-                    <FileSpreadsheet /> Baixar modelo XLSX
+                    <FileSpreadsheet /> Baixar modelo CSV
                   </a>
                 </Button>
                 <Button asChild>
                   <label className="cursor-pointer">
-                    <Upload /> {busy ? "Validando…" : "Selecionar XLSX"}
+                    <Upload /> {busy ? "Validando…" : "Selecionar CSV"}
                     <input
                       className="sr-only"
                       type="file"
-                      accept=".xlsx"
+                      accept=".csv,text/csv"
                       disabled={busy}
                       onChange={(event) => void inspectFile(event)}
                     />

@@ -41,7 +41,7 @@ export const assessmentAdminRepository = {
     batch.set(reference, {
       ...assessment,
       questionIds: questions.map((item) => item.id),
-      source: "xlsx",
+      source: "csv",
       createdBy: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

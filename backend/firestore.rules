@@ -9,6 +9,16 @@ service cloud.firestore {
     // - attempts are immutable answer events.
     // - skillMastery contains one validated aggregate per skill.
     // - progressEvents are immutable diagnostic/training timeline entries.
+    // - assessmentDefinitions/{assessmentId} stores teacher-created metadata:
+    //   string id/title/type/notes/source/createdBy; integer version/questionCount/
+    //   minMinutes/maxMinutes; bool isActive; bounded string-list questionIds;
+    //   immutable createdAt and server timestamp updatedAt. Imports use source=csv.
+    // - assessmentDefinitions/{assessmentId}/questions/{questionId} contains the
+    //   student-visible prompt/options/source fields. answerKeys/{questionId}
+    //   contains correctOption/explanation and is restricted to teachers/server.
+    // - assessmentSessions/{sessionId} and responses/{questionId} are created and
+    //   changed only by trusted Cloud Functions. Owners read their own records;
+    //   teachers may list/read all sessions for school reporting.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -203,7 +213,7 @@ service cloud.firestore {
         && data.isActive is bool
         && validOptionalString(data, 'notes', 2000)
         && data.questionIds is list && data.questionIds.size() == data.questionCount
-        && data.source == 'xlsx'
+        && data.source == 'csv'
         && validShortString(data.createdBy, 128)
         && data.updatedAt == request.time;
     }

@@ -1,6 +1,6 @@
 import { ASSESSMENT_TYPES, ASSESSMENT_TYPE_LABELS, formatDuration } from "@/domain/assessment";
 
-const ASSESSMENT_HEADERS = [
+export const ASSESSMENT_CSV_HEADERS = [
   "codigo_avaliacao",
   "titulo",
   "tipo",
@@ -8,12 +8,8 @@ const ASSESSMENT_HEADERS = [
   "quantidade_questoes",
   "tempo_minimo_minutos",
   "tempo_maximo_minutos",
-  "ativa",
-  "observacoes",
-];
-
-const QUESTION_HEADERS = [
-  "codigo_avaliacao",
+  "avaliacao_ativa",
+  "observacoes_avaliacao",
   "questao_id",
   "ordem",
   "ano_prova",
@@ -35,35 +31,11 @@ const QUESTION_HEADERS = [
   "gabarito",
   "explicacao",
   "fonte_url",
-  "observacoes",
-  "ativa",
+  "observacoes_questao",
+  "questao_ativa",
 ];
 
-const HEADER_FILL = "173F35";
-const HEADER_FONT = "FFFFFF";
-const ACCENT_FILL = "DDF5E7";
-const BORDER = "B8C7C1";
-
-async function excelModule() {
-  const module = await import("exceljs");
-  return module.default ?? module;
-}
-
-function cellText(cell) {
-  const value = cell?.value;
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") {
-    if ("text" in value) return String(value.text ?? "").trim();
-    if ("result" in value) return String(value.result ?? "").trim();
-    if (Array.isArray(value.richText)) {
-      return value.richText
-        .map((item) => item.text ?? "")
-        .join("")
-        .trim();
-    }
-  }
-  return String(value).trim();
-}
+const ASSESSMENT_FIELDS = ASSESSMENT_CSV_HEADERS.slice(0, 9);
 
 function asInteger(value) {
   const parsed = Number(value);
@@ -81,38 +53,6 @@ function asBoolean(value) {
   return null;
 }
 
-function findHeaderRow(worksheet, requiredHeader) {
-  const limit = Math.min(worksheet.rowCount, 30);
-  for (let rowNumber = 1; rowNumber <= limit; rowNumber += 1) {
-    if (cellText(worksheet.getRow(rowNumber).getCell(1)) === requiredHeader) return rowNumber;
-  }
-  return null;
-}
-
-function sheetRecords(worksheet, headers, requiredHeader) {
-  const headerRowNumber = findHeaderRow(worksheet, requiredHeader);
-  if (!headerRowNumber) {
-    return { records: [], errors: [`Cabeçalho '${requiredHeader}' não encontrado.`] };
-  }
-  const headerRow = worksheet.getRow(headerRowNumber);
-  const actualHeaders = headers.map((_, index) => cellText(headerRow.getCell(index + 1)));
-  const missing = headers.filter((header) => !actualHeaders.includes(header));
-  if (missing.length) {
-    return { records: [], errors: [`Colunas ausentes: ${missing.join(", ")}.`] };
-  }
-  const indexes = new Map(actualHeaders.map((header, index) => [header, index + 1]));
-  const records = [];
-  for (let rowNumber = headerRowNumber + 1; rowNumber <= worksheet.rowCount; rowNumber += 1) {
-    const row = worksheet.getRow(rowNumber);
-    const record = Object.fromEntries(
-      headers.map((header) => [header, cellText(row.getCell(indexes.get(header)))]),
-    );
-    if (!Object.values(record).some(Boolean)) continue;
-    records.push({ ...record, __row: rowNumber });
-  }
-  return { records, errors: [] };
-}
-
 function issue(sheet, row, field, message) {
   return { sheet, row, field, message };
 }
@@ -126,6 +66,78 @@ function validHttpsUrl(value) {
   }
 }
 
+export function parseCsvText(source, delimiter = ";") {
+  const text = String(source ?? "").replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (quoted) {
+      if (character === '"' && text[index + 1] === '"') {
+        field += '"';
+        index += 1;
+      } else if (character === '"') quoted = false;
+      else field += character;
+    } else if (character === '"') quoted = true;
+    else if (character === delimiter) {
+      row.push(field);
+      field = "";
+    } else if (character === "\n") {
+      row.push(field.replace(/\r$/, ""));
+      rows.push(row);
+      row = [];
+      field = "";
+    } else field += character;
+  }
+  if (quoted) throw new Error("O CSV contém aspas não finalizadas.");
+  if (field || row.length) {
+    row.push(field.replace(/\r$/, ""));
+    rows.push(row);
+  }
+  return rows.filter((item) => item.some((value) => value.trim() !== ""));
+}
+
+function safeCsvValue(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  return /^[=+\-@]/.test(text.trimStart()) ? `'${text}` : text;
+}
+
+export function serializeCsv(headers, records) {
+  const encode = (value) => `"${safeCsvValue(value).replaceAll('"', '""')}"`;
+  return [headers, ...records.map((record) => headers.map((header) => record[header] ?? ""))]
+    .map((row) => row.map(encode).join(";"))
+    .join("\r\n");
+}
+
+function recordsFromCsv(text) {
+  const rows = parseCsvText(text);
+  if (!rows.length)
+    return { records: [], errors: [issue("CSV", 1, null, "O arquivo está vazio.")] };
+  const headers = rows[0].map((value) => value.trim());
+  const missing = ASSESSMENT_CSV_HEADERS.filter((header) => !headers.includes(header));
+  if (missing.length)
+    return {
+      records: [],
+      errors: [issue("CSV", 1, null, `Colunas ausentes: ${missing.join(", ")}.`)],
+    };
+  const indexes = new Map(headers.map((header, index) => [header, index]));
+  return {
+    records: rows.slice(1).map((row, index) => ({
+      ...Object.fromEntries(
+        ASSESSMENT_CSV_HEADERS.map((header) => [
+          header,
+          String(row[indexes.get(header)] ?? "").trim(),
+        ]),
+      ),
+      __row: index + 2,
+    })),
+    errors: [],
+  };
+}
+
 export function validateAssessmentImport(assessmentRow, questionRows) {
   const errors = [];
   const warnings = [];
@@ -134,112 +146,93 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
   const minMinutes = asInteger(assessmentRow.tempo_minimo_minutos);
   const maxMinutes = asInteger(assessmentRow.tempo_maximo_minutos);
   const version = asInteger(assessmentRow.versao);
-  const isActive = asBoolean(assessmentRow.ativa);
+  const isActive = asBoolean(assessmentRow.ativa ?? assessmentRow.avaliacao_ativa);
 
-  if (!/^[a-z0-9][a-z0-9-]{2,127}$/.test(assessmentRow.codigo_avaliacao)) {
+  if (!/^[a-z0-9][a-z0-9-]{2,127}$/.test(assessmentRow.codigo_avaliacao))
     errors.push(
       issue(
-        "Avaliações",
+        "CSV",
         assessmentRow.__row,
         "codigo_avaliacao",
         "Use letras minúsculas, números e hífens.",
       ),
     );
-  }
-  if (!assessmentRow.titulo || assessmentRow.titulo.length > 160) {
+  if (!assessmentRow.titulo || assessmentRow.titulo.length > 160)
     errors.push(
-      issue(
-        "Avaliações",
-        assessmentRow.__row,
-        "titulo",
-        "Informe um título de até 160 caracteres.",
-      ),
+      issue("CSV", assessmentRow.__row, "titulo", "Informe um título de até 160 caracteres."),
     );
-  }
-  if (!ASSESSMENT_TYPES.includes(type)) {
-    errors.push(issue("Avaliações", assessmentRow.__row, "tipo", "Tipo de avaliação inválido."));
-  }
-  if (!version || version < 1 || version > 999) {
+  if (!ASSESSMENT_TYPES.includes(type))
+    errors.push(issue("CSV", assessmentRow.__row, "tipo", "Tipo de avaliação inválido."));
+  if (!version || version < 1 || version > 999)
     errors.push(
-      issue(
-        "Avaliações",
-        assessmentRow.__row,
-        "versao",
-        "A versão deve ser um inteiro entre 1 e 999.",
-      ),
+      issue("CSV", assessmentRow.__row, "versao", "A versão deve ser um inteiro entre 1 e 999."),
     );
-  }
-  if (!questionCount || questionCount < 1 || questionCount > 100) {
+  if (!questionCount || questionCount < 1 || questionCount > 100)
     errors.push(
       issue(
-        "Avaliações",
+        "CSV",
         assessmentRow.__row,
         "quantidade_questoes",
         "Informe uma quantidade entre 1 e 100.",
       ),
     );
-  }
-  if (["diagnostico_inicial", "diagnostico_final"].includes(type) && questionCount !== 25) {
+  if (["diagnostico_inicial", "diagnostico_final"].includes(type) && questionCount !== 25)
     errors.push(
       issue(
-        "Avaliações",
+        "CSV",
         assessmentRow.__row,
         "quantidade_questoes",
         "O diagnóstico deve ter exatamente 25 questões.",
       ),
     );
-  }
-  if (!minMinutes || !maxMinutes || minMinutes < 1 || maxMinutes < minMinutes || maxMinutes > 360) {
+  if (!minMinutes || !maxMinutes || minMinutes < 1 || maxMinutes < minMinutes || maxMinutes > 360)
     errors.push(
       issue(
-        "Avaliações",
+        "CSV",
         assessmentRow.__row,
         "tempo_maximo_minutos",
         "Informe uma janela de tempo válida.",
       ),
     );
-  }
   if (
     ["diagnostico_inicial", "diagnostico_final"].includes(type) &&
     (minMinutes !== 30 || maxMinutes !== 90)
-  ) {
+  )
     errors.push(
       issue(
-        "Avaliações",
+        "CSV",
         assessmentRow.__row,
         "tempo_minimo_minutos",
         "O diagnóstico deve usar mínimo de 30 e máximo de 90 minutos.",
       ),
     );
-  }
-  if (isActive === null) {
-    errors.push(issue("Avaliações", assessmentRow.__row, "ativa", "Use SIM ou NÃO."));
-  }
+  if (isActive === null)
+    errors.push(issue("CSV", assessmentRow.__row, "avaliacao_ativa", "Use SIM ou NÃO."));
 
   const matchingRows = questionRows.filter(
     (row) => row.codigo_avaliacao === assessmentRow.codigo_avaliacao,
   );
-  const activeRows = matchingRows.filter((row) => asBoolean(row.ativa) === true);
-  if (matchingRows.length !== questionCount) {
+  const activeRows = matchingRows.filter(
+    (row) => asBoolean(row.ativa ?? row.questao_ativa) === true,
+  );
+  if (matchingRows.length !== questionCount)
     errors.push(
       issue(
-        "Questões",
+        "CSV",
         null,
         "codigo_avaliacao",
         `Foram encontradas ${matchingRows.length} linhas; a avaliação declara ${questionCount}.`,
       ),
     );
-  }
-  if (isActive && activeRows.length !== questionCount) {
+  if (isActive && activeRows.length !== questionCount)
     errors.push(
       issue(
-        "Questões",
+        "CSV",
         null,
-        "ativa",
+        "questao_ativa",
         `Uma avaliação ativa precisa ter ${questionCount} questões marcadas como SIM.`,
       ),
     );
-  }
 
   const ids = new Set();
   const orders = new Set();
@@ -250,7 +243,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
     const phase = asInteger(row.fase);
     const originalNumber = asInteger(row.numero_original);
     const difficulty = asInteger(row.dificuldade);
-    const active = asBoolean(row.ativa);
+    const active = asBoolean(row.ativa ?? row.questao_ativa);
     const optionValues = [
       row.alternativa_a,
       row.alternativa_b,
@@ -263,38 +256,33 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
     const answerLetter = row.gabarito.toUpperCase();
     const correctOption = answerLetter.charCodeAt(0) - 65;
 
-    if (!/^[a-z0-9][a-z0-9-]{2,127}$/.test(row.questao_id)) {
+    if (!/^[a-z0-9][a-z0-9-]{2,127}$/.test(row.questao_id))
       errors.push(
-        issue("Questões", rowNumber, "questao_id", "Use letras minúsculas, números e hífens."),
+        issue("CSV", rowNumber, "questao_id", "Use letras minúsculas, números e hífens."),
       );
-    } else if (ids.has(row.questao_id)) {
-      errors.push(issue("Questões", rowNumber, "questao_id", "Identificador duplicado."));
-    }
+    else if (ids.has(row.questao_id))
+      errors.push(issue("CSV", rowNumber, "questao_id", "Identificador duplicado."));
     ids.add(row.questao_id);
-    if (!order || order < 1 || order > questionCount || orders.has(order)) {
+    if (!order || order < 1 || order > questionCount || orders.has(order))
       errors.push(
         issue(
-          "Questões",
+          "CSV",
           rowNumber,
           "ordem",
           "A ordem deve ser única e estar dentro da quantidade da avaliação.",
         ),
       );
-    }
     orders.add(order);
-    if (!examYear || examYear < 2009 || examYear > 2026) {
-      errors.push(issue("Questões", rowNumber, "ano_prova", "Informe um ano entre 2009 e 2026."));
-    }
-    if (phase !== 1) {
+    if (!examYear || examYear < 2009 || examYear > 2026)
+      errors.push(issue("CSV", rowNumber, "ano_prova", "Informe um ano entre 2009 e 2026."));
+    if (phase !== 1)
       errors.push(
-        issue("Questões", rowNumber, "fase", "O conjunto atual usa somente a 1ª fase da OBB."),
+        issue("CSV", rowNumber, "fase", "O conjunto atual usa somente a 1ª fase da OBB."),
       );
-    }
-    if (!originalNumber || originalNumber < 1 || originalNumber > 200) {
+    if (!originalNumber || originalNumber < 1 || originalNumber > 200)
       errors.push(
-        issue("Questões", rowNumber, "numero_original", "Informe o número original da questão."),
+        issue("CSV", rowNumber, "numero_original", "Informe o número original da questão."),
       );
-    }
     for (const [field, value, max] of [
       ["area", row.area, 120],
       ["habilidade_id", row.habilidade_id, 128],
@@ -302,59 +290,46 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       ["enunciado", row.enunciado, 5000],
       ["explicacao", row.explicacao, 5000],
     ]) {
-      if (!value || value.length > max) {
+      if (!value || value.length > max)
         errors.push(
-          issue("Questões", rowNumber, field, `Campo obrigatório com limite de ${max} caracteres.`),
+          issue("CSV", rowNumber, field, `Campo obrigatório com limite de ${max} caracteres.`),
         );
-      }
     }
-    if (![1, 2, 3].includes(difficulty)) {
-      errors.push(issue("Questões", rowNumber, "dificuldade", "Use 1, 2 ou 3."));
-    }
-    if (options.length < 2 || options.length > 6) {
+    if (![1, 2, 3].includes(difficulty))
+      errors.push(issue("CSV", rowNumber, "dificuldade", "Use 1, 2 ou 3."));
+    if (options.length < 2 || options.length > 6)
       errors.push(
-        issue("Questões", rowNumber, "alternativa_a", "Informe entre duas e seis alternativas."),
+        issue("CSV", rowNumber, "alternativa_a", "Informe entre duas e seis alternativas."),
       );
-    }
-    if (!/^[A-F]$/.test(answerLetter) || correctOption < 0 || !optionValues[correctOption]) {
+    if (!/^[A-F]$/.test(answerLetter) || correctOption < 0 || !optionValues[correctOption])
       errors.push(
         issue(
-          "Questões",
+          "CSV",
           rowNumber,
           "gabarito",
           "O gabarito deve apontar para uma alternativa preenchida.",
         ),
       );
-    }
-    if (active === null) {
-      errors.push(issue("Questões", rowNumber, "ativa", "Use SIM ou NÃO."));
-    }
+    if (active === null) errors.push(issue("CSV", rowNumber, "questao_ativa", "Use SIM ou NÃO."));
     for (const [field, value] of [
       ["imagem_url", row.imagem_url],
       ["fonte_url", row.fonte_url],
     ]) {
-      if (!validHttpsUrl(value)) {
-        errors.push(
-          issue("Questões", rowNumber, field, "Informe uma URL HTTPS válida ou deixe vazio."),
-        );
-      }
+      if (!validHttpsUrl(value))
+        errors.push(issue("CSV", rowNumber, field, "Informe uma URL HTTPS válida ou deixe vazio."));
     }
     if (/SUBSTITUIR|PROVIS.RIA/i.test(`${row.area} ${row.enunciado}`)) {
-      warnings.push(
-        issue("Questões", rowNumber, "enunciado", "A questão ainda parece provisória."),
-      );
-      if (isActive || active) {
+      warnings.push(issue("CSV", rowNumber, "enunciado", "A questão ainda parece provisória."));
+      if (isActive || active)
         errors.push(
           issue(
-            "Questões",
+            "CSV",
             rowNumber,
             "enunciado",
             "Questões provisórias não podem ser publicadas como ativas.",
           ),
         );
-      }
     }
-
     return {
       id: row.questao_id,
       assessmentId: row.codigo_avaliacao,
@@ -373,7 +348,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       correctOption,
       explanation: row.explicacao,
       sourceUrl: row.fonte_url,
-      notes: row.observacoes,
+      notes: row.observacoes ?? row.observacoes_questao,
       isActive: active,
     };
   });
@@ -388,7 +363,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       minMinutes,
       maxMinutes,
       isActive,
-      notes: assessmentRow.observacoes,
+      notes: assessmentRow.observacoes ?? assessmentRow.observacoes_avaliacao,
     },
     questions: normalizedQuestions.sort((a, b) => a.order - b.order),
     errors,
@@ -396,270 +371,128 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
   };
 }
 
-export async function parseAssessmentWorkbook(file) {
-  if (!file?.name?.toLowerCase().endsWith(".xlsx")) {
-    throw new Error("Selecione um arquivo no formato .xlsx.");
+export function parseAssessmentCsvText(text) {
+  const parsed = recordsFromCsv(text);
+  if (parsed.errors.length)
+    return { assessment: null, questions: [], errors: parsed.errors, warnings: [] };
+  if (!parsed.records.length)
+    return {
+      assessment: null,
+      questions: [],
+      errors: [issue("CSV", 2, null, "Inclua pelo menos uma questão.")],
+      warnings: [],
+    };
+  const first = parsed.records[0];
+  const consistencyErrors = [];
+  for (const row of parsed.records.slice(1)) {
+    for (const field of ASSESSMENT_FIELDS) {
+      if (row[field] !== first[field])
+        consistencyErrors.push(
+          issue(
+            "CSV",
+            row.__row,
+            field,
+            "Os dados da avaliação devem ser iguais em todas as linhas.",
+          ),
+        );
+    }
   }
-  if (file.size > 10 * 1024 * 1024) {
-    throw new Error("A planilha deve ter no máximo 10 MB.");
-  }
-  const ExcelJS = await excelModule();
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(await file.arrayBuffer());
-  const assessments = workbook.getWorksheet("Avaliações");
-  const questions = workbook.getWorksheet("Questões");
-  if (!assessments || !questions) {
-    throw new Error("A planilha deve conter as abas Avaliações e Questões.");
-  }
-  const assessmentData = sheetRecords(assessments, ASSESSMENT_HEADERS, "codigo_avaliacao");
-  const questionData = sheetRecords(questions, QUESTION_HEADERS, "codigo_avaliacao");
-  const structuralErrors = [
-    ...assessmentData.errors.map((message) => issue("Avaliações", null, null, message)),
-    ...questionData.errors.map((message) => issue("Questões", null, null, message)),
-  ];
-  if (assessmentData.records.length !== 1) {
-    structuralErrors.push(
-      issue("Avaliações", null, null, "Envie exatamente uma avaliação por arquivo."),
-    );
-  }
-  if (structuralErrors.length) {
-    return { assessment: null, questions: [], errors: structuralErrors, warnings: [] };
-  }
-  return validateAssessmentImport(assessmentData.records[0], questionData.records);
+  const assessmentRow = {
+    ...first,
+    ativa: first.avaliacao_ativa,
+    observacoes: first.observacoes_avaliacao,
+  };
+  const questionRows = parsed.records.map((row) => ({
+    ...row,
+    ativa: row.questao_ativa,
+    observacoes: row.observacoes_questao,
+  }));
+  const result = validateAssessmentImport(assessmentRow, questionRows);
+  return { ...result, errors: [...consistencyErrors, ...result.errors] };
 }
 
-function styleHeader(row) {
-  row.height = 28;
-  row.eachCell((cell) => {
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: HEADER_FILL } };
-    cell.font = { name: "Arial", size: 10, bold: true, color: { argb: HEADER_FONT } };
-    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-    cell.border = { bottom: { style: "thin", color: { argb: BORDER } } };
-  });
-}
-
-function styleWorkbookSheet(sheet) {
-  sheet.views = [{ state: "frozen", ySplit: 1, showGridLines: false }];
-  sheet.eachRow((row) => {
-    row.eachCell((cell) => {
-      cell.font = { ...cell.font, name: "Arial", size: cell.font?.size ?? 10 };
-      cell.alignment = { ...cell.alignment, vertical: "middle" };
-    });
-  });
-  styleHeader(sheet.getRow(1));
-  sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: sheet.columnCount } };
+export async function parseAssessmentCsv(file) {
+  if (!file?.name?.toLowerCase().endsWith(".csv"))
+    throw new Error("Selecione um arquivo no formato .csv.");
+  if (file.size > 2 * 1024 * 1024) throw new Error("O CSV deve ter no máximo 2 MB.");
+  return parseAssessmentCsvText(await file.text());
 }
 
 function safeDate(value) {
   if (!value) return "";
-  if (typeof value.toDate === "function") return value.toDate();
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date;
+  const date = typeof value.toDate === "function" ? value.toDate() : new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("pt-BR");
 }
 
-function percentage(value) {
-  return Number(value ?? 0) / 100;
+function studentReportRecords(session) {
+  const common = {
+    aluno: session.studentName,
+    email: session.studentEmail,
+    turma: session.className,
+    avaliacao: session.assessmentTitle,
+    tipo: ASSESSMENT_TYPE_LABELS[session.assessmentType] ?? session.assessmentType,
+    situacao: session.status === "completed" ? "Concluído" : "Em andamento",
+    inicio: safeDate(session.startedAt),
+    conclusao: safeDate(session.completedAt),
+    duracao: session.report ? formatDuration(session.report.durationSeconds) : "",
+    acertos: session.report?.correctCount ?? "",
+    erros: session.report?.incorrectCount ?? "",
+    em_branco: session.report?.blankCount ?? "",
+    percentual: session.report ? `${session.report.percentage}%` : "",
+  };
+  const results = session.report?.questionResults ?? [];
+  if (!results.length) return [{ ...common }];
+  return results.map((item) => ({
+    ...common,
+    ordem: item.order,
+    area: item.area,
+    habilidade: item.skillLabel,
+    enunciado: item.prompt,
+    resposta_aluno: item.selectedAnswer || "Em branco",
+    gabarito: item.correctAnswer,
+    resultado: item.correct ? "Correta" : item.selectedOption === null ? "Em branco" : "Incorreta",
+    explicacao: item.explanation,
+    ano_prova: item.examYear,
+    numero_original: item.originalNumber,
+  }));
 }
 
-export async function buildStudentReportWorkbook(session) {
-  const ExcelJS = await excelModule();
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Olympic School";
-  const summary = workbook.addWorksheet("Resumo");
-  summary.addRow(["Campo", "Resultado"]);
-  summary.addRows([
-    ["Aluno", session.studentName],
-    ["Turma", session.className],
-    ["Avaliação", session.assessmentTitle],
-    ["Tipo", ASSESSMENT_TYPE_LABELS[session.assessmentType] ?? session.assessmentType],
-    ["Início", safeDate(session.startedAt)],
-    ["Conclusão", safeDate(session.completedAt)],
-    ["Duração", formatDuration(session.report?.durationSeconds)],
-    ["Acertos", session.report?.correctCount ?? 0],
-    ["Erros", session.report?.incorrectCount ?? 0],
-    ["Em branco", session.report?.blankCount ?? 0],
-    ["Percentual", percentage(session.report?.percentage)],
-  ]);
-  summary.getColumn(1).width = 24;
-  summary.getColumn(2).width = 48;
-  summary.getCell("B6").numFmt = "dd/mm/yyyy hh:mm";
-  summary.getCell("B7").numFmt = "dd/mm/yyyy hh:mm";
-  summary.getCell("B12").numFmt = "0%";
-  styleWorkbookSheet(summary);
+const REPORT_HEADERS = [
+  "aluno",
+  "email",
+  "turma",
+  "avaliacao",
+  "tipo",
+  "situacao",
+  "inicio",
+  "conclusao",
+  "duracao",
+  "acertos",
+  "erros",
+  "em_branco",
+  "percentual",
+  "ordem",
+  "area",
+  "habilidade",
+  "enunciado",
+  "resposta_aluno",
+  "gabarito",
+  "resultado",
+  "explicacao",
+  "ano_prova",
+  "numero_original",
+];
 
-  const performance = workbook.addWorksheet("Desempenho");
-  performance.addRow(["Dimensão", "Área ou habilidade", "Acertos", "Total", "Percentual"]);
-  for (const item of session.report?.areaResults ?? []) {
-    performance.addRow(["Área", item.area, item.correct, item.total, percentage(item.percentage)]);
-  }
-  for (const item of session.report?.skillResults ?? []) {
-    performance.addRow([
-      "Habilidade",
-      item.label,
-      item.correct,
-      item.total,
-      percentage(item.percentage),
-    ]);
-  }
-  performance.columns = [18, 38, 12, 12, 16].map((width) => ({ width }));
-  performance.getColumn(5).numFmt = "0%";
-  styleWorkbookSheet(performance);
-
-  const answers = workbook.addWorksheet("Respostas");
-  answers.addRow([
-    "Ordem",
-    "Área",
-    "Habilidade",
-    "Enunciado",
-    "Resposta do aluno",
-    "Gabarito",
-    "Resultado",
-    "Explicação",
-    "Ano",
-    "Questão original",
-  ]);
-  for (const item of session.report?.questionResults ?? []) {
-    answers.addRow([
-      item.order,
-      item.area,
-      item.skillLabel,
-      item.prompt,
-      item.selectedAnswer || "Em branco",
-      item.correctAnswer,
-      item.correct ? "Correta" : item.selectedOption === null ? "Em branco" : "Incorreta",
-      item.explanation,
-      item.examYear,
-      item.originalNumber,
-    ]);
-  }
-  answers.columns = [10, 22, 28, 70, 38, 38, 14, 70, 10, 18].map((width) => ({ width }));
-  answers.getColumn(4).alignment = { wrapText: true, vertical: "top" };
-  answers.getColumn(8).alignment = { wrapText: true, vertical: "top" };
-  styleWorkbookSheet(answers);
-  return workbook;
+export function buildStudentReportCsv(session) {
+  return serializeCsv(REPORT_HEADERS, studentReportRecords(session));
 }
 
-export async function buildTeacherReportWorkbook(sessions) {
-  const ExcelJS = await excelModule();
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Olympic School";
-  const students = workbook.addWorksheet("Alunos");
-  students.addRow([
-    "Aluno",
-    "E-mail",
-    "Turma",
-    "Avaliação",
-    "Situação",
-    "Início",
-    "Conclusão",
-    "Duração",
-    "Acertos",
-    "Erros",
-    "Em branco",
-    "Percentual",
-  ]);
-  for (const session of sessions) {
-    students.addRow([
-      session.studentName,
-      session.studentEmail,
-      session.className,
-      session.assessmentTitle,
-      session.status === "completed" ? "Concluído" : "Em andamento",
-      safeDate(session.startedAt),
-      safeDate(session.completedAt),
-      session.report ? formatDuration(session.report.durationSeconds) : "",
-      session.report?.correctCount ?? "",
-      session.report?.incorrectCount ?? "",
-      session.report?.blankCount ?? "",
-      session.report ? percentage(session.report.percentage) : "",
-    ]);
-  }
-  students.columns = [28, 34, 16, 32, 16, 20, 20, 16, 12, 12, 12, 16].map((width) => ({ width }));
-  students.getColumn(6).numFmt = "dd/mm/yyyy hh:mm";
-  students.getColumn(7).numFmt = "dd/mm/yyyy hh:mm";
-  students.getColumn(12).numFmt = "0%";
-  styleWorkbookSheet(students);
-
-  const performance = workbook.addWorksheet("Desempenho");
-  performance.addRow([
-    "Aluno",
-    "Turma",
-    "Dimensão",
-    "Área ou habilidade",
-    "Acertos",
-    "Total",
-    "Percentual",
-  ]);
-  for (const session of sessions) {
-    for (const item of session.report?.areaResults ?? []) {
-      performance.addRow([
-        session.studentName,
-        session.className,
-        "Área",
-        item.area,
-        item.correct,
-        item.total,
-        percentage(item.percentage),
-      ]);
-    }
-    for (const item of session.report?.skillResults ?? []) {
-      performance.addRow([
-        session.studentName,
-        session.className,
-        "Habilidade",
-        item.label,
-        item.correct,
-        item.total,
-        percentage(item.percentage),
-      ]);
-    }
-  }
-  performance.columns = [28, 16, 16, 38, 12, 12, 16].map((width) => ({ width }));
-  performance.getColumn(7).numFmt = "0%";
-  styleWorkbookSheet(performance);
-
-  const answers = workbook.addWorksheet("Respostas");
-  answers.addRow([
-    "Aluno",
-    "Turma",
-    "Ordem",
-    "Área",
-    "Habilidade",
-    "Enunciado",
-    "Resposta",
-    "Gabarito",
-    "Resultado",
-    "Ano",
-    "Questão original",
-  ]);
-  for (const session of sessions) {
-    for (const item of session.report?.questionResults ?? []) {
-      answers.addRow([
-        session.studentName,
-        session.className,
-        item.order,
-        item.area,
-        item.skillLabel,
-        item.prompt,
-        item.selectedAnswer || "Em branco",
-        item.correctAnswer,
-        item.correct ? "Correta" : item.selectedOption === null ? "Em branco" : "Incorreta",
-        item.examYear,
-        item.originalNumber,
-      ]);
-    }
-  }
-  answers.columns = [28, 16, 10, 22, 28, 70, 38, 38, 14, 10, 18].map((width) => ({ width }));
-  answers.getColumn(6).alignment = { wrapText: true, vertical: "top" };
-  styleWorkbookSheet(answers);
-  return workbook;
+export function buildTeacherReportCsv(sessions) {
+  return serializeCsv(REPORT_HEADERS, sessions.flatMap(studentReportRecords));
 }
 
-export async function downloadWorkbook(workbook, filename) {
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+export function downloadCsv(csv, filename) {
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -669,14 +502,12 @@ export async function downloadWorkbook(workbook, filename) {
 }
 
 export const assessmentSpreadsheet = {
-  parse: parseAssessmentWorkbook,
-  templateUrl: "/templates/modelo-avaliacoes-olympic-school.xlsx",
-  async exportStudent(session) {
-    const workbook = await buildStudentReportWorkbook(session);
-    await downloadWorkbook(workbook, `relatorio-${session.assessmentType}.xlsx`);
+  parse: parseAssessmentCsv,
+  templateUrl: "/templates/modelo-avaliacoes-olympic-school.csv",
+  exportStudent(session) {
+    downloadCsv(buildStudentReportCsv(session), `relatorio-${session.assessmentType}.csv`);
   },
-  async exportTeacher(sessions) {
-    const workbook = await buildTeacherReportWorkbook(sessions);
-    await downloadWorkbook(workbook, "resultados-diagnostico.xlsx");
+  exportTeacher(sessions) {
+    downloadCsv(buildTeacherReportCsv(sessions), "resultados-diagnostico.csv");
   },
 };
