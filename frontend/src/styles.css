@@ -546,26 +546,160 @@
   --gradient-primary: linear-gradient(115deg, #b2ff24, #e0ff75);
   color: var(--foreground);
   background: #0c4a36;
+  font-family: "Poppins", ui-sans-serif, sans-serif;
 }
 
 .landing-theme header:first-child {
-  background: rgb(6 66 48 / 92%);
+  background: #084b3d;
   box-shadow: 0 8px 22px rgb(0 40 22 / 16%);
+}
+
+.pdf-logo {
+  display: block;
+  width: clamp(8.5rem, 13vw, 11rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.platform-theme .pdf-logo {
+  width: 10rem;
+}
+
+.landing-theme .pdf-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.95rem;
+  color: #fffde9;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.landing-theme .pdf-nav-link:hover,
+.landing-theme .pdf-nav-active {
+  background: rgb(231 255 219 / 28%);
+}
+
+.landing-theme .pdf-hero {
+  min-height: min(850px, 100svh);
+  background: url("/design/pdf-gradient.png") center / cover no-repeat;
+}
+
+.pdf-hero-texture {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("/design/pdf-texture.png") center / cover no-repeat;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.pdf-hero-dna {
+  position: absolute;
+  z-index: -1;
+  top: -10%;
+  right: -25%;
+  width: min(1050px, 83vw);
+  height: auto;
+  transform: rotate(-69deg);
+  opacity: 0.96;
+  pointer-events: none;
+}
+
+.pdf-hero-content {
+  position: relative;
+  padding-top: clamp(9rem, 13vw, 12rem);
+  padding-bottom: 6rem;
+}
+
+.pdf-hero-title {
+  max-width: 760px;
+  margin: 0;
+}
+
+.pdf-hero-intro {
+  display: block;
+  color: #b5ff2a;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.65rem, 3.6vw, 3.2rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.pdf-hero-display {
+  display: block;
+  margin-top: 0.15em;
+  color: #fffde9;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: clamp(3.1rem, 7.2vw, 6.7rem);
+  font-weight: 400;
+  line-height: 0.79;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+}
+
+.pdf-obb {
+  display: inline-block;
+  transform: rotate(-8deg) translateY(-0.22em);
+  border-radius: 999px;
+  padding: 0.08em 0.7em 0;
+  background: #b5ff2a;
+  color: #0c4a36;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 0.25em;
+  line-height: 1.2;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.pdf-hero-description {
+  max-width: 630px;
+  margin-top: 1.25rem;
+  color: #fffde9;
+  font-size: clamp(0.96rem, 1.35vw, 1.15rem);
+  line-height: 1.48;
+}
+
+.pdf-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.1rem;
+}
+
+.landing-theme .pdf-enter-hero {
+  background: #084b3d;
+  color: #b5ff2a;
+  font-size: clamp(0.9rem, 1.65vw, 1.25rem);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.pdf-search-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  color: #b5ff2a;
+  stroke-width: 2.4;
+}
+.pdf-hero-note {
+  margin-top: 0.7rem;
+  font-size: 0.68rem;
+  color: #fffde9;
 }
 
 .landing-theme main > section {
   position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(ellipse at 100% 85%, rgb(171 227 47 / 42%), transparent 47%),
-    radial-gradient(ellipse at 3% 6%, rgb(103 197 48 / 36%), transparent 58%),
-    linear-gradient(125deg, #167348, #0b5038 58%, #427d38);
+  background: url("/design/pdf-gradient.png") center / cover no-repeat;
 }
 
 .landing-theme main > section:nth-child(even) {
-  background:
-    radial-gradient(ellipse at 5% 90%, rgb(169 219 49 / 28%), transparent 48%),
-    linear-gradient(145deg, #0b4c37, #226941 75%, #629136);
+  background: url("/design/pdf-gradient.png") right center / cover no-repeat;
 }
 
 .landing-theme main > section::before {
@@ -575,39 +709,19 @@
   z-index: -1;
   pointer-events: none;
   opacity: 0.13;
-  background-image: repeating-radial-gradient(
-    circle at 80% 70%,
-    transparent 0 80px,
-    #b9fa6d 82px 115px,
-    transparent 118px 180px
-  );
-  mask-image: linear-gradient(90deg, transparent, black);
+  background: url("/design/pdf-texture.png") center / cover no-repeat;
+  mix-blend-mode: screen;
 }
 
 .landing-theme h1,
 .landing-theme h2 {
+  font-family: "Josefin Sans", sans-serif;
   letter-spacing: -0.045em;
 }
 
 .landing-theme h2 {
   font-size: clamp(2.4rem, 5vw, 4.8rem);
   line-height: 1.02;
-}
-
-.landing-hero-intro {
-  display: block;
-  color: var(--primary);
-  font-size: 0.67em;
-  line-height: 1.15;
-}
-
-.landing-hero-emphasis {
-  display: block;
-  max-width: 12ch;
-  font-size: clamp(3rem, 5vw, 5rem);
-  font-weight: 400;
-  line-height: 0.95;
-  text-transform: uppercase;
 }
 
 .landing-theme .glass-panel,
@@ -619,21 +733,80 @@
   backdrop-filter: blur(12px);
 }
 
+.landing-theme .pdf-info-card {
+  position: relative;
+  min-height: 13rem;
+  border-radius: 1.5rem;
+  padding: 1.8rem;
+}
+
+.landing-theme .pdf-card-pill {
+  display: table;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 0.42rem 1.05rem 0.3rem;
+  background: #b5ff2a;
+  color: #084b3d !important;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(0.9rem, 1.3vw, 1.17rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.landing-theme .pdf-info-card p {
+  max-width: 38ch;
+  color: #fffde9;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.landing-theme #problema .pdf-card-icon {
+  position: absolute;
+  top: 1.35rem;
+  right: 1.35rem;
+  border-color: #b5ff2a;
+  background: transparent;
+}
+
+.landing-theme #problema .pdf-info-card .space-y-4 {
+  padding-right: 2.5rem;
+}
+.landing-theme #solucao .pdf-card-icon,
+.landing-theme #recursos .pdf-card-icon {
+  display: none;
+}
+.landing-theme #solucao .pdf-info-card h3,
+.landing-theme #recursos .pdf-info-card h3 {
+  margin-top: 0;
+}
+
 .landing-theme main .group.flex.h-full h3,
 .landing-theme main article h3 {
   color: var(--primary);
 }
 
-.landing-dna {
-  filter: drop-shadow(0 12px 20px rgb(0 44 16 / 45%));
-}
-
 @media (max-width: 640px) {
-  .landing-hero-emphasis {
-    font-size: clamp(3rem, 13vw, 4.4rem);
+  .landing-theme .pdf-hero {
+    min-height: 720px;
   }
-  .landing-hero-art {
-    max-width: 32rem;
-    margin-inline: auto;
+  .pdf-hero-content {
+    padding-top: 9rem;
+    padding-bottom: 5rem;
+  }
+  .pdf-hero-display {
+    font-size: clamp(2.5rem, 10.7vw, 4rem);
+  }
+  .pdf-hero-dna {
+    top: 20%;
+    right: -95%;
+    width: 130vw;
+    opacity: 0.45;
+  }
+  .pdf-hero-actions {
+    gap: 0.7rem;
+  }
+  .pdf-search-icon {
+    width: 2.2rem;
+    height: 2.2rem;
   }
 }

@@ -11,9 +11,17 @@ const links = [
 ];
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("#topo");
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      const current = [...links].reverse().find(({ href }) => {
+        const section = document.querySelector(href);
+        return section && section.getBoundingClientRect().top <= 150;
+      });
+      setActiveSection(current?.href || "#topo");
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -41,7 +49,7 @@ export function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="relative text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100"
+                className={cn("pdf-nav-link", activeSection === link.href && "pdf-nav-active")}
               >
                 {link.label}
               </a>

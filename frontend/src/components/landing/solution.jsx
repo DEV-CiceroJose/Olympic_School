@@ -26,11 +26,8 @@ export function Solution() {
       />
       <div className="mx-auto max-w-6xl px-5">
         <Reveal className="max-w-2xl">
-          <span className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-            A solução
-          </span>
           <h2 className="mt-4 text-balance text-3xl font-semibold sm:text-4xl">
-            A visão que estamos construindo
+            A visão que estamos <span className="text-primary">CONSTRUINDO</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
             Estes três pilares fazem parte da visão do projeto Olympic School. Ainda estão em
@@ -41,19 +38,16 @@ export function Solution() {
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {solutions.map((item, i) => (
             <Reveal key={item.title} delay={i * 90}>
-              <article className="glass-panel group relative h-full overflow-hidden rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
+              <article className="pdf-info-card glass-panel group relative h-full overflow-hidden rounded-3xl p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
                 <span
                   className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full bg-primary/10 blur-2xl transition-opacity duration-500 group-hover:opacity-100 md:opacity-0"
                   aria-hidden="true"
                 />
-                <span className="grid size-12 place-items-center rounded-2xl bg-primary/15 text-primary">
+                <span className="pdf-card-icon grid size-12 place-items-center rounded-2xl bg-primary/15 text-primary">
                   <item.icon className="size-6" aria-hidden="true" />
                 </span>
-                <h3 className="mt-6 text-xl font-semibold">{item.title}</h3>
+                <h3 className="pdf-card-pill mt-6 text-xl font-semibold">{item.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
-                <p className="mt-6 inline-flex rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-                  Parte da visão do projeto
-                </p>
               </article>
             </Reveal>
           ))}
