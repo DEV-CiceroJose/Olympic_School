@@ -1,12 +1,12 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { CalendarDays, ClipboardList, Globe2, Library } from "lucide-react";
+import { CalendarDays, ClipboardCheck, Library, Sparkles } from "lucide-react";
 import { Logo } from "@/components/landing/logo";
 import { UserMenu } from "@/components/auth/user-menu";
 import { AuthenticatedHeader } from "@/components/layout/authenticated-header";
 const links = [
-  { to: "/app", label: "Visão geral", icon: Globe2, exact: true },
-  { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardList },
-  { to: "/app/plans", label: "Plano de Estudo", icon: CalendarDays },
+  { to: "/app", label: "Visão geral", icon: Sparkles, exact: true },
+  { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
+  { to: "/app/plans", label: "Plano de estudos", icon: CalendarDays },
   { to: "/app/reds", label: "REDs", icon: Library },
 ];
 export function LearningShell() {

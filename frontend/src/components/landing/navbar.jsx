@@ -4,6 +4,7 @@ import { EnterButton } from "./enter-button";
 import { Logo } from "./logo";
 import { cn } from "@/lib/utils";
 const links = [
+  { href: "#topo", label: "Início" },
   { href: "#problema", label: "Problema" },
   { href: "#solucao", label: "Solução" },
   { href: "#recursos", label: "Recursos" },
@@ -21,7 +22,7 @@ export function Navbar() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "border-b border-border bg-background/80 backdrop-blur-xl" : "",
+        scrolled ? "border-b border-border bg-background/90 backdrop-blur-xl" : "",
       )}
     >
       <nav

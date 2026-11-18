@@ -1,10 +1,13 @@
-import { Sparkles } from "lucide-react";
+import { Dna, Sparkles } from "lucide-react";
 import { EnterButton } from "./enter-button";
 import { Reveal } from "./reveal";
 import heroImage from "@/assets/hero-bio-ai.jpg";
 export function Hero() {
   return (
-    <section id="topo" className="relative overflow-hidden pt-32 pb-20 md:pt-44 md:pb-28">
+    <section
+      id="topo"
+      className="landing-hero relative overflow-hidden pt-32 pb-20 md:pt-44 md:pb-28"
+    >
       <div className="bg-hero-glow pointer-events-none absolute inset-0" aria-hidden="true" />
       <div
         className="bg-bio-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]"
@@ -22,8 +25,8 @@ export function Hero() {
 
           <Reveal delay={80}>
             <h1 className="mt-6 text-balance font-display text-4xl leading-[1.05] font-semibold sm:text-5xl lg:text-6xl">
-              Estude para as Olimpíadas de Biologia com{" "}
-              <span className="text-gradient">inteligência artificial</span>
+              <span className="landing-hero-intro">Estude para a Olimpíada de Biologia com</span>{" "}
+              <span className="landing-hero-emphasis">inteligência artificial</span>
             </h1>
           </Reveal>
 
@@ -63,7 +66,7 @@ export function Hero() {
         </div>
 
         <Reveal delay={200} className="relative">
-          <div className="glass-panel relative overflow-hidden rounded-3xl p-2 shadow-soft">
+          <div className="landing-hero-art glass-panel relative overflow-hidden rounded-3xl p-2 shadow-soft">
             <img
               src={heroImage}
               width={1200}
@@ -72,6 +75,10 @@ export function Hero() {
               className="h-full w-full rounded-2xl object-cover transition-transform duration-700 hover:scale-[1.02]"
             />
           </div>
+          <Dna
+            className="landing-dna pointer-events-none absolute -bottom-10 -right-8 size-36 rotate-[-20deg] text-primary md:size-52"
+            aria-hidden="true"
+          />
           <div
             className="pointer-events-none absolute -inset-6 -z-10 rounded-full bg-primary/20 blur-3xl"
             aria-hidden="true"
