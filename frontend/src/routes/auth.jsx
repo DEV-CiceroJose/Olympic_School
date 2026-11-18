@@ -62,7 +62,7 @@ function AuthPage() {
     }
   }
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-14">
+    <main className="platform-theme relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-14">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-40 left-1/2 size-[38rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[140px]"
@@ -70,7 +70,7 @@ function AuthPage() {
       <div className="relative w-full max-w-md">
         <div className="mb-8 flex justify-center">
           <Link to="/" className="rounded-md focus-visible:outline-none focus-visible:ring-2">
-            <Logo />
+            <Logo variant="platform" className="w-40" />
           </Link>
         </div>
 

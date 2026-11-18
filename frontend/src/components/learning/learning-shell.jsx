@@ -1,28 +1,26 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { CalendarDays, ClipboardCheck, Library, ShieldCheck, Sparkles } from "lucide-react";
+import { CalendarDays, ClipboardList, Globe2, Library } from "lucide-react";
 import { Logo } from "@/components/landing/logo";
 import { UserMenu } from "@/components/auth/user-menu";
 import { AuthenticatedHeader } from "@/components/layout/authenticated-header";
-import { useAuth } from "@/components/auth/auth-provider";
 const links = [
-  { to: "/app", label: "Visão geral", icon: Sparkles, exact: true },
-  { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardCheck },
-  { to: "/app/plans", label: "Plano de estudos", icon: CalendarDays },
+  { to: "/app", label: "Visão geral", icon: Globe2, exact: true },
+  { to: "/app/diagnostic", label: "Diagnóstico", icon: ClipboardList },
+  { to: "/app/plans", label: "Plano de Estudo", icon: CalendarDays },
   { to: "/app/reds", label: "REDs", icon: Library },
 ];
 export function LearningShell() {
-  const { isTeacher } = useAuth();
   return (
-    <div className="min-h-screen bg-background text-foreground md:flex">
-      <aside className="border-b border-border bg-sidebar p-4 md:flex md:min-h-screen md:w-64 md:flex-col md:border-b-0 md:border-r">
+    <div className="platform-theme min-h-screen text-foreground md:flex">
+      <aside className="platform-sidebar flex flex-col bg-sidebar md:w-[clamp(12.5rem,22vw,17rem)] md:shrink-0">
         <Link
           to="/app"
-          className="w-fit rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="platform-sidebar-brand w-fit rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Logo />
+          <Logo variant="platform" />
         </Link>
         <nav
-          className="mt-6 flex gap-2 overflow-x-auto md:min-h-0 md:flex-1 md:flex-col"
+          className="platform-study-nav flex flex-wrap gap-1 md:flex-1 md:flex-col"
           aria-label="Área de estudos"
         >
           {links.map((link) => {
@@ -32,31 +30,22 @@ export function LearningShell() {
                 key={link.to}
                 to={link.to}
                 activeOptions={{ exact: "exact" in link ? link.exact : false }}
-                className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground [&.active]:bg-primary/15 [&.active]:text-primary"
+                className="platform-study-link flex shrink-0 items-center gap-2 text-sm transition-colors md:gap-3 md:text-base"
               >
                 <Icon className="size-4" />
                 {link.label}
               </Link>
             );
           })}
-          {isTeacher ? (
-            <Link
-              to="/app/teacher"
-              className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground [&.active]:bg-primary/15 [&.active]:text-primary"
-            >
-              <ShieldCheck className="size-4" />
-              Área do professor
-            </Link>
-          ) : null}
         </nav>
         <div className="mt-4 hidden border-t border-sidebar-border pt-3 md:block">
-          <UserMenu />
+          <UserMenu showTeacherLink />
         </div>
       </aside>
       <div className="min-w-0 flex-1">
         <AuthenticatedHeader
           activeArea="studies"
-          actions={<UserMenu compact className="md:hidden" />}
+          actions={<UserMenu compact showTeacherLink className="md:hidden" />}
         />
         <Outlet />
       </div>

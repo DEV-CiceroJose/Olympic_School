@@ -244,7 +244,7 @@ function DiagnosticPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10">
+    <main className="platform-assessment mx-auto max-w-5xl px-4 py-6 sm:px-8 md:py-8">
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="font-medium text-primary">{session.assessmentTitle}</span>
         <span className="flex items-center gap-2">
@@ -256,47 +256,58 @@ function DiagnosticPage() {
         {responses.length} de {questions.length} respostas confirmadas · Turma {session.className}
       </p>
       {current ? (
-        <Card className="mt-7 bg-card/70">
-          <CardHeader>
-            <p className="text-sm text-muted-foreground">
-              Questão {current.order} · {current.area}
-            </p>
-            <CardTitle className="text-xl leading-relaxed">{current.prompt}</CardTitle>
-            {current.supportText ? (
-              <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                {current.supportText}
-              </p>
-            ) : null}
-            {current.imageUrl ? (
-              <img
-                src={current.imageUrl}
-                alt={`Imagem de apoio da questão ${current.order}`}
-                className="max-h-96 rounded-xl border object-contain"
-              />
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {current.options.map((option, index) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setSelected(index)}
-                className={`flex w-full gap-3 rounded-xl border p-4 text-left text-sm transition ${selected === index ? "border-primary bg-primary/10" : "hover:border-primary/50"}`}
+        <section className="mt-6" aria-labelledby="diagnostic-question">
+          <div className="mb-2 flex flex-wrap justify-between gap-2 font-display">
+            <span>{current.area}</span>
+            <span>
+              Questão {current.order} de {questions.length}
+            </span>
+          </div>
+          <Card className="platform-question">
+            <CardHeader className="p-4 sm:px-8 sm:pt-7">
+              <h1
+                id="diagnostic-question"
+                className="max-w-2xl text-xl leading-snug font-semibold sm:text-2xl"
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-full border">
-                  {String.fromCharCode(65 + index)}
-                </span>
-                {option}
-              </button>
-            ))}
-            <Button disabled={selected === null || saving} onClick={() => void confirmAnswer()}>
-              Confirmar resposta
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Depois de confirmar, esta resposta não poderá ser alterada.
-            </p>
-          </CardContent>
-        </Card>
+                {current.prompt}
+              </h1>
+              {current.supportText ? (
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {current.supportText}
+                </p>
+              ) : null}
+              {current.imageUrl ? (
+                <img
+                  src={current.imageUrl}
+                  alt={`Imagem de apoio da questão ${current.order}`}
+                  className="max-h-96 rounded-xl border object-contain"
+                />
+              ) : null}
+            </CardHeader>
+            <CardContent className="space-y-3 px-4 pb-5 sm:px-8 sm:pb-8">
+              {current.options.map((option, index) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSelected(index)}
+                  aria-pressed={selected === index}
+                  className="platform-answer flex w-full max-w-lg items-center gap-3 text-left"
+                >
+                  <span className="platform-answer-letter grid size-8 shrink-0 place-items-center rounded-full">
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  {option}
+                </button>
+              ))}
+              <Button disabled={selected === null || saving} onClick={() => void confirmAnswer()}>
+                Confirmar resposta
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Depois de confirmar, esta resposta não poderá ser alterada.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
       ) : (
         <Card className="mt-7 bg-card/70">
           <CardHeader>

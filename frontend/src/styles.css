@@ -361,3 +361,155 @@
     transition-duration: 0.001ms !important;
   }
 }
+/* Olympic School platform colors and surfaces from the visual reference. */
+.platform-theme {
+  --background: #174e37;
+  --foreground: #fffbe5;
+  --primary: #b4ff35;
+  --primary-foreground: #143f29;
+  --muted: #215b40;
+  --muted-foreground: #d9e9ce;
+  --card: #235f43;
+  --card-foreground: var(--foreground);
+  --secondary: #17513e;
+  --secondary-foreground: var(--foreground);
+  --border: #c9f2c966;
+  --input: #c9f2c981;
+  --ring: var(--primary);
+  --sidebar: #084b3b;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-accent: #125b45;
+  --sidebar-border: #d8fbd389;
+  color: var(--foreground);
+  background:
+    radial-gradient(ellipse at 100% 100%, rgb(160 212 61 / 58%), transparent 67%),
+    linear-gradient(130deg, #237b40 0%, #15563c 57%, #32753b 100%);
+}
+
+.platform-sidebar {
+  padding: 1.1rem 1rem 1rem;
+  color: var(--sidebar-foreground);
+}
+
+.platform-sidebar-brand {
+  display: block;
+  min-width: 0;
+}
+
+.platform-sidebar-brand img {
+  width: clamp(7.5rem, 13.5vw, 10.75rem);
+  height: auto;
+}
+
+.platform-study-nav {
+  margin-top: 1.05rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.platform-study-link {
+  padding: .52rem .7rem;
+  border-radius: 999px;
+  color: var(--sidebar-foreground);
+}
+
+.platform-study-link:hover {
+  background: var(--sidebar-accent);
+}
+
+.platform-study-link.active {
+  background: #9bd84c;
+  color: #103929;
+  font-weight: 600;
+}
+
+.platform-area-switch {
+  gap: .25rem;
+  padding: .26rem;
+  background: linear-gradient(125deg, #ccf8cd20, #b6dfb64c 48%, #235b4238);
+  border: 2px solid var(--border);
+}
+
+.platform-area-link {
+  min-width: 5rem;
+  min-height: 2rem;
+}
+
+.platform-area-link:hover,
+.platform-area-active {
+  background: var(--sidebar);
+  color: var(--foreground);
+}
+
+.platform-question {
+  border: 2px solid var(--border);
+  border-radius: 1.35rem;
+  background: linear-gradient(135deg, rgb(189 224 148 / 24%), rgb(23 78 52 / 86%));
+  box-shadow: none;
+}
+
+.platform-answer {
+  padding: .5rem .9rem;
+  border: 1.5px solid #a6dc3d;
+  border-radius: 1.35rem;
+  background: linear-gradient(120deg, rgb(205 247 173 / 17%), rgb(24 82 55 / 20%));
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+  transition: background-color .18s, border-color .18s;
+}
+
+.platform-answer:hover,
+.platform-answer[aria-pressed="true"] {
+  background: rgb(181 255 66 / 24%);
+  border-color: var(--primary);
+}
+
+.platform-answer-letter {
+  border: 1px solid currentcolor;
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.platform-answer[aria-pressed="true"] .platform-answer-letter {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.platform-chat {
+  background:
+    radial-gradient(ellipse at 15% 0%, rgb(147 222 64 / 66%), transparent 53%),
+    linear-gradient(135deg, #228043, #15543c 88%);
+}
+
+@media (min-width: 768px) {
+  .platform-sidebar,
+  .platform-chat-sidebar {
+    border-radius: 0 3.5rem 3.5rem 0;
+  }
+
+  .platform-sidebar {
+    min-height: 100vh;
+    padding: 2.3rem 1.8rem 1.4rem 1.3rem;
+  }
+
+  .platform-study-nav {
+    margin-top: 1.65rem;
+    padding-top: 1.25rem;
+  }
+
+  .platform-study-link {
+    margin-left: -1.3rem;
+    padding-inline: 1.35rem 1rem;
+    border-radius: 0 999px 999px 0;
+  }
+
+  .platform-area-switch {
+    padding: .37rem clamp(.65rem, 3vw, 2.8rem);
+  }
+
+  .platform-area-link {
+    min-width: 7.3rem;
+    font-size: 1.15rem;
+  }
+}

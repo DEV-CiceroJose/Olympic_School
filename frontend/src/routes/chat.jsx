@@ -26,8 +26,8 @@ function ChatLayout() {
   return (
     <RequireAuth>
       <ChatProvider>
-        <div className="flex h-screen w-full overflow-hidden bg-background">
-          <aside className="hidden w-72 shrink-0 border-r border-sidebar-border md:block">
+        <div className="platform-theme platform-chat flex h-dvh w-full overflow-hidden text-foreground">
+          <aside className="platform-chat-sidebar hidden w-[clamp(12.5rem,22vw,17rem)] shrink-0 overflow-hidden md:block">
             <ChatSidebar />
           </aside>
 

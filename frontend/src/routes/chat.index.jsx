@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Brain, ListChecks, Map } from "lucide-react";
+import { BookOpen, Dna, ListChecks, Map } from "lucide-react";
 import { Composer } from "@/components/chat/composer";
 import { NotebookSelect } from "@/components/chat/notebook-select";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/chat/")({
 const SUGGESTIONS = [
   { icon: BookOpen, label: "Resumo de citologia", prompt: "Faça um resumo de citologia para OBB." },
   {
-    icon: Brain,
+    icon: Dna,
     label: "Explicar genética",
     prompt: "Explique genética mendeliana em nível de olimpíada.",
   },
@@ -44,7 +44,7 @@ function ChatWelcome() {
 
       <div className="w-full max-w-3xl">
         <div className="mb-8 text-center">
-          <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          <h2 className="font-display text-4xl font-medium tracking-tight text-primary md:text-6xl">
             Olá, {firstName}
           </h2>
           <p className="mt-3 text-muted-foreground">

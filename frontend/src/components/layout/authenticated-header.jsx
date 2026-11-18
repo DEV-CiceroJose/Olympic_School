@@ -1,10 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { GraduationCap, MessageSquareText, PanelsTopLeft } from "lucide-react";
+import { PanelsTopLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/landing/logo";
 export function AuthenticatedHeader({ activeArea, onOpenSidebar, actions }) {
   return (
-    <header className="grid min-h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-border bg-background/80 px-3 py-2 backdrop-blur-xl md:px-5">
+    <header className="platform-header grid min-h-16 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-3 md:px-5">
       <div className="flex min-w-0 items-center">
         {onOpenSidebar ? (
           <button
@@ -16,33 +15,30 @@ export function AuthenticatedHeader({ activeArea, onOpenSidebar, actions }) {
             <PanelsTopLeft className="size-5" />
           </button>
         ) : null}
-        <Logo className="hidden lg:block" />
       </div>
 
       <nav
         aria-label="Alternar área da aplicação"
-        className="flex items-center rounded-full bg-secondary/70 p-1 ring-1 ring-border"
+        className="platform-area-switch flex items-center rounded-full"
       >
         <Link
           to="/app"
           aria-current={activeArea === "studies" ? "page" : undefined}
           className={cn(
-            "flex h-9 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:px-4",
-            activeArea === "studies" && "bg-card text-foreground shadow-sm",
+            "platform-area-link flex items-center justify-center rounded-full px-3 font-display font-medium transition-colors sm:px-5",
+            activeArea === "studies" && "platform-area-active",
           )}
         >
-          <GraduationCap className="hidden size-4 sm:block" />
           Estudos
         </Link>
         <Link
           to="/chat"
           aria-current={activeArea === "assistant" ? "page" : undefined}
           className={cn(
-            "flex h-9 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:px-4",
-            activeArea === "assistant" && "bg-card text-foreground shadow-sm",
+            "platform-area-link flex items-center justify-center rounded-full px-3 font-display font-medium transition-colors sm:px-5",
+            activeArea === "assistant" && "platform-area-active",
           )}
         >
-          <MessageSquareText className="hidden size-4 sm:block" />
           Assistente
         </Link>
       </nav>

@@ -1,4 +1,15 @@
-export function Logo({ className }) {
+export function Logo({ className, variant = "default" }) {
+  if (variant === "platform") {
+    return (
+      <img
+        src="/brand/olympic-school-wordmark.png"
+        width="296"
+        height="82"
+        alt="Olympic School"
+        className={className}
+      />
+    );
+  }
   return (
     <span className={className}>
       <span className="flex items-center gap-2.5">

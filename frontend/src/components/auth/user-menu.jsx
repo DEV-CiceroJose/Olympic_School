@@ -1,5 +1,5 @@
-import { useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   DropdownMenu,
@@ -20,8 +20,8 @@ function initials(name) {
       .join("") || "EU"
   );
 }
-export function UserMenu({ compact = false, className }) {
-  const { user, profile, logout } = useAuth();
+export function UserMenu({ compact = false, className, showTeacherLink = false }) {
+  const { user, profile, logout, isTeacher } = useAuth();
   const navigate = useNavigate();
   const name = profile?.name || user?.displayName || "Estudante";
   const email = profile?.email || user?.email || "";
@@ -68,6 +68,14 @@ export function UserMenu({ compact = false, className }) {
           <span className="block truncate text-xs text-muted-foreground">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {showTeacherLink && isTeacher ? (
+          <DropdownMenuItem asChild>
+            <Link to="/app/teacher">
+              <ShieldCheck />
+              Área do professor
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           onSelect={async () => {
             await logout();

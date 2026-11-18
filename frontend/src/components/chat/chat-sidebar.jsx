@@ -52,7 +52,7 @@ export function ChatSidebar({ onNavigate }) {
           to="/app"
           className="min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Logo />
+          <Logo variant="platform" className="my-2 ml-1 w-40 max-w-full" />
         </Link>
       </div>
 
