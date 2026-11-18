@@ -15,6 +15,34 @@ const startAssessmentCall = httpsCallable(functions, "startAssessment");
 const submitAnswerCall = httpsCallable(functions, "submitAssessmentAnswer");
 const finalizeAssessmentCall = httpsCallable(functions, "finalizeAssessment");
 
+const workerUrl = import.meta.env.VITE_ASSESSMENT_API_URL?.replace(/\/+$/, "");
+
+async function callAssessment(path, callable, input) {
+  if (!workerUrl) return (await callable(input)).data;
+  const token = await requireUser().getIdToken();
+  let response;
+  try {
+    response = await fetch(`${workerUrl}/${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  } catch {
+    const error = new Error("O serviço de diagnóstico está indisponível.");
+    error.code = "functions/unavailable";
+    throw error;
+  }
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.data) {
+    const error = new Error(
+      result?.error?.message || "O serviço de diagnóstico está indisponível.",
+    );
+    error.code = `functions/${result?.error?.code || "unavailable"}`;
+    throw error;
+  }
+  return result.data;
+}
+
 export const assessmentRepository = {
   async activeDefinition(type = "diagnostico_inicial") {
     const snapshot = await getDocs(
@@ -48,15 +76,12 @@ export const assessmentRepository = {
     return snapshot.docs.map(withId);
   },
   async start(input) {
-    const result = await startAssessmentCall(input);
-    return result.data;
+    return callAssessment("start", startAssessmentCall, input);
   },
   async answer(input) {
-    const result = await submitAnswerCall(input);
-    return result.data;
+    return callAssessment("answer", submitAnswerCall, input);
   },
   async finalize(sessionId) {
-    const result = await finalizeAssessmentCall({ sessionId });
-    return result.data;
+    return callAssessment("finalize", finalizeAssessmentCall, { sessionId });
   },
 };

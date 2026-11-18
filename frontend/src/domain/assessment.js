@@ -13,6 +13,14 @@ export const SCHOOL_CLASSES = [
   "3º TETB",
 ];
 
+export function registeredSchoolClass(value) {
+  const normalized = value
+    ?.trim()
+    .toUpperCase()
+    .replace(/^([123])(?:º|°)?\s+/, "$1º ");
+  return SCHOOL_CLASSES.includes(normalized) ? normalized : "";
+}
+
 export const ASSESSMENT_TYPES = ["diagnostico_inicial", "diagnostico_final", "simulado"];
 
 export const ASSESSMENT_TYPE_LABELS = {
@@ -43,18 +51,12 @@ export function formatDuration(totalSeconds = 0) {
 
 export function assessmentTiming(session, now = new Date()) {
   const startedAt = toDate(session?.startedAt);
-  const earliestSubmitAt = toDate(session?.earliestSubmitAt);
   const deadlineAt = toDate(session?.deadlineAt);
   const nowMs = now.getTime();
   return {
     startedAt,
-    earliestSubmitAt,
     deadlineAt,
-    canSubmit: Boolean(earliestSubmitAt && nowMs >= earliestSubmitAt.getTime()),
     expired: Boolean(deadlineAt && nowMs >= deadlineAt.getTime()),
-    secondsUntilSubmit: earliestSubmitAt
-      ? Math.max(0, Math.ceil((earliestSubmitAt.getTime() - nowMs) / 1000))
-      : 0,
     secondsRemaining: deadlineAt
       ? Math.max(0, Math.ceil((deadlineAt.getTime() - nowMs) / 1000))
       : 0,

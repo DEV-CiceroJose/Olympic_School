@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { initializeOlympicSchoolAppCheck } from "@/lib/firebase";
 function NotFoundComponent() {
   return (
@@ -153,6 +154,7 @@ function RootComponent() {
       <AuthProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <Toaster theme="dark" />
       </AuthProvider>
     </QueryClientProvider>
   );

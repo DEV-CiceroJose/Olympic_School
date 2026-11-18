@@ -42,7 +42,7 @@ function questions(count = 25) {
     alternativa_b: "Alternativa B",
     alternativa_c: "Alternativa C",
     alternativa_d: "Alternativa D",
-    alternativa_e: "",
+    alternativa_e: "Alternativa E",
     alternativa_f: "",
     gabarito: "A",
     explicacao: "Explicação do gabarito.",
@@ -61,8 +61,9 @@ describe("assessment spreadsheet validation", () => {
     );
     const result = parseAssessmentCsvText(text);
     expect(result.errors).toEqual([]);
-    expect(result.questions).toHaveLength(25);
-    expect(result.warnings).toHaveLength(25);
+    expect(result.questions).toHaveLength(10);
+    expect(result.assessment.type).toBe("simulado");
+    expect(result.warnings).toHaveLength(10);
   });
 
   it("preserves semicolons, quotes and line breaks inside quoted fields", () => {
@@ -82,6 +83,7 @@ describe("assessment spreadsheet validation", () => {
     const result = validateAssessmentImport(assessment(), questions());
     expect(result.errors).toEqual([]);
     expect(result.questions).toHaveLength(25);
+    expect(result.assessment).toMatchObject({ minMinutes: 0, maxMinutes: 90 });
   });
 
   it("rejects partial imports and provisional active questions", () => {
@@ -99,5 +101,40 @@ describe("assessment spreadsheet validation", () => {
     const result = validateAssessmentImport(assessment(), rows);
     expect(result.errors.some((item) => item.field === "fase")).toBe(true);
     expect(result.errors.some((item) => item.field === "ano_prova")).toBe(true);
+  });
+
+  it("accepts up to 30 questions and blocks a 31-question simulation", () => {
+    const metadata = assessment({ tipo: "simulado", quantidade_questoes: "30" });
+    expect(validateAssessmentImport(metadata, questions(30)).errors).toEqual([]);
+    const result = validateAssessmentImport(
+      { ...metadata, quantidade_questoes: "31" },
+      questions(31),
+    );
+    expect(result.errors.some((item) => item.field === "quantidade_questoes")).toBe(true);
+  });
+
+  it("requires A through E and rejects an additional F alternative", () => {
+    const rows = questions();
+    rows[0].alternativa_e = "";
+    rows[1].alternativa_f = "Sexta";
+    rows[1].gabarito = "F";
+    const result = validateAssessmentImport(assessment(), rows);
+    expect(result.errors.filter((item) => item.field === "alternativa_a")).toHaveLength(2);
+    expect(result.errors.some((item) => item.field === "gabarito")).toBe(true);
+  });
+
+  it("allows blank origin fields but still rejects invalid provided values", () => {
+    const rows = questions();
+    rows[0].ano_prova = "";
+    rows[0].numero_original = "";
+    const valid = validateAssessmentImport(assessment(), rows);
+    expect(valid.errors).toEqual([]);
+    expect(valid.questions[0]).toMatchObject({ examYear: null, originalNumber: null });
+    rows[0].numero_original = "abc";
+    expect(
+      validateAssessmentImport(assessment(), rows).errors.some(
+        (item) => item.field === "numero_original",
+      ),
+    ).toBe(true);
   });
 });

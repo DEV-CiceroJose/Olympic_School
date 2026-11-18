@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileSpreadsheet, RefreshCw, Upload } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Download, FileSpreadsheet, Pencil, RefreshCw, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { DiagnosticReport } from "@/components/assessment/diagnostic-report";
+import { useAuth } from "@/components/auth/auth-provider";
+import { AssessmentEditor } from "@/components/teacher/assessment-editor";
+import { AssessmentImportHelp } from "@/components/teacher/assessment-import-help";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,15 +20,26 @@ function message(error) {
   );
 }
 
+function publicationMessage(error) {
+  if (error?.code === "permission-denied") {
+    return "O Firestore recusou a publicação. Confira a permissão de professor e se as regras do banco estão atualizadas para o editor de avaliações.";
+  }
+  return message(error);
+}
+
 export function TeacherDashboard() {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [definitions, setDefinitions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [classFilter, setClassFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [creationMode, setCreationMode] = useState(null);
+  const manualTrigger = useRef(null);
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
+  const editorRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -83,7 +97,21 @@ export function TeacherDashboard() {
       setPreview(null);
       await load();
     } catch (error) {
-      toast.error(message(error));
+      toast.error(publicationMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const publishFromEditor = async (assessment) => {
+    setBusy(true);
+    try {
+      await assessmentAdminRepository.publish(assessment);
+      toast.success("Avaliação cadastrada com sucesso.");
+      await load();
+      return true;
+    } catch (error) {
+      toast.error(publicationMessage(error));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -94,14 +122,14 @@ export function TeacherDashboard() {
       <p className="text-sm font-medium text-primary">Acesso administrativo</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Área do professor</h1>
       <p className="mt-3 max-w-3xl text-muted-foreground">
-        Central da avaliação diagnóstica: publicação das questões, acompanhamento das turmas,
-        respostas e relatórios.
+        Criação de avaliações, publicação das questões, acompanhamento das turmas, respostas e
+        relatórios.
       </p>
       <Tabs defaultValue="overview" className="mt-8">
         <TabsList className="grid h-auto w-full max-w-3xl grid-cols-3">
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="students">Alunos e respostas</TabsTrigger>
-          <TabsTrigger value="questions">Questões por CSV</TabsTrigger>
+          <TabsTrigger value="questions">Criar avaliação</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-6 space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -230,79 +258,131 @@ export function TeacherDashboard() {
             </div>
           ) : null}
         </TabsContent>
-        <TabsContent value="questions" className="mt-6">
-          <Card className="bg-card/70">
-            <CardHeader>
-              <CardTitle>Importar avaliação por CSV</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <p className="text-sm text-muted-foreground">
-                Use o modelo CSV UTF-8, separado por ponto e vírgula, para diagnóstico inicial,
-                diagnóstico final ou simulado. A importação é atômica: qualquer erro bloqueia todo o
-                arquivo.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline">
-                  <a href={assessmentSpreadsheet.templateUrl} download>
-                    <FileSpreadsheet /> Baixar modelo CSV
-                  </a>
-                </Button>
-                <Button asChild>
-                  <label className="cursor-pointer">
-                    <Upload /> {busy ? "Validando…" : "Selecionar CSV"}
-                    <input
-                      className="sr-only"
-                      type="file"
-                      accept=".csv,text/csv"
-                      disabled={busy}
-                      onChange={(event) => void inspectFile(event)}
-                    />
-                  </label>
-                </Button>
-              </div>
-              {preview ? (
-                <div className="rounded-xl border p-5">
-                  <div className="flex flex-wrap justify-between gap-3">
-                    <div>
-                      <p className="font-medium">
-                        {preview.assessment?.title || "Arquivo inválido"}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {preview.questions.length} questões identificadas · {preview.errors.length}{" "}
-                        erros · {preview.warnings.length} avisos
-                      </p>
-                    </div>
-                    <Button
-                      disabled={busy || preview.errors.length > 0}
-                      onClick={() => void publish()}
-                    >
-                      Publicar avaliação
-                    </Button>
-                  </div>
-                  {[...preview.errors, ...preview.warnings].length ? (
-                    <ul className="mt-4 space-y-2 text-sm">
-                      {preview.errors.map((item, index) => (
-                        <li key={`error-${index}`} className="text-destructive">
-                          Erro · {item.sheet}
-                          {item.row ? ` linha ${item.row}` : ""}: {item.message}
-                        </li>
-                      ))}
-                      {preview.warnings.map((item, index) => (
-                        <li key={`warning-${index}`} className="text-amber-700">
-                          Aviso · {item.sheet}
-                          {item.row ? ` linha ${item.row}` : ""}: {item.message}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-4 text-sm text-emerald-700">
-                      Planilha válida e pronta para publicação.
-                    </p>
-                  )}
+        <TabsContent
+          value="questions"
+          forceMount
+          className="mt-6 space-y-6 data-[state=inactive]:hidden"
+        >
+          <div role="group" aria-label="Como criar a avaliação" className="grid gap-2 sm:flex">
+            <Button
+              ref={manualTrigger}
+              variant={creationMode === "manual" ? "default" : "outline"}
+              aria-expanded={creationMode === "manual"}
+              aria-controls="assessment-manual-panel"
+              onClick={() => setCreationMode(creationMode === "manual" ? null : "manual")}
+            >
+              <Pencil /> Criar manualmente
+            </Button>
+            <Button
+              variant={creationMode === "import" ? "default" : "outline"}
+              aria-expanded={creationMode === "import"}
+              aria-controls="assessment-import-panel"
+              onClick={() => setCreationMode(creationMode === "import" ? null : "import")}
+            >
+              <FileSpreadsheet /> Importar CSV
+            </Button>
+          </div>
+          <div id="assessment-manual-panel" hidden={creationMode !== "manual"}>
+            <AssessmentEditor
+              key={user.uid}
+              userId={user.uid}
+              busy={busy}
+              onPublish={publishFromEditor}
+              importRef={editorRef}
+            />
+          </div>
+          <div id="assessment-import-panel" hidden={creationMode !== "import"}>
+            <Card className="bg-card/70">
+              <CardHeader>
+                <CardTitle>Importar avaliação por CSV</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <p className="text-sm text-muted-foreground">
+                  Importe o CSV e abra no editor para conferir as figuras, corrigir os textos e
+                  completar as pendências antes de publicar.
+                </p>
+                <AssessmentImportHelp />
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild>
+                    <label className="cursor-pointer">
+                      <Upload /> {busy ? "Validando…" : "Selecionar CSV"}
+                      <input
+                        className="sr-only"
+                        type="file"
+                        accept=".csv,text/csv"
+                        disabled={busy}
+                        onChange={(event) => void inspectFile(event)}
+                      />
+                    </label>
+                  </Button>
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
+                {preview ? (
+                  <div className="rounded-xl border p-5">
+                    <div className="flex flex-wrap justify-between gap-3">
+                      <div>
+                        <p className="font-medium">
+                          {preview.assessment?.title || "Arquivo inválido"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {preview.questions.length} questões identificadas ·{" "}
+                          {preview.errors.length} erros · {preview.warnings.length} avisos
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          disabled={
+                            busy || !preview.rawRecords?.length || preview.rawRecords.length > 30
+                          }
+                          onClick={() => {
+                            if (editorRef.current?.loadImport(preview)) {
+                              setCreationMode("manual");
+                              manualTrigger.current?.focus();
+                            }
+                          }}
+                        >
+                          Abrir no editor
+                        </Button>
+                        <Button
+                          disabled={busy || preview.errors.length > 0}
+                          onClick={() => void publish()}
+                        >
+                          Publicar avaliação
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Ao abrir no editor, quantidade e ordem são calculadas pelas linhas carregadas.
+                      Identificadores de questões inválidos ou repetidos são gerados novamente.
+                      Confira o tipo da avaliação e revise os dados antes de publicar.
+                    </p>
+                    {[...preview.errors, ...preview.warnings].length ? (
+                      <ul className="mt-4 space-y-2 text-sm">
+                        {preview.errors.map((item, index) => (
+                          <li key={`error-${index}`} className="text-destructive">
+                            Erro · {item.sheet}
+                            {item.row ? ` linha ${item.row}` : ""}
+                            {item.field ? ` · coluna ${item.field}` : ""}: {item.message}
+                          </li>
+                        ))}
+                        {preview.warnings.map((item, index) => (
+                          <li key={`warning-${index}`} className="text-amber-700">
+                            Aviso · {item.sheet}
+                            {item.row ? ` linha ${item.row}` : ""}
+                            {item.field ? ` · coluna ${item.field}` : ""}: {item.message}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-4 text-sm text-emerald-700">
+                        Planilha válida e pronta para publicação.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </main>

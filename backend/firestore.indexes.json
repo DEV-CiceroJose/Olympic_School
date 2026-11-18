@@ -55,5 +55,5 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [{ "collectionGroup": "questions", "fieldPath": "imageUrl", "indexes": [] }]
 }

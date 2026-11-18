@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Clock3, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/auth-provider";
+import { ProfileDialog } from "@/components/auth/profile-dialog";
 import { DiagnosticReport } from "@/components/assessment/diagnostic-report";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { SCHOOL_CLASSES, assessmentTiming, formatDuration } from "@/domain/assessment";
+import { assessmentTiming, formatDuration, registeredSchoolClass } from "@/domain/assessment";
 import { assessmentRepository } from "@/services/assessment-repository";
 
 export const Route = createFileRoute("/app/diagnostic")({ component: DiagnosticPage });
@@ -19,18 +21,22 @@ function errorMessage(error) {
 }
 
 function DiagnosticPage() {
+  const { profile, completeProfile } = useAuth();
+  const className = registeredSchoolClass(profile?.turma);
   const [definition, setDefinition] = useState(null);
   const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [responses, setResponses] = useState([]);
-  const [className, setClassName] = useState("");
+  const [editingProfile, setEditingProfile] = useState(false);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [, tick] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [active, existing] = await Promise.all([
         assessmentRepository.activeDefinition(TYPE),
@@ -38,11 +44,16 @@ function DiagnosticPage() {
       ]);
       setDefinition(active);
       setSession(existing);
-      const assessmentId = existing?.assessmentId || active?.id;
-      if (assessmentId) setQuestions(await assessmentRepository.questions(assessmentId));
-      if (existing) setResponses(await assessmentRepository.responses(existing.id));
-    } catch (error) {
-      toast.error(errorMessage(error));
+      if (existing?.status === "in_progress") {
+        const [items, answers] = await Promise.all([
+          assessmentRepository.questions(existing.assessmentId),
+          assessmentRepository.responses(existing.id),
+        ]);
+        setQuestions(items);
+        setResponses(answers);
+      }
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -81,7 +92,12 @@ function DiagnosticPage() {
       });
       await load();
     } catch (error) {
-      toast.error(errorMessage(error));
+      const unavailable = ["functions/internal", "functions/not-found", "functions/unavailable"];
+      toast.error(
+        unavailable.includes(error?.code)
+          ? "O serviço que inicia o diagnóstico está indisponível. Tente novamente mais tarde."
+          : errorMessage(error),
+      );
     } finally {
       setSaving(false);
     }
@@ -124,6 +140,15 @@ function DiagnosticPage() {
       </main>
     );
   }
+  if (loadError) {
+    return (
+      <main className="mx-auto max-w-4xl space-y-4 px-5 py-10">
+        <h1 className="font-display text-4xl font-semibold">Avaliações diagnósticas</h1>
+        <p role="alert">Não foi possível carregar o diagnóstico.</p>
+        <Button onClick={() => void load()}>Tentar novamente</Button>
+      </main>
+    );
+  }
   if (session?.status === "completed") {
     return (
       <main className="mx-auto max-w-5xl px-5 py-10">
@@ -146,8 +171,12 @@ function DiagnosticPage() {
         <div className="mt-7 grid gap-4 sm:grid-cols-2">
           <Card className="border-primary/40 bg-primary/5">
             <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-primary">Disponível</p>
-              <p className="mt-2 text-lg font-semibold">Diagnóstico inicial</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-primary">
+                {definition ? "Disponível" : "Ainda não publicado"}
+              </p>
+              <p className="mt-2 text-lg font-semibold">
+                {definition?.title || "Diagnóstico inicial"}
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Mede o ponto de partida antes do uso da plataforma.
               </p>
@@ -166,8 +195,8 @@ function DiagnosticPage() {
           </Card>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <Info icon={Clock3} title="30 a 90 minutos">
-            A entrega abre após 30 minutos e o prazo termina em 1h30.
+          <Info icon={Clock3} title="Até 90 minutos">
+            Entregue assim que confirmar todas as respostas, dentro do prazo da prova.
           </Info>
           <Info icon={LockKeyhole} title="Tentativa única">
             Respostas confirmadas não podem ser alteradas e a prova não pode ser refeita.
@@ -181,29 +210,32 @@ function DiagnosticPage() {
             <CardTitle>Antes de começar</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <label className="block text-sm font-medium" htmlFor="className">
-              Selecione sua turma
-            </label>
-            <select
-              id="className"
-              className="h-11 w-full rounded-md border bg-background px-3"
-              value={className}
-              onChange={(event) => setClassName(event.target.value)}
-            >
-              <option value="">Escolha uma turma</option>
-              {SCHOOL_CLASSES.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-            {definition ? (
-              <Button disabled={!className || saving} onClick={() => void start()}>
-                {saving ? "Iniciando…" : "Iniciar diagnóstico"}
-              </Button>
-            ) : (
+            {!definition ? (
               <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-700">
-                A avaliação ainda não foi publicada. O professor deve importar o CSV com as 25
-                questões.
+                A avaliação ainda não foi publicada.
               </p>
+            ) : className ? (
+              <>
+                <p className="text-sm text-muted-foreground">Sua turma é {className}.</p>
+                <Button disabled={saving} onClick={() => void start()}>
+                  {saving ? "Iniciando…" : "Iniciar diagnóstico"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Atualize a turma do seu cadastro para começar.
+                </p>
+                <Button onClick={() => setEditingProfile(true)}>Atualizar cadastro</Button>
+                <ProfileDialog
+                  open={editingProfile}
+                  defaultName={profile?.name}
+                  onOpenChange={setEditingProfile}
+                  onSubmit={completeProfile}
+                  onCompleted={() => setEditingProfile(false)}
+                  updating
+                />
+              </>
             )}
           </CardContent>
         </Card>
@@ -271,16 +303,9 @@ function DiagnosticPage() {
             <CardTitle>Todas as respostas foram confirmadas</CardTitle>
           </CardHeader>
           <CardContent>
-            {timing.canSubmit ? (
-              <Button disabled={saving} onClick={() => void finish()}>
-                Entregar e gerar relatório
-              </Button>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                A entrega será liberada em {formatDuration(timing.secondsUntilSubmit)}. Respostas
-                confirmadas permanecem bloqueadas.
-              </p>
-            )}
+            <Button disabled={saving} onClick={() => void finish()}>
+              Entregar e gerar relatório
+            </Button>
           </CardContent>
         </Card>
       )}

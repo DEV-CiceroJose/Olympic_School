@@ -25,6 +25,8 @@ a próxima atividade e acompanha lacunas sem permitir que a IA invente progresso
 - cache local isolado por UID, sem reutilização automática entre contas;
 - histórico paginado, carregado sob demanda, com renomeação, limpeza e exportação Markdown.
 - área exclusiva do professor para gerenciar questões, notebooks e prompts dos focos da IA;
+- editor visual de avaliações, com rascunho local, geração de CSV e publicação; veja
+  [como usar o editor](./docs/editor-avaliacoes.md);
 - autorização docente em duas camadas: custom claim `teacher` e regras do Firestore.
 
 ## Desenvolvimento

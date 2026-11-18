@@ -1,5 +1,6 @@
 import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { SCHOOL_CLASSES } from "@/domain/assessment";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase";
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
@@ -35,12 +36,14 @@ export async function signInWithGoogle() {
 export async function completeStudentProfile(input) {
   const user = auth.currentUser;
   if (!user) throw new Error("AUTH_REQUIRED");
+  const turma = input.turma.trim();
+  if (!SCHOOL_CLASSES.includes(turma)) throw new Error("Selecione uma turma válida.");
   const existing = await getStudentProfile(user.uid);
   if (!existing) throw new Error("PROFILE_NOT_FOUND");
   const profile = {
     ...existing,
     name: input.name.trim(),
-    turma: input.turma.trim(),
+    turma,
     profileCompleted: true,
   };
   await setDoc(

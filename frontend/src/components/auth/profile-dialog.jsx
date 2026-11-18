@@ -9,12 +9,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SCHOOL_CLASSES } from "@/domain/assessment";
 import { cn } from "@/lib/utils";
 /**
  * First-access step: there is no separate sign-up button — the profile is
  * completed automatically right after the first Google sign-in.
  */
-export function ProfileDialog({ open, defaultName = "", onSubmit, onCompleted }) {
+export function ProfileDialog({
+  open,
+  defaultName = "",
+  onSubmit,
+  onCompleted,
+  onOpenChange,
+  updating = false,
+}) {
   const [name, setName] = useState(defaultName);
   const [turma, setTurma] = useState("");
   const [saving, setSaving] = useState(false);
@@ -24,8 +32,8 @@ export function ProfileDialog({ open, defaultName = "", onSubmit, onCompleted })
   }, [open, defaultName]);
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!name.trim() || !turma.trim()) {
-      setError("Preencha nome e turma para continuar.");
+    if (!name.trim() || !SCHOOL_CLASSES.includes(turma)) {
+      setError("Preencha o nome e selecione sua turma para continuar.");
       return;
     }
     setError(null);
@@ -40,13 +48,21 @@ export function ProfileDialog({ open, defaultName = "", onSubmit, onCompleted })
     }
   }
   return (
-    <Dialog open={open}>
-      <DialogContent className="border-border bg-popover text-popover-foreground [&>button]:hidden sm:max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={cn(
+          "border-border bg-popover text-popover-foreground sm:max-w-md",
+          !updating && "[&>button]:hidden",
+        )}
+      >
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Complete seu cadastro</DialogTitle>
+          <DialogTitle className="font-display text-xl">
+            {updating ? "Atualizar cadastro" : "Complete seu cadastro"}
+          </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Primeiro acesso detectado. Só precisamos de duas informações para personalizar sua
-            experiência.
+            {updating
+              ? "Selecione uma turma da lista para atualizar seu perfil."
+              : "Primeiro acesso detectado. Só precisamos de duas informações para personalizar sua experiência."}
           </DialogDescription>
         </DialogHeader>
 
@@ -65,12 +81,22 @@ export function ProfileDialog({ open, defaultName = "", onSubmit, onCompleted })
 
           <div className="space-y-2">
             <Label htmlFor="profile-turma">Turma</Label>
-            <Input
+            <select
               id="profile-turma"
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
               value={turma}
-              onChange={(e) => setTurma(e.target.value)}
-              placeholder="Ex.: 3º ano B"
-            />
+              onChange={(event) => setTurma(event.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Escolha uma turma
+              </option>
+              {SCHOOL_CLASSES.map((schoolClass) => (
+                <option key={schoolClass} value={schoolClass}>
+                  {schoolClass}
+                </option>
+              ))}
+            </select>
           </div>
 
           {error ? (
@@ -90,7 +116,7 @@ export function ProfileDialog({ open, defaultName = "", onSubmit, onCompleted })
             )}
           >
             {saving ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-            {saving ? "Salvando..." : "Concluir e entrar"}
+            {saving ? "Salvando..." : updating ? "Salvar cadastro" : "Concluir e entrar"}
           </button>
         </form>
       </DialogContent>

@@ -1,0 +1,13 @@
+{
+  "name": "olympic-school-diagnostic",
+  "main": "index.js",
+  "compatibility_date": "2026-11-18",
+  "vars": {
+    "FIREBASE_PROJECT_ID": "biodoraia",
+    "FIRESTORE_DATABASE_ID": "biodoraia",
+    "ALLOWED_ORIGINS": "http://localhost:8080,http://127.0.0.1:8080,https://olympic-school-z5ee.onrender.com"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
+}

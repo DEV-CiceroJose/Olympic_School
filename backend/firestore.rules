@@ -207,8 +207,9 @@ service cloud.firestore {
         && validShortString(data.title, 160)
         && data.type in ['diagnostico_inicial', 'diagnostico_final', 'simulado']
         && data.version is int && data.version >= 1 && data.version <= 999
-        && data.questionCount is int && data.questionCount >= 1 && data.questionCount <= 100
-        && data.minMinutes is int && data.minMinutes >= 1
+        && data.questionCount is int && data.questionCount >= 1 && data.questionCount <= 30
+        && data.minMinutes is int
+        && (data.minMinutes >= 1 || (data.type != 'simulado' && data.minMinutes == 0))
         && data.maxMinutes is int && data.maxMinutes >= data.minMinutes && data.maxMinutes <= 360
         && data.isActive is bool
         && validOptionalString(data, 'notes', 2000)
@@ -227,18 +228,23 @@ service cloud.firestore {
           'createdAt', 'updatedAt'
         ])
         && validShortString(data.id, 128)
-        && data.order is int && data.order >= 1 && data.order <= 100
-        && data.examYear is int && data.examYear >= 2009 && data.examYear <= 2026
+        && data.order is int && data.order >= 1 && data.order <= 30
+        && (!('examYear' in data) || data.examYear == null
+          || (data.examYear is int && data.examYear >= 2009 && data.examYear <= 2026))
         && data.phase == 1
-        && data.originalNumber is int && data.originalNumber >= 1
+        && (!('originalNumber' in data) || data.originalNumber == null
+          || (data.originalNumber is int && data.originalNumber >= 1 && data.originalNumber <= 200))
         && validShortString(data.area, 120)
         && validShortString(data.skillId, 128)
         && validShortString(data.skillLabel, 120)
         && data.difficulty in [1, 2, 3]
         && validShortString(data.prompt, 5000)
         && validOptionalString(data, 'supportText', 10000)
-        && validOptionalString(data, 'imageUrl', 2048)
-        && validQuestionOptions(data.options)
+        && validOptionalString(data, 'imageUrl', 100000)
+        && (!('imageUrl' in data) || data.imageUrl == ''
+          || (data.imageUrl.size() <= 2048 && data.imageUrl.matches('https://.*'))
+          || data.imageUrl.matches('data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}'))
+        && validQuestionOptions(data.options) && data.options.size() == 5
         && validOptionalString(data, 'sourceUrl', 2048)
         && validOptionalString(data, 'notes', 2000)
         && data.isActive is bool
@@ -248,7 +254,7 @@ service cloud.firestore {
     function validAnswerKey() {
       let data = request.resource.data;
       return hasOnly(data, ['correctOption', 'explanation', 'createdAt', 'updatedAt'])
-        && data.correctOption is int && data.correctOption >= 0 && data.correctOption <= 5
+        && data.correctOption is int && data.correctOption >= 0 && data.correctOption <= 4
         && validShortString(data.explanation, 5000)
         && data.updatedAt == request.time;
     }
@@ -267,6 +273,18 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
+    function validSchoolClass(value) {
+      return value in [
+        '1º DSA', '1º DSB', '1º TETA', '1º TETB',
+        '2º DSA', '2º DSB', '2º TETA', '2º TETB',
+        '3º DSA', '3º DSB', '3º TETA', '3º TETB'
+      ];
+    }
+
+    function validProfileClass(data) {
+      return 'turma' in data ? validSchoolClass(data.turma) : !data.profileCompleted;
+    }
+
     function validUserCreate(uid) {
       let data = request.resource.data;
       return hasOnly(data, [
@@ -278,8 +296,8 @@ service cloud.firestore {
         && validShortString(data.email, 320)
         && validShortString(data.name, 120)
         && validOptionalString(data, 'avatarUrl', 2048)
-        && validOptionalString(data, 'turma', 80)
         && data.profileCompleted is bool
+        && validProfileClass(data)
         && validRecentCreate(data)
         && data.updatedAt == request.time;
     }
@@ -296,8 +314,9 @@ service cloud.firestore {
         && validShortString(data.email, 320)
         && validShortString(data.name, 120)
         && validOptionalString(data, 'avatarUrl', 2048)
-        && validOptionalString(data, 'turma', 80)
         && data.profileCompleted is bool
+        && (validProfileClass(data)
+          || !data.diff(resource.data).affectedKeys().hasAny(['turma', 'profileCompleted']))
         && createdAtUnchanged()
         && data.updatedAt == request.time;
     }
@@ -551,7 +570,12 @@ service cloud.firestore {
     // own attempt; teachers can inspect every class and completed report.
     match /assessmentSessions/{sessionId} {
       allow get: if isAuthenticated()
-        && (resource.data.userId == request.auth.uid || isTeacher());
+        && (isTeacher()
+          || (resource != null && resource.data.userId == request.auth.uid)
+          || (resource == null && sessionId in [
+            request.auth.uid + '_diagnostico_inicial',
+            request.auth.uid + '_diagnostico_final'
+          ]));
       allow list: if isTeacher();
       allow create, update, delete: if false;
 

@@ -1,19 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { assessmentTiming, formatDuration, reportInsights, resultLevel } from "./assessment";
+import {
+  assessmentTiming,
+  formatDuration,
+  registeredSchoolClass,
+  reportInsights,
+  resultLevel,
+} from "./assessment";
 
 describe("assessment domain", () => {
-  it("enforces the 30 to 90 minute window", () => {
+  it("uses the registered school class and recognizes older supported spellings", () => {
+    expect(registeredSchoolClass("2º TETB")).toBe("2º TETB");
+    expect(registeredSchoolClass(" 3 dsa ")).toBe("3º DSA");
+    expect(registeredSchoolClass("3º ano B")).toBe("");
+    expect(registeredSchoolClass(undefined)).toBe("");
+  });
+
+  it("tracks the 90-minute deadline for attempts with a legacy minimum", () => {
     const session = {
       startedAt: "2026-09-24T12:00:00.000Z",
       earliestSubmitAt: "2026-09-24T12:30:00.000Z",
       deadlineAt: "2026-09-24T13:30:00.000Z",
     };
     expect(assessmentTiming(session, new Date("2026-09-24T12:29:59.000Z"))).toMatchObject({
-      canSubmit: false,
       expired: false,
-      secondsUntilSubmit: 1,
+      secondsRemaining: 3601,
     });
-    expect(assessmentTiming(session, new Date("2026-09-24T12:30:00.000Z")).canSubmit).toBe(true);
     expect(assessmentTiming(session, new Date("2026-09-24T13:30:00.000Z")).expired).toBe(true);
   });
 

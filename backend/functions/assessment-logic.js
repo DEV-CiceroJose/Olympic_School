@@ -1,3 +1,5 @@
+const toMillis = (value) => (value instanceof Date ? value.getTime() : value.toMillis());
+
 export function computeAssessmentReport({
   session,
   questions,
@@ -28,8 +30,8 @@ export function computeAssessmentReport({
       skillId: question.skillId,
       skillLabel: question.skillLabel,
       prompt: question.prompt,
-      examYear: question.examYear,
-      originalNumber: question.originalNumber,
+      examYear: question.examYear ?? null,
+      originalNumber: question.originalNumber ?? null,
       selectedOption: response?.selectedOption ?? null,
       selectedAnswer: response ? question.options[response.selectedOption] : "",
       correctOption: key.correctOption,
@@ -47,10 +49,10 @@ export function computeAssessmentReport({
     total: item.total,
     percentage: Math.round((item.correct / item.total) * 100),
   });
-  const startedAt = session.startedAt.toMillis();
+  const startedAt = toMillis(session.startedAt);
   const completedMillis = session.deadlineAt
-    ? Math.min(completedAt.toMillis(), session.deadlineAt.toMillis())
-    : completedAt.toMillis();
+    ? Math.min(toMillis(completedAt), toMillis(session.deadlineAt))
+    : toMillis(completedAt);
   return {
     correctCount,
     incorrectCount: questions.length - correctCount - blankCount,

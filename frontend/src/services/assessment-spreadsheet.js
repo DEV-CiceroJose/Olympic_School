@@ -1,4 +1,5 @@
 import { ASSESSMENT_TYPES, ASSESSMENT_TYPE_LABELS, formatDuration } from "@/domain/assessment";
+import { validAssessmentImage } from "@/domain/assessment-image";
 
 export const ASSESSMENT_CSV_HEADERS = [
   "codigo_avaliacao",
@@ -123,6 +124,21 @@ function recordsFromCsv(text) {
       records: [],
       errors: [issue("CSV", 1, null, `Colunas ausentes: ${missing.join(", ")}.`)],
     };
+  const structureErrors = [];
+  if (new Set(headers).size !== headers.length)
+    structureErrors.push(issue("CSV", 1, null, "O cabeçalho contém colunas duplicadas."));
+  rows.slice(1).forEach((row, index) => {
+    if (row.length !== headers.length)
+      structureErrors.push(
+        issue(
+          "CSV",
+          index + 2,
+          null,
+          `Esta linha tem ${row.length} células, mas o cabeçalho tem ${headers.length}. Confira os pontos e vírgulas e as aspas dos textos.`,
+        ),
+      );
+  });
+  if (structureErrors.length) return { records: [], errors: structureErrors };
   const indexes = new Map(headers.map((header, index) => [header, index]));
   return {
     records: rows.slice(1).map((row, index) => ({
@@ -142,6 +158,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
   const errors = [];
   const warnings = [];
   const type = assessmentRow.tipo;
+  const isDiagnostic = ["diagnostico_inicial", "diagnostico_final"].includes(type);
   const questionCount = asInteger(assessmentRow.quantidade_questoes);
   const minMinutes = asInteger(assessmentRow.tempo_minimo_minutos);
   const maxMinutes = asInteger(assessmentRow.tempo_maximo_minutos);
@@ -167,25 +184,45 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
     errors.push(
       issue("CSV", assessmentRow.__row, "versao", "A versão deve ser um inteiro entre 1 e 999."),
     );
-  if (!questionCount || questionCount < 1 || questionCount > 100)
+  if (!questionCount || questionCount < 1 || questionCount > 30)
     errors.push(
       issue(
         "CSV",
         assessmentRow.__row,
         "quantidade_questoes",
-        "Informe uma quantidade entre 1 e 100.",
+        "Informe uma quantidade entre 1 e 30.",
       ),
     );
-  if (["diagnostico_inicial", "diagnostico_final"].includes(type) && questionCount !== 25)
+  if (isDiagnostic && questionCount !== 25)
     errors.push(
       issue(
         "CSV",
         assessmentRow.__row,
         "quantidade_questoes",
-        "O diagnóstico deve ter exatamente 25 questões.",
+        `O tipo ${type} exige exatamente 25 questões; o arquivo declara ${questionCount}. Para um simulado de 1 a 30 questões, selecione o tipo simulado no editor.`,
       ),
     );
-  if (!minMinutes || !maxMinutes || minMinutes < 1 || maxMinutes < minMinutes || maxMinutes > 360)
+  if (isDiagnostic) {
+    if (minMinutes !== 0 && minMinutes !== 30)
+      errors.push(
+        issue("CSV", assessmentRow.__row, "tempo_minimo_minutos", "Use 0 para diagnósticos."),
+      );
+    if (maxMinutes !== 90)
+      errors.push(
+        issue(
+          "CSV",
+          assessmentRow.__row,
+          "tempo_maximo_minutos",
+          "O diagnóstico tem prazo máximo de 90 minutos.",
+        ),
+      );
+  } else if (
+    !minMinutes ||
+    !maxMinutes ||
+    minMinutes < 1 ||
+    maxMinutes < minMinutes ||
+    maxMinutes > 360
+  ) {
     errors.push(
       issue(
         "CSV",
@@ -194,18 +231,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
         "Informe uma janela de tempo válida.",
       ),
     );
-  if (
-    ["diagnostico_inicial", "diagnostico_final"].includes(type) &&
-    (minMinutes !== 30 || maxMinutes !== 90)
-  )
-    errors.push(
-      issue(
-        "CSV",
-        assessmentRow.__row,
-        "tempo_minimo_minutos",
-        "O diagnóstico deve usar mínimo de 30 e máximo de 90 minutos.",
-      ),
-    );
+  }
   if (isActive === null)
     errors.push(issue("CSV", assessmentRow.__row, "avaliacao_ativa", "Use SIM ou NÃO."));
 
@@ -239,9 +265,9 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
   const normalizedQuestions = matchingRows.map((row) => {
     const rowNumber = row.__row;
     const order = asInteger(row.ordem);
-    const examYear = asInteger(row.ano_prova);
+    const examYear = row.ano_prova ? asInteger(row.ano_prova) : null;
     const phase = asInteger(row.fase);
-    const originalNumber = asInteger(row.numero_original);
+    const originalNumber = row.numero_original ? asInteger(row.numero_original) : null;
     const difficulty = asInteger(row.dificuldade);
     const active = asBoolean(row.ativa ?? row.questao_ativa);
     const optionValues = [
@@ -252,7 +278,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       row.alternativa_e,
       row.alternativa_f,
     ];
-    const options = optionValues.filter(Boolean);
+    const options = optionValues.slice(0, 5);
     const answerLetter = row.gabarito.toUpperCase();
     const correctOption = answerLetter.charCodeAt(0) - 65;
 
@@ -273,13 +299,13 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
         ),
       );
     orders.add(order);
-    if (!examYear || examYear < 2009 || examYear > 2026)
+    if (row.ano_prova && (!examYear || examYear < 2009 || examYear > 2026))
       errors.push(issue("CSV", rowNumber, "ano_prova", "Informe um ano entre 2009 e 2026."));
     if (phase !== 1)
       errors.push(
         issue("CSV", rowNumber, "fase", "O conjunto atual usa somente a 1ª fase da OBB."),
       );
-    if (!originalNumber || originalNumber < 1 || originalNumber > 200)
+    if (row.numero_original && (!originalNumber || originalNumber < 1 || originalNumber > 200))
       errors.push(
         issue("CSV", rowNumber, "numero_original", "Informe o número original da questão."),
       );
@@ -292,16 +318,66 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
     ]) {
       if (!value || value.length > max)
         errors.push(
-          issue("CSV", rowNumber, field, `Campo obrigatório com limite de ${max} caracteres.`),
+          issue(
+            "CSV",
+            rowNumber,
+            field,
+            !value
+              ? `O campo ${field} é obrigatório e está vazio.`
+              : `O campo ${field} tem ${value.length} caracteres; o limite é ${max}. Resuma esse campo antes de importar.`,
+          ),
         );
     }
+    for (const [field, value, max] of [
+      ["texto_apoio", row.texto_apoio, 10000],
+      ["observacoes_questao", row.observacoes ?? row.observacoes_questao, 2000],
+    ]) {
+      if ((value ?? "").length > max)
+        errors.push(
+          issue(
+            "CSV",
+            rowNumber,
+            field,
+            `O campo ${field} tem ${value.length} caracteres; o limite é ${max}.`,
+          ),
+        );
+    }
+    optionValues.slice(0, 5).forEach((value, index) => {
+      const field = `alternativa_${String.fromCharCode(97 + index)}`;
+      if ((value ?? "").length > 500)
+        errors.push(
+          issue(
+            "CSV",
+            rowNumber,
+            field,
+            `O campo ${field} tem ${value.length} caracteres; o limite é 500.`,
+          ),
+        );
+    });
+    if (
+      (row.observacoes ?? row.observacoes_questao ?? "").includes("[IMAGEM_PENDENTE]") &&
+      !row.imagem_url
+    )
+      errors.push(
+        issue(
+          "CSV",
+          rowNumber,
+          "imagem_url",
+          "Esta questão depende de uma imagem. Abra no editor e faça o upload antes de publicar.",
+        ),
+      );
     if (![1, 2, 3].includes(difficulty))
       errors.push(issue("CSV", rowNumber, "dificuldade", "Use 1, 2 ou 3."));
-    if (options.length < 2 || options.length > 6)
+    if (optionValues.slice(0, 5).some((option) => !option?.trim()) || row.alternativa_f)
       errors.push(
-        issue("CSV", rowNumber, "alternativa_a", "Informe entre duas e seis alternativas."),
+        issue(
+          "CSV",
+          rowNumber,
+          "alternativa_a",
+          "Preencha exatamente cinco alternativas, de A a E; deixe F vazia.",
+        ),
       );
-    if (!/^[A-F]$/.test(answerLetter) || correctOption < 0 || !optionValues[correctOption])
+    if (!/^[A-E]$/.test(answerLetter) || correctOption < 0 || !optionValues[correctOption])
       errors.push(
         issue(
           "CSV",
@@ -311,10 +387,16 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
         ),
       );
     if (active === null) errors.push(issue("CSV", rowNumber, "questao_ativa", "Use SIM ou NÃO."));
-    for (const [field, value] of [
-      ["imagem_url", row.imagem_url],
-      ["fonte_url", row.fonte_url],
-    ]) {
+    if (!validAssessmentImage(row.imagem_url))
+      errors.push(
+        issue(
+          "CSV",
+          rowNumber,
+          "imagem_url",
+          "Use uma imagem enviada pelo editor ou uma URL HTTPS válida.",
+        ),
+      );
+    for (const [field, value] of [["fonte_url", row.fonte_url]]) {
       if (!validHttpsUrl(value))
         errors.push(issue("CSV", rowNumber, field, "Informe uma URL HTTPS válida ou deixe vazio."));
     }
@@ -353,6 +435,16 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
     };
   });
 
+  if ((assessmentRow.observacoes ?? assessmentRow.observacoes_avaliacao ?? "").length > 2000)
+    errors.push(
+      issue(
+        "CSV",
+        assessmentRow.__row,
+        "observacoes_avaliacao",
+        "As observações da avaliação aceitam até 2000 caracteres.",
+      ),
+    );
+
   return {
     assessment: {
       id: assessmentRow.codigo_avaliacao,
@@ -360,7 +452,7 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       type,
       version,
       questionCount,
-      minMinutes,
+      minMinutes: isDiagnostic ? 0 : minMinutes,
       maxMinutes,
       isActive,
       notes: assessmentRow.observacoes ?? assessmentRow.observacoes_avaliacao,
@@ -408,7 +500,11 @@ export function parseAssessmentCsvText(text) {
     observacoes: row.observacoes_questao,
   }));
   const result = validateAssessmentImport(assessmentRow, questionRows);
-  return { ...result, errors: [...consistencyErrors, ...result.errors] };
+  return {
+    ...result,
+    rawRecords: parsed.records,
+    errors: [...consistencyErrors, ...result.errors],
+  };
 }
 
 export async function parseAssessmentCsv(file) {

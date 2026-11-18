@@ -42,15 +42,12 @@ async function loadReportData(session) {
   };
 }
 
-async function completeSession(reference, { requireMinimum = false } = {}) {
+async function completeSession(reference) {
   const snapshot = await reference.get();
   if (!snapshot.exists) throw new HttpsError("not-found", "Tentativa não encontrada.");
   const session = { id: snapshot.id, ...snapshot.data() };
   if (session.status === "completed") return session;
   const now = Timestamp.now();
-  if (requireMinimum && now.toMillis() < session.earliestSubmitAt.toMillis()) {
-    throw new HttpsError("failed-precondition", "A entrega só é liberada após 30 minutos.");
-  }
   const data = await loadReportData(session);
   const report = computeAssessmentReport({ session, ...data, completedAt: now });
   await db.runTransaction(async (transaction) => {
@@ -102,7 +99,7 @@ export const startAssessment = onCall(async (request) => {
     answeredCount: 0,
     status: "in_progress",
     startedAt: now,
-    earliestSubmitAt: Timestamp.fromMillis(now.toMillis() + assessment.minMinutes * 60_000),
+    earliestSubmitAt: now,
     deadlineAt: Timestamp.fromMillis(now.toMillis() + assessment.maxMinutes * 60_000),
     createdAt: now,
     updatedAt: now,
@@ -163,7 +160,7 @@ export const finalizeAssessment = onCall(async (request) => {
     (snapshot.data().userId !== identity.uid && identity.token.teacher !== true)
   )
     throw new HttpsError("permission-denied", "Tentativa inválida.");
-  return completeSession(reference, { requireMinimum: snapshot.data().userId === identity.uid });
+  return completeSession(reference);
 });
 
 export const finalizeExpiredAssessments = onSchedule("every 5 minutes", async () => {
