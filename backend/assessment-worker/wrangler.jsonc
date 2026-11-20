@@ -5,7 +5,7 @@
   "vars": {
     "FIREBASE_PROJECT_ID": "biodoraia",
     "FIRESTORE_DATABASE_ID": "biodoraia",
-    "ALLOWED_ORIGINS": "http://localhost:8080,http://127.0.0.1:8080,https://olympic-school-z5ee.onrender.com,https://olympic-school.onrender.com"
+    "ALLOWED_ORIGINS": "http://localhost:8080,http://127.0.0.1:8080,https://olympic-school-z5ee.onrender.com,https://olympic-school.onrender.com,https://olympicschool.onrender.com"
   },
   "triggers": {
     "crons": ["*/5 * * * *"]
