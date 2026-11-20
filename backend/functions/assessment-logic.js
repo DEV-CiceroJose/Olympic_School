@@ -13,19 +13,6 @@ export function assessmentSessionId(uid, type, assessmentId) {
   return type === "simulado" ? `${uid}_simulado_${assessmentId}` : `${uid}_${type}`;
 }
 
-export function earliestAssessmentSubmission(startedAt, assessment) {
-  const minimum = assessment.type === "simulado" ? (assessment.minMinutes ?? 0) : 0;
-  return toMillis(startedAt) + minimum * 60_000;
-}
-
-export function canSubmitAssessment(session, now) {
-  return (
-    session.assessmentType !== "simulado" ||
-    !session.earliestSubmitAt ||
-    toMillis(now) >= toMillis(session.earliestSubmitAt)
-  );
-}
-
 export function computeAssessmentReport({
   session,
   questions,

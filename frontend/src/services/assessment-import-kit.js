@@ -8,7 +8,6 @@ export function buildAssessmentImportKit(type = "simulado", requestedCount = 10)
   const count = type === "simulado" ? Number(requestedCount) : 25;
   if (!Number.isInteger(count) || count < 1 || count > 30)
     throw new Error("Escolha entre 1 e 30 questões.");
-  const minimum = type === "simulado" ? 30 : 0;
   const code = `${type.replaceAll("_", "-")}-obb-v1`;
   const records = Array.from({ length: count }, (_, index) => ({
     codigo_avaliacao: code,
@@ -16,7 +15,6 @@ export function buildAssessmentImportKit(type = "simulado", requestedCount = 10)
     tipo: type,
     versao: "1",
     quantidade_questoes: String(count),
-    tempo_minimo_minutos: String(minimum),
     tempo_maximo_minutos: "90",
     avaliacao_ativa: "NAO",
     observacoes_avaliacao: "Revisar antes da publicação.",
@@ -61,10 +59,10 @@ COMO TRABALHAR
 
 FORMATO DO ARQUIVO
 - CSV UTF-8, separado por ponto e vírgula (;), de até 2 MB. Um arquivo por avaliação.
-- Mantenha os 32 cabeçalhos do modelo, inclusive alternativa_f vazia. Não acrescente linhas de explicação ou cercas de código Markdown.
+- Mantenha os ${ASSESSMENT_CSV_HEADERS.length} cabeçalhos do modelo, inclusive alternativa_f vazia. Não acrescente linhas de explicação ou cercas de código Markdown.
 - Envolva todos os valores em aspas duplas. Dentro de um valor, escreva cada aspa dupla duas vezes: "".
 - Textos podem conter ponto e vírgula e quebras de linha quando corretamente delimitados por aspas.
-- As primeiras nove colunas são os dados da avaliação e devem ser idênticas em todas as linhas.
+- As colunas anteriores a questao_id são os dados da avaliação e devem ser idênticas em todas as linhas.
 - A quantidade declarada deve coincidir com a quantidade de linhas de questões.
 - Não use fórmulas de planilha. O sistema protege os textos exportados contra execução de fórmulas.
 
@@ -74,8 +72,7 @@ titulo: obrigatório, até 160 caracteres.
 tipo: simulado, diagnostico_inicial ou diagnostico_final. Simulado aceita de 1 a 30 questões. Diagnósticos exigem exatamente 25.
 versao: inteiro de 1 a 999.
 quantidade_questoes: inteiro de 1 a 30; nos diagnósticos, exatamente 25; igual ao total de linhas.
-tempo_minimo_minutos: use 0 em diagnósticos (entrega sem espera). Simulados usam um inteiro a partir de 1. O valor 30 de CSVs antigos de diagnóstico é aceito e tratado como 0.
-tempo_maximo_minutos: inteiro maior ou igual ao mínimo, até 360. Diagnósticos: 90.
+tempo_maximo_minutos: inteiro de 1 a 360 para simulados. Diagnósticos: 90.
 avaliacao_ativa: SIM ou NAO. Use NAO para importar, revisar e completar as imagens. Ativar ao publicar desativa a avaliação anterior do mesmo tipo.
 observacoes_avaliacao: opcional, até 2000 caracteres.
 questao_id: obrigatório e único no arquivo; mesma regra de caracteres do codigo_avaliacao, de 3 a 128 caracteres.
@@ -116,7 +113,7 @@ O sistema mostra linha, coluna e motivo. Campo obrigatório vazio e texto acima 
 Ao abrir no editor, ordem e quantidade são calculadas a partir das linhas carregadas; identificadores de questões inválidos ou repetidos são regenerados. Confira os dados antes de publicar.
 `;
   const prompt = `Prepare um CSV para importar na Olympic School usando as questões e fontes que anexarei.
-Configuração obrigatória: tipo=${type}; quantidade_questoes=${count}; tempo_minimo_minutos=${minimum}; tempo_maximo_minutos=90.
+Configuração obrigatória: tipo=${type}; quantidade_questoes=${count}; tempo_maximo_minutos=90.
 Use exatamente o cabeçalho de modelo.csv. Siga integralmente REGRAS-DE-IMPORTACAO.txt, incluindo limites de caracteres, tipos, cinco alternativas A a E e alternativa_f vazia.
 Mantenha avaliacao_ativa=NAO e questao_ativa=NAO para revisão. Não publique conteúdo provisório.
 Se eu pedir quantidade diferente, confirme se desejo simulado (1 a 30) ou diagnóstico (exatamente 25), sem trocar o tipo silenciosamente.

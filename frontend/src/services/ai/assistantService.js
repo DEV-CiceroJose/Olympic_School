@@ -10,7 +10,10 @@ function friendlyAiError(error) {
   if (/quota|429|resource-exhausted/i.test(message)) {
     return new Error("O limite temporário da IA foi atingido. Aguarde alguns minutos.");
   }
-  if (/app.check|app-check/i.test(message)) {
+  if (message === "APP_CHECK_NOT_CONFIGURED") {
+    return new Error("A verificação de segurança da IA precisa ser configurada neste ambiente.");
+  }
+  if (/app[\s_-]?check/i.test(message)) {
     return new Error("A verificação de segurança da IA falhou. Recarregue a página.");
   }
   return new Error("A IA não conseguiu responder agora. Tente novamente em instantes.");

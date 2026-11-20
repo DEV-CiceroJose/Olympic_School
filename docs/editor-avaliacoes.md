@@ -32,19 +32,34 @@ para outra área da aplicação.
 
 ## Compatibilidade atual
 
-- Simulados: de 1 a 30 questões, tempo mínimo de pelo menos 1 minuto, máximo
-  de até 360 minutos e não inferior ao mínimo.
-- Diagnósticos inicial e final: exatamente 25 questões e prazo máximo de 90 minutos. A entrega fica disponível após confirmar todas as respostas. Nos CSVs use `tempo_minimo_minutos=0`. Arquivos antigos com 30 continuam importáveis.
+- Simulados: de 1 a 30 questões e prazo máximo de 1 a 360 minutos.
+- Diagnósticos inicial e final: exatamente 25 questões e prazo máximo de 90 minutos.
+- A entrega fica disponível assim que todas as respostas forem confirmadas. O importador
+  ignora a coluna `tempo_minimo_minutos` em CSVs antigos.
 - Questões: 1ª fase da OBB ou autorais. Quando informados, o ano deve ser de 2009
   a 2026 e o número original de 1 a 200.
 - Exatamente cinco alternativas (A a E), com até 500 caracteres cada. Rascunhos
   antigos com quatro alternativas ganham o campo E vazio ao serem recuperados.
 - A avaliação começa como inativa. Se o professor marcar a ativação, a publicação
   desativa a avaliação anteriormente ativa do mesmo tipo.
-- Esta mudança implementa a autoria e o cadastro. O fluxo de realização de
-  simulados pelos alunos continua dependendo de implementação própria.
 - Avaliações já publicadas não são editadas por este editor. Para cadastrar uma
   nova avaliação, use **Nova avaliação**, com um novo código.
+
+## Teste de entrega
+
+1. Na versão atual do Render, use um simulado de teste com uma questão e um tempo mínimo
+   configurado. Como aluno, confirme a resposta antes desse horário e observe a espera.
+2. Em homologação, com regras e backend de avaliações atualizados, publique uma avaliação
+   equivalente como ativa e confirme a resposta com uma conta de aluno. O botão
+   **Entregar e gerar relatório** deve estar disponível imediatamente. Repita em uma tentativa
+   iniciada na versão anterior para validar a compatibilidade.
+3. Repita com um diagnóstico usando uma conta de teste. A entrega deve estar disponível depois
+   de confirmar todas as respostas. Confira que o prazo máximo continua sendo exibido.
+
+O endereço local do frontend usa o Firestore e o backend definidos no `.env.local`.
+Com a configuração de produção, o Firestore publicado ainda pode recusar com HTTP 403
+uma nova avaliação sem o campo antigo `minMinutes`. Use um ambiente separado para
+testar a publicação, pois ativar um simulado desativa o anterior do mesmo tipo.
 
 ## Imagens
 

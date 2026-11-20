@@ -13,7 +13,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarStateProvider } from "@/components/layout/sidebar-state";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { initializeOlympicSchoolAppCheck } from "@/lib/firebase";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -147,9 +146,6 @@ function RootShell({ children }) {
 }
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  useEffect(() => {
-    initializeOlympicSchoolAppCheck();
-  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

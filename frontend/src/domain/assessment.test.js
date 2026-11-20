@@ -17,6 +17,7 @@ describe("assessment domain", () => {
 
   it("tracks the 90-minute deadline for attempts with a legacy minimum", () => {
     const session = {
+      assessmentType: "simulado",
       startedAt: "2026-09-24T12:00:00.000Z",
       earliestSubmitAt: "2026-09-24T12:30:00.000Z",
       deadlineAt: "2026-09-24T13:30:00.000Z",
@@ -24,22 +25,8 @@ describe("assessment domain", () => {
     expect(assessmentTiming(session, new Date("2026-09-24T12:29:59.000Z"))).toMatchObject({
       expired: false,
       secondsRemaining: 3601,
-      secondsUntilSubmission: 0,
     });
     expect(assessmentTiming(session, new Date("2026-09-24T13:30:00.000Z")).expired).toBe(true);
-  });
-
-  it("counts down to the minimum submission time for a mock exam", () => {
-    const session = {
-      assessmentType: "simulado",
-      earliestSubmitAt: "2026-09-24T12:30:00.000Z",
-    };
-    expect(
-      assessmentTiming(session, new Date("2026-09-24T12:29:59.000Z")).secondsUntilSubmission,
-    ).toBe(1);
-    expect(
-      assessmentTiming(session, new Date("2026-09-24T12:30:00.000Z")).secondsUntilSubmission,
-    ).toBe(0);
   });
 
   it("formats durations and result levels", () => {

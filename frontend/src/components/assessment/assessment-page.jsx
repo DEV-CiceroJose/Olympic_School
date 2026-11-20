@@ -210,9 +210,7 @@ export function AssessmentPage({ assessmentId }) {
         {(!isMockExam || definition) && (
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <Info icon={Clock3} title={`Até ${definition?.maxMinutes ?? 90} minutos`}>
-              {isMockExam
-                ? `Você poderá entregar após ${definition?.minMinutes} min e confirmar todas as respostas.`
-                : "Entregue assim que confirmar todas as respostas, dentro do prazo da prova."}
+              Entregue assim que confirmar todas as respostas, dentro do prazo da prova.
             </Info>
             <Info icon={LockKeyhole} title="Tentativa única">
               Respostas confirmadas não podem ser alteradas e a prova não pode ser refeita.
@@ -336,17 +334,9 @@ export function AssessmentPage({ assessmentId }) {
             <CardTitle>Todas as respostas foram confirmadas</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button
-              disabled={saving || timing.secondsUntilSubmission > 0}
-              onClick={() => void finish()}
-            >
+            <Button disabled={saving} onClick={() => void finish()}>
               Entregar e gerar relatório
             </Button>
-            {timing.secondsUntilSubmission > 0 && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Entrega disponível em {formatDuration(timing.secondsUntilSubmission)}.
-              </p>
-            )}
           </CardContent>
         </Card>
       )}

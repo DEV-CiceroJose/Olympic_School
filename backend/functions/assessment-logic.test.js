@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   assessmentSessionId,
-  canSubmitAssessment,
   computeAssessmentReport,
-  earliestAssessmentSubmission,
   validAssessmentStart,
 } from "./assessment-logic.js";
+import {
+  finalizeAssessment,
+  submitAssessmentAnswer,
+} from "../assessment-worker/assessments.js";
 
 test("computes correct, wrong and blank answers without exposing feedback early", () => {
   const time = (value) => ({ toMillis: () => value });
@@ -104,17 +106,62 @@ test("keeps diagnostic attempt IDs and separates mock attempts by publication", 
   assert.equal(validAssessmentStart("a/b", "simulado"), false);
 });
 
-test("enforces the mock submission window and preserves immediate diagnostic submission", () => {
+test("finalizes a legacy mock exam before its previous minimum submission time", async () => {
   const start = new Date(0);
-  const mockExam = { type: "simulado", minMinutes: 1 };
+  const completedAt = new Date(10_000);
+  const sessionId = "student_simulado_mock";
+  const sessionPath = `assessmentSessions/${sessionId}`;
+  const questionId = "question-one";
   const session = {
-    assessmentType: mockExam.type,
-    earliestSubmitAt: new Date(earliestAssessmentSubmission(start, mockExam)),
+    userId: "student",
+    assessmentId: "mock",
+    assessmentType: "simulado",
+    questionIds: [questionId],
+    answeredCount: 0,
+    startedAt: start,
+    earliestSubmitAt: new Date(60_000),
+    deadlineAt: new Date(90 * 60_000),
+    status: "in_progress",
   };
-  assert.equal(canSubmitAssessment(session, new Date(59_999)), false);
-  assert.equal(canSubmitAssessment(session, new Date(60_000)), true);
-  assert.equal(
-    canSubmitAssessment({ ...session, assessmentType: "diagnostico_inicial" }, start),
-    true,
+  const documents = new Map([
+    [sessionPath, session],
+    [
+      `assessmentDefinitions/mock/questions/${questionId}`,
+      {
+        order: 1,
+        area: "Citologia",
+        skillId: "celulas",
+        skillLabel: "Identificar células",
+        prompt: "Qual alternativa identifica a célula?",
+        options: ["A", "B"],
+      },
+    ],
+    [
+      `assessmentDefinitions/mock/answerKeys/${questionId}`,
+      { correctOption: 0, explanation: "A é a resposta correta." },
+    ],
+  ]);
+  const snapshot = (path) => ({ id: path.split("/").at(-1), data: documents.get(path) });
+  const store = {
+    get: async (path) => (documents.has(path) ? snapshot(path) : null),
+    getMany: async (paths) => paths.filter((path) => documents.has(path)).map(snapshot),
+    commit: async (writes) => {
+      for (const { path, fields } of writes) {
+        const document = documents.get(path) ?? {};
+        documents.set(path, Object.assign(document, fields));
+      }
+    },
+  };
+  const identity = { sub: "student" };
+  await submitAssessmentAnswer(
+    store,
+    identity,
+    { sessionId, questionId, selectedOption: 0 },
+    () => new Date(5_000),
   );
+  const result = await finalizeAssessment(store, identity, { sessionId }, () => completedAt);
+  assert.deepEqual(result, { completed: true });
+  assert.equal(session.status, "completed");
+  assert.equal(session.report.percentage, 100);
+  assert.equal(session.report.durationSeconds, 10);
 });

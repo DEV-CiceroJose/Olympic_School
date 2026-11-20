@@ -64,6 +64,13 @@ describe("assessment spreadsheet validation", () => {
     expect(result.questions).toHaveLength(10);
     expect(result.assessment.type).toBe("simulado");
     expect(result.warnings).toHaveLength(10);
+
+    const legacyCsv = text
+      .replace(';"tempo_maximo_minutos"', ';"tempo_minimo_minutos";"tempo_maximo_minutos"')
+      .replaceAll(';"10";"90";', ';"10";"30";"90";');
+    const legacy = parseAssessmentCsvText(legacyCsv);
+    expect(legacy.errors).toEqual([]);
+    expect(legacy.assessment).toEqual(result.assessment);
   });
 
   it("preserves semicolons, quotes and line breaks inside quoted fields", () => {
@@ -83,7 +90,8 @@ describe("assessment spreadsheet validation", () => {
     const result = validateAssessmentImport(assessment(), questions());
     expect(result.errors).toEqual([]);
     expect(result.questions).toHaveLength(25);
-    expect(result.assessment).toMatchObject({ minMinutes: 0, maxMinutes: 90 });
+    expect(result.assessment).toMatchObject({ maxMinutes: 90 });
+    expect(result.assessment).not.toHaveProperty("minMinutes");
   });
 
   it("rejects partial imports and provisional active questions", () => {

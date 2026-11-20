@@ -34,9 +34,9 @@ describe("teacher CSV preparation and correction workflow", () => {
     const kit = buildAssessmentImportKit("diagnostico_final", 30);
     const result = parseAssessmentCsvText(kit.csv);
     expect(result.errors).toEqual([]);
-    expect(result.assessment).toMatchObject({ minMinutes: 0, maxMinutes: 90 });
-    expect(result.rawRecords[0].tempo_minimo_minutos).toBe("0");
-    expect(kit.prompt).toContain("tempo_minimo_minutos=0; tempo_maximo_minutos=90");
+    expect(result.assessment).toMatchObject({ maxMinutes: 90 });
+    expect(result.rawRecords[0]).not.toHaveProperty("tempo_minimo_minutos");
+    expect(kit.prompt).toContain("tempo_maximo_minutos=90");
     expect(kit.count).toBe(25);
     expect(() => buildAssessmentImportKit("simulado", 31)).toThrow("1 e 30");
   });

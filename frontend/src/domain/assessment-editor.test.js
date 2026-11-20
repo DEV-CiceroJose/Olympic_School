@@ -77,12 +77,10 @@ describe("visual assessment editor CSV compatibility", () => {
   it("requires a selected answer and reuses diagnostic quantity and timing rules", () => {
     const draft = validDraft();
     draft.type = "diagnostico_final";
-    draft.minMinutes = "30";
     draft.maxMinutes = "75";
     draft.questions[0].correctOption = "";
     const result = buildEditorAssessment(draft);
     const fields = result.errors.map((item) => item.field);
-    expect(result.assessment.minMinutes).toBe(0);
     expect(fields).toEqual(
       expect.arrayContaining(["quantidade_questoes", "tempo_maximo_minutos", "gabarito"]),
     );

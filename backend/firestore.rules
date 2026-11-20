@@ -11,7 +11,7 @@ service cloud.firestore {
     // - progressEvents are immutable diagnostic/training timeline entries.
     // - assessmentDefinitions/{assessmentId} stores teacher-created metadata:
     //   string id/title/type/notes/source/createdBy; integer version/questionCount/
-    //   minMinutes/maxMinutes; bool isActive; bounded string-list questionIds;
+    //   maxMinutes; bool isActive; bounded string-list questionIds;
     //   immutable createdAt and server timestamp updatedAt. Imports use source=csv.
     // - assessmentDefinitions/{assessmentId}/questions/{questionId} contains the
     //   student-visible prompt/options/source fields. answerKeys/{questionId}
@@ -208,9 +208,7 @@ service cloud.firestore {
         && data.type in ['diagnostico_inicial', 'diagnostico_final', 'simulado']
         && data.version is int && data.version >= 1 && data.version <= 999
         && data.questionCount is int && data.questionCount >= 1 && data.questionCount <= 30
-        && data.minMinutes is int
-        && (data.minMinutes >= 1 || (data.type != 'simulado' && data.minMinutes == 0))
-        && data.maxMinutes is int && data.maxMinutes >= data.minMinutes && data.maxMinutes <= 360
+        && data.maxMinutes is int && data.maxMinutes >= 1 && data.maxMinutes <= 360
         && data.isActive is bool
         && validOptionalString(data, 'notes', 2000)
         && data.questionIds is list && data.questionIds.size() == data.questionCount
@@ -586,8 +584,11 @@ service cloud.firestore {
     match /assessmentDefinitions/{assessmentId} {
       allow get, list: if isTeacher() || (isAuthenticated() && resource.data.isActive == true);
       allow create: if isTeacher() && validAssessmentDefinition()
+        && !('minMinutes' in request.resource.data)
         && validRecentCreate(request.resource.data) && selectedAssessment(assessmentId);
       allow update: if isTeacher() && validAssessmentDefinition()
+        && (!('minMinutes' in request.resource.data)
+          || ('minMinutes' in resource.data && request.resource.data.minMinutes == resource.data.minMinutes))
         && createdAtUnchanged() && request.resource.data.type == resource.data.type
         && selectedAssessment(assessmentId);
       allow delete: if false;

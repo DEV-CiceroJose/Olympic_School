@@ -241,9 +241,7 @@ export function AssessmentEditor({ userId, busy, onPublish, importRef }) {
                   change({
                     ...draft,
                     type: event.target.value,
-                    ...(event.target.value === "simulado"
-                      ? { minMinutes: "30" }
-                      : { minMinutes: "0", maxMinutes: "90" }),
+                    ...(event.target.value !== "simulado" && { maxMinutes: "90" }),
                   });
                 }}
               >
@@ -273,17 +271,6 @@ export function AssessmentEditor({ userId, busy, onPublish, importRef }) {
                 onChange={(event) => update("version", event.target.value)}
               />
             </Field>
-            {draft.type === "simulado" ? (
-              <Field label="Tempo mínimo (minutos)">
-                <Input
-                  type="number"
-                  min={1}
-                  max={360}
-                  value={draft.minMinutes}
-                  onChange={(event) => update("minMinutes", event.target.value)}
-                />
-              </Field>
-            ) : null}
             <Field label="Tempo máximo (minutos)">
               <Input
                 type="number"
@@ -596,10 +583,7 @@ export function AssessmentEditor({ userId, busy, onPublish, importRef }) {
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={validate}>Revisar avaliação</Button>
         <p className="text-sm text-muted-foreground">
-          {draft.questions.length} questões ·{" "}
-          {draft.type === "simulado"
-            ? `${draft.minMinutes || "—"} a ${draft.maxMinutes || "—"} minutos`
-            : `até ${draft.maxMinutes || "—"} minutos`}
+          {draft.questions.length} questões · até {draft.maxMinutes || "—"} minutos
         </p>
       </div>
       {review ? (

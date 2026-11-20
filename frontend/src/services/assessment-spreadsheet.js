@@ -7,7 +7,6 @@ export const ASSESSMENT_CSV_HEADERS = [
   "tipo",
   "versao",
   "quantidade_questoes",
-  "tempo_minimo_minutos",
   "tempo_maximo_minutos",
   "avaliacao_ativa",
   "observacoes_avaliacao",
@@ -36,7 +35,10 @@ export const ASSESSMENT_CSV_HEADERS = [
   "questao_ativa",
 ];
 
-const ASSESSMENT_FIELDS = ASSESSMENT_CSV_HEADERS.slice(0, 9);
+const ASSESSMENT_FIELDS = ASSESSMENT_CSV_HEADERS.slice(
+  0,
+  ASSESSMENT_CSV_HEADERS.indexOf("questao_id"),
+);
 
 function asInteger(value) {
   const parsed = Number(value);
@@ -160,7 +162,6 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
   const type = assessmentRow.tipo;
   const isDiagnostic = ["diagnostico_inicial", "diagnostico_final"].includes(type);
   const questionCount = asInteger(assessmentRow.quantidade_questoes);
-  const minMinutes = asInteger(assessmentRow.tempo_minimo_minutos);
   const maxMinutes = asInteger(assessmentRow.tempo_maximo_minutos);
   const version = asInteger(assessmentRow.versao);
   const isActive = asBoolean(assessmentRow.ativa ?? assessmentRow.avaliacao_ativa);
@@ -203,10 +204,6 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       ),
     );
   if (isDiagnostic) {
-    if (minMinutes !== 0 && minMinutes !== 30)
-      errors.push(
-        issue("CSV", assessmentRow.__row, "tempo_minimo_minutos", "Use 0 para diagnósticos."),
-      );
     if (maxMinutes !== 90)
       errors.push(
         issue(
@@ -216,19 +213,13 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
           "O diagnóstico tem prazo máximo de 90 minutos.",
         ),
       );
-  } else if (
-    !minMinutes ||
-    !maxMinutes ||
-    minMinutes < 1 ||
-    maxMinutes < minMinutes ||
-    maxMinutes > 360
-  ) {
+  } else if (!maxMinutes || maxMinutes < 1 || maxMinutes > 360) {
     errors.push(
       issue(
         "CSV",
         assessmentRow.__row,
         "tempo_maximo_minutos",
-        "Informe uma janela de tempo válida.",
+        "Informe um tempo máximo de 1 a 360 minutos.",
       ),
     );
   }
@@ -452,7 +443,6 @@ export function validateAssessmentImport(assessmentRow, questionRows) {
       type,
       version,
       questionCount,
-      minMinutes: isDiagnostic ? 0 : minMinutes,
       maxMinutes,
       isActive,
       notes: assessmentRow.observacoes ?? assessmentRow.observacoes_avaliacao,

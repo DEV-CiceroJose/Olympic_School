@@ -27,20 +27,29 @@ const testSafeFallbackConfig = {
 };
 export const firebaseApp =
   getApps()[0] ?? initializeApp(isFirebaseConfigured ? firebaseConfig : testSafeFallbackConfig);
+
+function initializeOlympicSchoolAppCheck() {
+  const siteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY?.trim();
+  if (typeof window === "undefined" || !isFirebaseConfigured || !siteKey) return null;
+
+  if (
+    import.meta.env.DEV &&
+    import.meta.env.VITE_FIREBASE_APPCHECK_DEBUG === "true" &&
+    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
+  ) {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+
+  return initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaEnterpriseProvider(siteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
+export const appCheck = initializeOlympicSchoolAppCheck();
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(
   firebaseApp,
   import.meta.env.VITE_FIRESTORE_DATABASE_ID || "biodoraia",
 );
 export const functions = getFunctions(firebaseApp, "southamerica-east1");
-let appCheck = null;
-export function initializeOlympicSchoolAppCheck() {
-  if (typeof window === "undefined" || appCheck) return appCheck;
-  const siteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY;
-  if (!siteKey) return null;
-  appCheck = initializeAppCheck(firebaseApp, {
-    provider: new ReCaptchaEnterpriseProvider(siteKey),
-    isTokenAutoRefreshEnabled: true,
-  });
-  return appCheck;
-}

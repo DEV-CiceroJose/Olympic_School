@@ -69,6 +69,7 @@ VITE_FIREBASE_APP_ID=
 VITE_FIREBASE_MEASUREMENT_ID=
 VITE_FIRESTORE_DATABASE_ID=biodoraia
 VITE_RECAPTCHA_ENTERPRISE_SITE_KEY=
+VITE_FIREBASE_APPCHECK_DEBUG=false
 VITE_GEMINI_MODEL=gemini-3.6-flash
 ```
 
@@ -84,7 +85,7 @@ garantida pelo Firebase Authentication, Security Rules e, quando ativado, App Ch
 - Authentication: provedor Google habilitado;
 - Firebase AI Logic: Gemini Developer API habilitada;
 - modelo padrão: `gemini-3.6-flash`.
-- App Check: reCAPTCHA Enterprise configurado, sem enforcement durante a validação inicial.
+- App Check: reCAPTCHA Enterprise para o Firebase AI Logic. Consulte [a configuração e o teste do Gemini](docs/firebase-setup.md#app-check-no-gemini).
 
 Deploy:
 

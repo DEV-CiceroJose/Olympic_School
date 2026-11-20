@@ -1,8 +1,6 @@
 import {
   assessmentSessionId,
-  canSubmitAssessment,
   computeAssessmentReport,
-  earliestAssessmentSubmission,
   validAssessmentStart,
 } from "../functions/assessment-logic.js";
 
@@ -88,7 +86,6 @@ export async function startAssessment(store, identity, input, now = new Date()) 
           answeredCount: 0,
           status: "in_progress",
           startedAt: now,
-          earliestSubmitAt: new Date(earliestAssessmentSubmission(now, assessment)),
           deadlineAt: new Date(now.getTime() + assessment.maxMinutes * 60_000),
           createdAt: now,
           updatedAt: now,
@@ -161,9 +158,6 @@ async function completeSession(store, sessionId, identity, clock) {
     if (session.status === "completed") return { completed: true };
     const completedAt = clock();
     if (!identity && completedAt < session.deadlineAt) return;
-    if (!canSubmitAssessment(session, completedAt)) {
-      throw new AssessmentError("failed-precondition", "Aguarde o tempo mínimo para entregar.");
-    }
 
     const path = definitionPath(session.assessmentId);
     const [questions, answerKeys, responses] = await Promise.all([

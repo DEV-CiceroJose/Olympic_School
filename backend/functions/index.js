@@ -5,9 +5,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { setGlobalOptions } from "firebase-functions/v2/options";
 import {
   assessmentSessionId,
-  canSubmitAssessment,
   computeAssessmentReport,
-  earliestAssessmentSubmission,
   validAssessmentStart,
 } from "./assessment-logic.js";
 
@@ -54,8 +52,6 @@ async function completeSession(reference) {
   const session = { id: snapshot.id, ...snapshot.data() };
   if (session.status === "completed") return session;
   const now = Timestamp.now();
-  if (!canSubmitAssessment(session, now))
-    throw new HttpsError("failed-precondition", "Aguarde o tempo mínimo para entregar.");
   const data = await loadReportData(session);
   const report = computeAssessmentReport({ session, ...data, completedAt: now });
   await db.runTransaction(async (transaction) => {
@@ -109,7 +105,6 @@ export const startAssessment = onCall(async (request) => {
     answeredCount: 0,
     status: "in_progress",
     startedAt: now,
-    earliestSubmitAt: Timestamp.fromMillis(earliestAssessmentSubmission(now, assessment)),
     deadlineAt: Timestamp.fromMillis(now.toMillis() + assessment.maxMinutes * 60_000),
     createdAt: now,
     updatedAt: now,
