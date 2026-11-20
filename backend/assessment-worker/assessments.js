@@ -1,4 +1,10 @@
-import { computeAssessmentReport } from "../functions/assessment-logic.js";
+import {
+  assessmentSessionId,
+  canSubmitAssessment,
+  computeAssessmentReport,
+  earliestAssessmentSubmission,
+  validAssessmentStart,
+} from "../functions/assessment-logic.js";
 
 export class AssessmentError extends Error {
   constructor(code, message) {
@@ -7,9 +13,8 @@ export class AssessmentError extends Error {
   }
 }
 
-const types = ["diagnostico_inicial", "diagnostico_final"];
 const series = /^([123])(?:º|°)?\s+(DSA|DSB|TETA|TETB)$/i;
-const safeId = (value) => typeof value === "string" && /^[\w-]{1,260}$/.test(value);
+const safeId = (value) => typeof value === "string" && /^[\w-]{1,266}$/.test(value);
 const sessionPath = (id) => `assessmentSessions/${id}`;
 const definitionPath = (id) => `assessmentDefinitions/${id}`;
 const conflict = (error) =>
@@ -44,10 +49,10 @@ async function updateSession(store, id, operation) {
 
 export async function startAssessment(store, identity, input, now = new Date()) {
   const { assessmentId, assessmentType } = input;
-  if (!safeId(assessmentId) || !types.includes(assessmentType)) {
+  if (!validAssessmentStart(assessmentId, assessmentType)) {
     throw new AssessmentError("invalid-argument", "Avaliação inválida.");
   }
-  const id = `${identity.sub}_${assessmentType}`;
+  const id = assessmentSessionId(identity.sub, assessmentType, assessmentId);
   const existing = await store.get(sessionPath(id));
   if (existing) {
     ownedSession(existing, identity);
@@ -83,7 +88,7 @@ export async function startAssessment(store, identity, input, now = new Date()) 
           answeredCount: 0,
           status: "in_progress",
           startedAt: now,
-          earliestSubmitAt: now,
+          earliestSubmitAt: new Date(earliestAssessmentSubmission(now, assessment)),
           deadlineAt: new Date(now.getTime() + assessment.maxMinutes * 60_000),
           createdAt: now,
           updatedAt: now,
@@ -156,6 +161,9 @@ async function completeSession(store, sessionId, identity, clock) {
     if (session.status === "completed") return { completed: true };
     const completedAt = clock();
     if (!identity && completedAt < session.deadlineAt) return;
+    if (!canSubmitAssessment(session, completedAt)) {
+      throw new AssessmentError("failed-precondition", "Aguarde o tempo mínimo para entregar.");
+    }
 
     const path = definitionPath(session.assessmentId);
     const [questions, answerKeys, responses] = await Promise.all([

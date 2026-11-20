@@ -51,11 +51,16 @@ export function formatDuration(totalSeconds = 0) {
 
 export function assessmentTiming(session, now = new Date()) {
   const startedAt = toDate(session?.startedAt);
+  const earliestSubmitAt =
+    session?.assessmentType === "simulado" ? toDate(session.earliestSubmitAt) : null;
   const deadlineAt = toDate(session?.deadlineAt);
   const nowMs = now.getTime();
   return {
     startedAt,
     deadlineAt,
+    secondsUntilSubmission: earliestSubmitAt
+      ? Math.max(0, Math.ceil((earliestSubmitAt.getTime() - nowMs) / 1000))
+      : 0,
     expired: Boolean(deadlineAt && nowMs >= deadlineAt.getTime()),
     secondsRemaining: deadlineAt
       ? Math.max(0, Math.ceil((deadlineAt.getTime() - nowMs) / 1000))

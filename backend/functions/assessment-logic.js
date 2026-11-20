@@ -1,5 +1,31 @@
 const toMillis = (value) => (value instanceof Date ? value.getTime() : value.toMillis());
 
+const assessmentTypes = ["diagnostico_inicial", "diagnostico_final", "simulado"];
+
+export function validAssessmentStart(assessmentId, assessmentType) {
+  if (!assessmentTypes.includes(assessmentType) || typeof assessmentId !== "string") return false;
+  const pattern = assessmentType === "simulado" ? /^[a-z0-9][a-z0-9-]{2,127}$/ : /^[\w-]{1,260}$/;
+  return pattern.test(assessmentId);
+}
+
+export function assessmentSessionId(uid, type, assessmentId) {
+  // Diagnostic attempts keep their original IDs. Each published mock exam has its own attempt.
+  return type === "simulado" ? `${uid}_simulado_${assessmentId}` : `${uid}_${type}`;
+}
+
+export function earliestAssessmentSubmission(startedAt, assessment) {
+  const minimum = assessment.type === "simulado" ? (assessment.minMinutes ?? 0) : 0;
+  return toMillis(startedAt) + minimum * 60_000;
+}
+
+export function canSubmitAssessment(session, now) {
+  return (
+    session.assessmentType !== "simulado" ||
+    !session.earliestSubmitAt ||
+    toMillis(now) >= toMillis(session.earliestSubmitAt)
+  );
+}
+
 export function computeAssessmentReport({
   session,
   questions,

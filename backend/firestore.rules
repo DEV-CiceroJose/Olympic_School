@@ -538,19 +538,62 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Definitions and prompts are readable by students only while active. Answer
-    // keys never leave the teacher/server boundary before the final report.
+    function assessmentDefinitionPath(assessmentId) {
+      return /databases/$(database)/documents/assessmentDefinitions/$(assessmentId);
+    }
+
+    function activeAssessmentPath(type) {
+      return /databases/$(database)/documents/activeAssessments/$(type);
+    }
+
+    function validActiveAssessment(type) {
+      let data = request.resource.data;
+      let definition = getAfter(assessmentDefinitionPath(data.assessmentId)).data;
+      return hasOnly(data, ['assessmentId'])
+        && definition.type == type
+        && definition.isActive == true;
+    }
+
+    function selectedAssessment(assessmentId) {
+      return !request.resource.data.isActive
+        || getAfter(activeAssessmentPath(request.resource.data.type)).data.assessmentId == assessmentId;
+    }
+
+    function hasOngoingAssessment(assessmentId, type) {
+      let suffix = type == 'simulado' ? '_simulado_' + assessmentId : '_' + type;
+      let sessionId = request.auth.uid + suffix;
+      let session = get(/databases/$(database)/documents/assessmentSessions/$(sessionId)).data;
+      return session.userId == request.auth.uid
+        && session.assessmentId == assessmentId
+        && session.assessmentType == type
+        && session.status == 'in_progress';
+    }
+
+    function canReadAssessmentQuestions(assessmentId) {
+      let definition = get(assessmentDefinitionPath(assessmentId)).data;
+      return definition.isActive == true || hasOngoingAssessment(assessmentId, definition.type);
+    }
+
+    match /activeAssessments/{type} {
+      allow get: if isTeacher();
+      allow create: if isTeacher() && validActiveAssessment(type);
+      allow update: if isTeacher() && validActiveAssessment(type)
+        && (resource.data.assessmentId == request.resource.data.assessmentId
+          || getAfter(assessmentDefinitionPath(resource.data.assessmentId)).data.isActive == false);
+      allow delete: if false;
+    }
+
     match /assessmentDefinitions/{assessmentId} {
       allow get, list: if isTeacher() || (isAuthenticated() && resource.data.isActive == true);
       allow create: if isTeacher() && validAssessmentDefinition()
-        && validRecentCreate(request.resource.data);
-      allow update: if isTeacher() && validAssessmentDefinition() && createdAtUnchanged();
+        && validRecentCreate(request.resource.data) && selectedAssessment(assessmentId);
+      allow update: if isTeacher() && validAssessmentDefinition()
+        && createdAtUnchanged() && request.resource.data.type == resource.data.type
+        && selectedAssessment(assessmentId);
       allow delete: if false;
 
       match /questions/{questionId} {
-        allow read: if isTeacher()
-          || (isAuthenticated()
-            && get(/databases/$(database)/documents/assessmentDefinitions/$(assessmentId)).data.isActive == true);
+        allow read: if isTeacher() || (isAuthenticated() && canReadAssessmentQuestions(assessmentId));
         allow create: if isTeacher() && validAssessmentQuestion()
           && validRecentCreate(request.resource.data);
         allow update: if isTeacher() && validAssessmentQuestion() && createdAtUnchanged();
@@ -576,7 +619,9 @@ service cloud.firestore {
             request.auth.uid + '_diagnostico_inicial',
             request.auth.uid + '_diagnostico_final'
           ]));
-      allow list: if isTeacher();
+      allow list: if isTeacher()
+        || (isAuthenticated() && resource.data.userId == request.auth.uid
+          && resource.data.assessmentType == 'simulado');
       allow create, update, delete: if false;
 
       match /responses/{responseId} {

@@ -29,7 +29,7 @@ describe("Firestore security contract", () => {
       /match \/responses\/\{responseId\}[\s\S]*allow create, update, delete: if false/,
     );
     expect(rules).toMatch(
-      /match \/assessmentSessions\/\{sessionId\}[\s\S]*allow list: if isTeacher\(\)/,
+      /match \/assessmentSessions\/\{sessionId\}[\s\S]*allow list: if isTeacher\(\)\s*\|\| \(isAuthenticated\(\) && resource\.data\.userId == request\.auth\.uid\s*&& resource\.data\.assessmentType == 'simulado'\);/,
     );
   });
 });

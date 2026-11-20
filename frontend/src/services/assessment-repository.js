@@ -28,15 +28,13 @@ async function callAssessment(path, callable, input) {
       body: JSON.stringify(input),
     });
   } catch {
-    const error = new Error("O serviço de diagnóstico está indisponível.");
+    const error = new Error("O serviço de avaliações está indisponível.");
     error.code = "functions/unavailable";
     throw error;
   }
   const result = await response.json().catch(() => null);
   if (!response.ok || !result?.data) {
-    const error = new Error(
-      result?.error?.message || "O serviço de diagnóstico está indisponível.",
-    );
+    const error = new Error(result?.error?.message || "O serviço de avaliações está indisponível.");
     error.code = `functions/${result?.error?.code || "unavailable"}`;
     throw error;
   }
@@ -68,6 +66,13 @@ export const assessmentRepository = {
     const user = requireUser();
     const snapshot = await getDoc(doc(db, "assessmentSessions", `${user.uid}_${type}`));
     return snapshot.exists() ? withId(snapshot) : null;
+  },
+  async mockSessions(assessmentId) {
+    const user = requireUser();
+    const filters = [where("userId", "==", user.uid), where("assessmentType", "==", "simulado")];
+    if (assessmentId) filters.push(where("assessmentId", "==", assessmentId), limit(1));
+    const snapshot = await getDocs(query(collection(db, "assessmentSessions"), ...filters));
+    return snapshot.docs.map(withId);
   },
   async responses(sessionId) {
     const snapshot = await getDocs(

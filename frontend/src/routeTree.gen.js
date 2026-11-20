@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppDiagnosticRouteImport } from './routes/app.diagnostic'
 import { Route as AppPlansRouteImport } from './routes/app.plans'
 import { Route as AppRedsRouteImport } from './routes/app.reds'
+import { Route as AppSimuladoRouteImport } from './routes/app.simulado'
 import { Route as AppTeacherRouteImport } from './routes/app.teacher'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat.$conversationId'
@@ -61,6 +62,11 @@ const AppRedsRoute = AppRedsRouteImport.update({
   path: '/reds',
   getParentRoute: () => AppRoute,
 })
+const AppSimuladoRoute = AppSimuladoRouteImport.update({
+  id: '/simulado',
+  path: '/simulado',
+  getParentRoute: () => AppRoute,
+})
 const AppTeacherRoute = AppTeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
@@ -81,6 +87,7 @@ const AppRouteChildren = {
   AppDiagnosticRoute: AppDiagnosticRoute,
   AppPlansRoute: AppPlansRoute,
   AppRedsRoute: AppRedsRoute,
+  AppSimuladoRoute: AppSimuladoRoute,
   AppTeacherRoute: AppTeacherRoute,
   AppIndexRoute: AppIndexRoute,
 }

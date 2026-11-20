@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeAssessmentReport } from "./assessment-logic.js";
+import {
+  assessmentSessionId,
+  canSubmitAssessment,
+  computeAssessmentReport,
+  earliestAssessmentSubmission,
+  validAssessmentStart,
+} from "./assessment-logic.js";
 
 test("computes correct, wrong and blank answers without exposing feedback early", () => {
   const time = (value) => ({ toMillis: () => value });
@@ -81,4 +87,34 @@ test("caps duration at the 90-minute deadline", () => {
     completedAt: time(5_700_000),
   });
   assert.equal(report.durationSeconds, 5400);
+});
+
+test("keeps diagnostic attempt IDs and separates mock attempts by publication", () => {
+  assert.equal(
+    assessmentSessionId("student", "diagnostico_inicial", "first"),
+    "student_diagnostico_inicial",
+  );
+  assert.equal(
+    assessmentSessionId("student", "diagnostico_inicial", "second"),
+    "student_diagnostico_inicial",
+  );
+  assert.equal(assessmentSessionId("student", "simulado", "first"), "student_simulado_first");
+  assert.equal(assessmentSessionId("student", "simulado", "second"), "student_simulado_second");
+  assert.equal(validAssessmentStart("first", "simulado"), true);
+  assert.equal(validAssessmentStart("a/b", "simulado"), false);
+});
+
+test("enforces the mock submission window and preserves immediate diagnostic submission", () => {
+  const start = new Date(0);
+  const mockExam = { type: "simulado", minMinutes: 1 };
+  const session = {
+    assessmentType: mockExam.type,
+    earliestSubmitAt: new Date(earliestAssessmentSubmission(start, mockExam)),
+  };
+  assert.equal(canSubmitAssessment(session, new Date(59_999)), false);
+  assert.equal(canSubmitAssessment(session, new Date(60_000)), true);
+  assert.equal(
+    canSubmitAssessment({ ...session, assessmentType: "diagnostico_inicial" }, start),
+    true,
+  );
 });

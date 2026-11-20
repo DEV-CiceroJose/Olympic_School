@@ -3,7 +3,13 @@ import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { setGlobalOptions } from "firebase-functions/v2/options";
-import { computeAssessmentReport } from "./assessment-logic.js";
+import {
+  assessmentSessionId,
+  canSubmitAssessment,
+  computeAssessmentReport,
+  earliestAssessmentSubmission,
+  validAssessmentStart,
+} from "./assessment-logic.js";
 
 initializeApp();
 setGlobalOptions({ region: "southamerica-east1", maxInstances: 10 });
@@ -48,6 +54,8 @@ async function completeSession(reference) {
   const session = { id: snapshot.id, ...snapshot.data() };
   if (session.status === "completed") return session;
   const now = Timestamp.now();
+  if (!canSubmitAssessment(session, now))
+    throw new HttpsError("failed-precondition", "Aguarde o tempo mínimo para entregar.");
   const data = await loadReportData(session);
   const report = computeAssessmentReport({ session, ...data, completedAt: now });
   await db.runTransaction(async (transaction) => {
@@ -68,8 +76,13 @@ export const startAssessment = onCall(async (request) => {
   const { assessmentId, assessmentType, className } = request.data ?? {};
   if (!classes.has(className))
     throw new HttpsError("invalid-argument", "Selecione uma turma válida.");
-  if (!["diagnostico_inicial", "diagnostico_final"].includes(assessmentType))
-    throw new HttpsError("invalid-argument", "Tipo inválido.");
+  if (!validAssessmentStart(assessmentId, assessmentType))
+    throw new HttpsError("invalid-argument", "Avaliação inválida.");
+  const reference = db
+    .collection("assessmentSessions")
+    .doc(assessmentSessionId(identity.uid, assessmentType, assessmentId));
+  const existing = await reference.get();
+  if (existing.exists) return { id: existing.id, ...existing.data(), resumed: true };
   const definition = await db.collection("assessmentDefinitions").doc(assessmentId).get();
   if (
     !definition.exists ||
@@ -77,9 +90,6 @@ export const startAssessment = onCall(async (request) => {
     definition.data().type !== assessmentType
   )
     throw new HttpsError("failed-precondition", "Esta avaliação não está disponível.");
-  const reference = db.collection("assessmentSessions").doc(`${identity.uid}_${assessmentType}`);
-  const existing = await reference.get();
-  if (existing.exists) return { id: existing.id, ...existing.data(), resumed: true };
   const [profile, now] = await Promise.all([
     db.collection("users").doc(identity.uid).get(),
     Promise.resolve(Timestamp.now()),
@@ -99,7 +109,7 @@ export const startAssessment = onCall(async (request) => {
     answeredCount: 0,
     status: "in_progress",
     startedAt: now,
-    earliestSubmitAt: now,
+    earliestSubmitAt: Timestamp.fromMillis(earliestAssessmentSubmission(now, assessment)),
     deadlineAt: Timestamp.fromMillis(now.toMillis() + assessment.maxMinutes * 60_000),
     createdAt: now,
     updatedAt: now,
@@ -108,6 +118,8 @@ export const startAssessment = onCall(async (request) => {
     await reference.create(session);
   } catch (error) {
     if (error.code !== 6 && error.code !== "already-exists") throw error;
+    const concurrent = await reference.get();
+    return { id: concurrent.id, ...concurrent.data(), resumed: true };
   }
   return { id: reference.id, ...session, resumed: false };
 });
