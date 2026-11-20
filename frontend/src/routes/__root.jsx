@@ -10,6 +10,7 @@ import {
 import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SidebarStateProvider } from "@/components/layout/sidebar-state";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { initializeOlympicSchoolAppCheck } from "@/lib/firebase";
@@ -153,7 +154,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <SidebarStateProvider>
+          <Outlet />
+        </SidebarStateProvider>
         <Toaster theme="dark" />
       </AuthProvider>
     </QueryClientProvider>

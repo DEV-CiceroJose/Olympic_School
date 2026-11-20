@@ -1,12 +1,9 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { MessageSquarePlus, Search, NotebookPen, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Logo } from "@/components/landing/logo";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
-import { UserMenu } from "@/components/auth/user-menu";
 function groupByDate(conversations) {
   const day = 86_400_000;
   const now = Date.now();
@@ -46,43 +43,23 @@ export function ChatSidebar({ onNavigate }) {
     navigate({ to: "/chat/$conversationId", params: { conversationId: id } });
   };
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex items-center justify-between px-4 py-4">
-        <Link
-          to="/app"
-          className="min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Logo variant="platform" className="my-2 ml-1 w-40 max-w-full" />
-        </Link>
-      </div>
-
-      <div className="px-3">
-        <Button
+    <>
+      <nav className="platform-sidebar-nav" aria-label="Ferramentas da conversa">
+        <button
+          type="button"
           onClick={handleNew}
-          className="w-full justify-start gap-2 rounded-xl bg-primary/15 text-foreground ring-1 ring-primary/30 transition-colors hover:bg-primary/25"
+          className="platform-sidebar-link platform-sidebar-primary"
         >
-          <MessageSquarePlus className="size-4 text-primary" />
           Nova conversa
-        </Button>
-      </div>
-
-      <nav className="mt-4 space-y-1 px-3" aria-label="Ferramentas da conversa">
-        <Link
-          to="/app/notebooks"
-          onClick={onNavigate}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-        >
-          <NotebookPen className="size-4" />
-          Meus notebooks
-        </Link>
+        </button>
         <button
           type="button"
           onClick={() => setSearching((value) => !value)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          className="platform-sidebar-link"
           aria-expanded={searching}
         >
           {searching ? <X className="size-4" /> : <Search className="size-4" />}
-          Pesquisar conversas
+          Pesquisar conversa
         </button>
       </nav>
 
@@ -98,7 +75,7 @@ export function ChatSidebar({ onNavigate }) {
         </div>
       ) : null}
 
-      <div className="mt-4 min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+      <div className="mt-4 px-3 pb-4">
         {loading ? (
           <div className="space-y-2 px-1">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -135,10 +112,6 @@ export function ChatSidebar({ onNavigate }) {
           ))
         )}
       </div>
-
-      <div className="border-t border-sidebar-border p-3">
-        <UserMenu />
-      </div>
-    </div>
+    </>
   );
 }

@@ -30,7 +30,7 @@ function exportConversation(conversation) {
   link.click();
   URL.revokeObjectURL(url);
 }
-export function ChatHeader({ onOpenSidebar }) {
+export function ChatHeader({ controls, profile }) {
   const { logout } = useAuth();
   const { conversations, renameConversation, clearConversation } = useChatStore();
   const navigate = useNavigate();
@@ -41,16 +41,15 @@ export function ChatHeader({ onOpenSidebar }) {
   return (
     <AuthenticatedHeader
       activeArea="assistant"
-      onOpenSidebar={onOpenSidebar}
+      controls={controls}
+      profile={profile}
       actions={
         <>
-          <div className="hidden sm:block">
-            <NotebookSelect />
-          </div>
+          <NotebookSelect />
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Opções da conversa"
-              className="grid size-10 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="platform-icon-button grid"
             >
               <MoreHorizontal className="size-5" />
             </DropdownMenuTrigger>

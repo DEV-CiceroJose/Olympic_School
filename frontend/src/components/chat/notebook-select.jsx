@@ -2,22 +2,23 @@ import { Check, ChevronDown, NotebookPen } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
-export function NotebookSelect({ className }) {
+export function NotebookSelect() {
   const { notebooks, notebookId, setNotebookId } = useChatStore();
   const active = notebooks.find((notebook) => notebook.id === notebookId);
   return (
     <Popover>
       <PopoverTrigger
-        className={cn(
-          "flex max-w-[60vw] items-center gap-2 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          className,
-        )}
+        aria-label={active ? `Selecionar notebook: ${active.name}` : "Selecionar notebook"}
+        className="platform-notebook-select"
       >
         <NotebookPen className="size-4 shrink-0 text-primary" />
         <span className="truncate">{active ? active.name : "Selecionar notebook"}</span>
         <ChevronDown className="size-4 shrink-0 opacity-70" />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-1.5">
+      <PopoverContent
+        align="end"
+        className="w-72 max-w-[var(--radix-popover-content-available-width)] p-1.5"
+      >
         <p className="px-2.5 py-1.5 text-xs uppercase tracking-wide text-muted-foreground/70">
           Notebooks
         </p>

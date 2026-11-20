@@ -45,11 +45,8 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
   const textareaRef = useRef(null);
   const fileRef = useRef(null);
   useEffect(() => {
-    if (autoFocus) textareaRef.current?.focus();
-  }, [autoFocus]);
-  useEffect(() => {
-    if (!streaming) textareaRef.current?.focus();
-  }, [streaming]);
+    if (autoFocus && !streaming) textareaRef.current?.focus();
+  }, [autoFocus, streaming]);
   useEffect(() => {
     const element = textareaRef.current;
     if (!element) return;
@@ -112,13 +109,10 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
         </div>
       ) : null}
 
-      <div className="flex items-end gap-2 rounded-[28px] border border-border bg-card/70 p-2 shadow-lg backdrop-blur-xl transition-colors focus-within:border-primary/40">
+      <div className="platform-composer">
         <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Adicionar ferramenta"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Plus className="size-5" />
+          <DropdownMenuTrigger aria-label="Adicionar ferramenta" className="platform-composer-add">
+            <Plus className="size-5" strokeWidth={3} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             {RESOURCES.map((resource) => (
@@ -163,9 +157,9 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
               submit();
             }
           }}
-          placeholder="Pergunte qualquer coisa sobre Biologia..."
+          placeholder="Faça uma pergunta…"
           aria-label="Mensagem"
-          className="max-h-[200px] min-h-10 flex-1 resize-none bg-transparent py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="max-h-[200px] min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
 
         {uploading ? (
@@ -191,10 +185,10 @@ export function Composer({ onSend, streaming, onStop, autoFocus = true }) {
             aria-label="Enviar mensagem"
             className={cn(
               "grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground transition-all hover:brightness-110",
-              !value.trim() && "cursor-not-allowed opacity-40 hover:brightness-100",
+              !value.trim() && "cursor-not-allowed hover:brightness-100",
             )}
           >
-            <ArrowUp className="size-5" />
+            <ArrowUp className="size-6" strokeWidth={3.5} />
           </button>
         )}
       </div>

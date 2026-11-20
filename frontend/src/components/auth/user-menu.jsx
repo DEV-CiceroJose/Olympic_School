@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
   DropdownMenu,
@@ -10,16 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-function initials(name) {
-  return (
-    name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "EU"
-  );
-}
 export function UserMenu({ compact = false, className, showTeacherLink = false }) {
   const { user, profile, logout, isTeacher } = useAuth();
   const navigate = useNavigate();
@@ -44,8 +34,8 @@ export function UserMenu({ compact = false, className, showTeacherLink = false }
             className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"
           />
         ) : (
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary ring-1 ring-primary/30">
-            {initials(name)}
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-sidebar">
+            <UserRound className="size-5" aria-hidden="true" />
           </span>
         )}
         {!compact ? (

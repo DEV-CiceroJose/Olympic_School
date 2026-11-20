@@ -118,7 +118,7 @@ export function TeacherDashboard() {
   };
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-10">
+    <main className="mx-auto w-full min-w-0 max-w-7xl px-5 py-10">
       <p className="text-sm font-medium text-primary">Acesso administrativo</p>
       <h1 className="mt-2 font-display text-4xl font-semibold">Área do professor</h1>
       <p className="mt-3 max-w-3xl text-muted-foreground">
@@ -127,9 +127,15 @@ export function TeacherDashboard() {
       </p>
       <Tabs defaultValue="overview" className="mt-8">
         <TabsList className="grid h-auto w-full max-w-3xl grid-cols-3">
-          <TabsTrigger value="overview">Visão geral</TabsTrigger>
-          <TabsTrigger value="students">Alunos e respostas</TabsTrigger>
-          <TabsTrigger value="questions">Criar avaliação</TabsTrigger>
+          <TabsTrigger value="overview" className="px-1.5 whitespace-normal">
+            Visão geral
+          </TabsTrigger>
+          <TabsTrigger value="students" className="px-1.5 whitespace-normal">
+            Alunos e respostas
+          </TabsTrigger>
+          <TabsTrigger value="questions" className="px-1.5 whitespace-normal">
+            Criar avaliação
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="mt-6 space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -168,14 +174,17 @@ export function TeacherDashboard() {
         </TabsContent>
         <TabsContent value="students" className="mt-6 space-y-5">
           <Card className="bg-card/70">
-            <CardContent className="grid gap-3 p-5 md:grid-cols-4">
+            <CardContent className="flex flex-wrap items-center gap-3 p-5">
               <Input
+                className="min-w-0 flex-[2_1_14rem]"
+                aria-label="Buscar aluno ou e-mail"
                 placeholder="Buscar aluno ou e-mail"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
               <select
-                className="h-10 rounded-md border bg-background px-3 text-sm"
+                className="h-10 min-w-0 flex-[1_1_10rem] rounded-md border bg-background px-3 text-sm"
+                aria-label="Filtrar por turma"
                 value={classFilter}
                 onChange={(event) => setClassFilter(event.target.value)}
               >
@@ -185,7 +194,8 @@ export function TeacherDashboard() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-md border bg-background px-3 text-sm"
+                className="h-10 min-w-0 flex-[1_1_10rem] rounded-md border bg-background px-3 text-sm"
+                aria-label="Filtrar por situação"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
               >
@@ -193,7 +203,7 @@ export function TeacherDashboard() {
                 <option value="in_progress">Em andamento</option>
                 <option value="completed">Concluído</option>
               </select>
-              <div className="flex gap-2">
+              <div className="flex max-w-full flex-wrap gap-2">
                 <Button variant="outline" onClick={() => void load()}>
                   <RefreshCw /> Atualizar
                 </Button>
