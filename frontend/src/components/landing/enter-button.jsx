@@ -17,9 +17,13 @@ export function EnterButton({ label = "Entrar", size = "md", variant = "default"
         className,
       )}
     >
-      <span aria-hidden="true" className={size === "lg" ? "text-xl" : "text-base"}>
-        🏛️
-      </span>
+      <img
+        src="/design/landing/templo.webp"
+        alt=""
+        width="64"
+        height="64"
+        className={size === "lg" ? "size-7 shrink-0" : "size-5 shrink-0"}
+      />
       {label}
     </Link>
   );

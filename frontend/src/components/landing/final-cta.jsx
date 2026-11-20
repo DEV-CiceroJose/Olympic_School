@@ -2,15 +2,11 @@ import { EnterButton } from "./enter-button";
 import { Reveal } from "./reveal";
 export function FinalCta() {
   return (
-    <section className="py-24">
+    <section className="landing-section landing-cta">
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
-          <div className="glass-panel bg-hero-glow relative overflow-hidden rounded-[2rem] px-6 py-16 text-center shadow-soft sm:px-12">
-            <div
-              className="bg-bio-grid pointer-events-none absolute inset-0 opacity-30"
-              aria-hidden="true"
-            />
-            <div className="relative mx-auto max-w-2xl">
+          <div className="pdf-cta-panel rounded-[2rem] px-6 py-14 text-center sm:px-12">
+            <div className="mx-auto max-w-2xl">
               <h2 className="text-balance text-3xl font-semibold sm:text-4xl">
                 Faça parte do início da <span className="text-gradient">Olympic School</span>
               </h2>

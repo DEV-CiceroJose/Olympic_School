@@ -1,11 +1,8 @@
-import { Search } from "lucide-react";
 import { EnterButton } from "./enter-button";
 
 export function Hero() {
   return (
-    <section id="topo" className="pdf-hero relative isolate overflow-hidden">
-      <div className="pdf-hero-texture" aria-hidden="true" />
-      <img src="/design/pdf-dna.png" className="pdf-hero-dna" alt="" aria-hidden="true" />
+    <section id="topo" className="pdf-hero">
       <div className="pdf-hero-content mx-auto max-w-7xl px-6 sm:px-10 lg:px-14">
         <h1 className="pdf-hero-title">
           <span className="pdf-hero-intro">
@@ -14,9 +11,16 @@ export function Hero() {
             de Biologia com
           </span>
           <span className="pdf-hero-display">
-            Inteligência
-            <br />
-            Artificial <span className="pdf-obb">OBB</span>
+            <img
+              src="/design/landing/titulo-inicio.webp"
+              width="1094"
+              height="310"
+              alt="Inteligência Artificial"
+              fetchPriority="high"
+            />
+            <span className="pdf-obb" aria-hidden="true">
+              OBB
+            </span>
           </span>
         </h1>
         <p className="pdf-hero-description">
@@ -26,7 +30,13 @@ export function Hero() {
         </p>
         <div className="pdf-hero-actions">
           <EnterButton label="ENTRAR NA OLYMPIC SCHOOL" size="lg" variant="hero" />
-          <Search className="pdf-search-icon" aria-hidden="true" />
+          <img
+            src="/design/landing/lupa-inicio.webp"
+            width="138"
+            height="136"
+            alt=""
+            className="pdf-search-icon"
+          />
         </div>
         <p className="pdf-hero-note">Acesso com Google · cadastro automático no primeiro login</p>
       </div>

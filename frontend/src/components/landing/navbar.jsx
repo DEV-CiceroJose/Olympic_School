@@ -10,12 +10,10 @@ const links = [
   { href: "#recursos", label: "Recursos" },
 ];
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("#topo");
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 12);
       const current = [...links].reverse().find(({ href }) => {
         const section = document.querySelector(href);
         return section && section.getBoundingClientRect().top <= 150;
@@ -27,15 +25,10 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "border-b border-border bg-background/90 backdrop-blur-xl" : "",
-      )}
-    >
+    <header className="landing-navbar sticky inset-x-0 top-0 z-50">
       <nav
         aria-label="Principal"
-        className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 md:flex md:justify-between"
+        className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-4 sm:px-10 md:flex lg:px-14 md:justify-between"
       >
         <a
           href="#topo"
@@ -44,11 +37,12 @@ export function Navbar() {
           <Logo />
         </a>
 
-        <ul className="hidden items-center gap-8 md:flex">
+        <ul className="hidden items-center gap-2 md:flex lg:gap-5">
           {links.map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}
+                aria-current={activeSection === link.href ? "location" : undefined}
                 className={cn("pdf-nav-link", activeSection === link.href && "pdf-nav-active")}
               >
                 {link.label}
@@ -73,7 +67,7 @@ export function Navbar() {
       </nav>
 
       {open ? (
-        <div className="border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
+        <div className="md:hidden">
           <ul className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4">
             {links.map((link) => (
               <li key={link.href}>

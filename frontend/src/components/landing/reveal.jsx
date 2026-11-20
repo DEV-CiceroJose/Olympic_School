@@ -14,16 +14,14 @@ export function Reveal({ children, className, delay = 0, as: Tag = "div" }) {
       setRevealed(true);
       return;
     }
+    const threshold = 0.15;
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setRevealed(true);
-            observer.disconnect();
-          }
-        });
+      ([entry]) => {
+        if (entry.intersectionRatio < threshold) return;
+        setRevealed(true);
+        observer.disconnect();
       },
-      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" },
+      { threshold, rootMargin: "0px 0px -32px 0px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -32,7 +30,7 @@ export function Reveal({ children, className, delay = 0, as: Tag = "div" }) {
     <Tag
       ref={ref}
       data-revealed={revealed}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{ "--landing-reveal-delay": `${delay}ms` }}
       className={cn("reveal", className)}
     >
       {children}

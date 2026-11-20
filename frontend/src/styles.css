@@ -336,19 +336,6 @@
   box-shadow: var(--shadow-soft);
 }
 
-@utility reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  transition:
-    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
-
-  &[data-revealed="true"] {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -536,22 +523,23 @@
   --background: #0c4a36;
   --foreground: #fffde9;
   --surface: #1d6844;
-  --card: #276d46;
-  --primary: #b2ff24;
+  --primary: #aeff2b;
   --primary-foreground: #073a2a;
-  --primary-glow: #d7ff8b;
-  --muted-foreground: #e4f1dc;
+  --muted-foreground: #edf6e7;
   --border: rgb(220 255 207 / 42%);
   --secondary: #236a47;
-  --gradient-primary: linear-gradient(115deg, #b2ff24, #e0ff75);
+  --gradient-primary: linear-gradient(115deg, #aeff2b, #e0ff75);
+  --landing-blend: clamp(5rem, 11vw, 12rem);
+  --landing-footer: #0b4438;
+  isolation: isolate;
   color: var(--foreground);
-  background: #0c4a36;
+  background: var(--background);
   font-family: "Poppins", ui-sans-serif, sans-serif;
 }
 
-.landing-theme header:first-child {
-  background: #084b3d;
-  box-shadow: 0 8px 22px rgb(0 40 22 / 16%);
+.landing-navbar {
+  background: #0b4a3d;
+  box-shadow: 0 0.4rem 1rem rgb(4 40 26 / 20%);
 }
 
 .pdf-logo {
@@ -570,8 +558,8 @@
   align-items: center;
   min-height: 2rem;
   border-radius: 999px;
-  padding: 0.25rem 0.95rem;
-  color: #fffde9;
+  padding: 0.25rem 0.9rem;
+  color: var(--foreground);
   font-family: "Josefin Sans", sans-serif;
   font-size: 1rem;
   font-weight: 600;
@@ -583,230 +571,320 @@
   background: rgb(231 255 219 / 28%);
 }
 
+.landing-theme > main > section {
+  position: relative;
+}
+
+/* The next background fades in over the previous one in the landing's shared stacking context. */
+.landing-theme > main > section::before {
+  position: absolute;
+  inset: calc(-1 * var(--landing-blend)) 0 0;
+  z-index: -1;
+  background-image: var(--landing-scene);
+  background-position: var(--landing-scene-position, center);
+  background-size: cover;
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--landing-blend));
+  pointer-events: none;
+  content: "";
+}
+
+.landing-theme > main > .pdf-hero::before {
+  inset-block-start: 0;
+  mask-image: none;
+}
+
 .landing-theme .pdf-hero {
-  min-height: min(850px, 100svh);
-  background: url("/design/pdf-gradient.png") center / cover no-repeat;
-}
-
-.pdf-hero-texture {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: url("/design/pdf-texture.png") center / cover no-repeat;
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-.pdf-hero-dna {
-  position: absolute;
-  z-index: -1;
-  top: -10%;
-  right: -25%;
-  width: min(1050px, 83vw);
-  height: auto;
-  transform: rotate(-69deg);
-  opacity: 0.96;
-  pointer-events: none;
+  --landing-scene:
+    linear-gradient(90deg, rgb(9 62 37 / 20%), transparent 75%), url("/design/landing/inicio.webp");
+  --landing-scene-position: center, right center;
 }
 
 .pdf-hero-content {
-  position: relative;
-  padding-top: clamp(9rem, 13vw, 12rem);
-  padding-bottom: 6rem;
+  padding-top: clamp(3rem, 6vw, 6.75rem);
+  padding-bottom: clamp(6rem, 11vw, 11rem);
 }
 
 .pdf-hero-title {
-  max-width: 760px;
+  width: min(100%, 45rem);
   margin: 0;
 }
 
 .pdf-hero-intro {
   display: block;
-  color: #b5ff2a;
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(1.65rem, 3.6vw, 3.2rem);
+  color: var(--primary);
+  font-size: clamp(1.45rem, 3.7vw, 3.25rem);
   font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.035em;
 }
 
 .pdf-hero-display {
+  position: relative;
   display: block;
-  margin-top: 0.15em;
-  color: #fffde9;
-  font-family: "Josefin Sans", sans-serif;
-  font-size: clamp(3.1rem, 7.2vw, 6.7rem);
-  font-weight: 400;
-  line-height: 0.79;
-  letter-spacing: -0.055em;
-  text-transform: uppercase;
+}
+
+.pdf-hero-display img {
+  width: 100%;
+  height: auto;
 }
 
 .pdf-obb {
-  display: inline-block;
-  transform: rotate(-8deg) translateY(-0.22em);
+  position: absolute;
+  inset-block-start: 67%;
+  inset-inline-start: 81%;
+  transform: rotate(-6deg);
   border-radius: 999px;
-  padding: 0.08em 0.7em 0;
-  background: #b5ff2a;
-  color: #0c4a36;
+  padding: 0.12em 0.8em;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-family: "Josefin Sans", sans-serif;
-  font-size: 0.25em;
-  line-height: 1.2;
-  letter-spacing: 0;
-  vertical-align: middle;
+  font-size: clamp(0.7rem, 1.8vw, 1.55rem);
+  line-height: 1.05;
 }
 
 .pdf-hero-description {
-  max-width: 630px;
-  margin-top: 1.25rem;
-  color: #fffde9;
-  font-size: clamp(0.96rem, 1.35vw, 1.15rem);
-  line-height: 1.48;
+  max-width: 36rem;
+  margin-top: 0.9rem;
+  font-size: clamp(0.94rem, 1.4vw, 1.13rem);
+  line-height: 1.5;
 }
 
 .pdf-hero-actions {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-top: 1.1rem;
+  gap: clamp(0.55rem, 1.75vw, 1.4rem);
+  margin-top: 1rem;
 }
 
 .landing-theme .pdf-enter-hero {
   background: #084b3d;
-  color: #b5ff2a;
-  font-size: clamp(0.9rem, 1.65vw, 1.25rem);
+  color: var(--primary);
+  font-size: clamp(0.78rem, 1.55vw, 1.2rem);
   font-weight: 700;
-  box-shadow: none;
+  line-height: 1.2;
 }
 
 .pdf-search-icon {
-  width: 3.2rem;
-  height: 3.2rem;
-  color: #b5ff2a;
-  stroke-width: 2.4;
+  width: clamp(2.25rem, 6vw, 4.2rem);
+  height: auto;
+  flex: none;
 }
+
 .pdf-hero-note {
   margin-top: 0.7rem;
-  font-size: 0.68rem;
-  color: #fffde9;
+  font-size: 0.75rem;
 }
 
-.landing-theme main > section {
-  position: relative;
-  isolation: isolate;
-  background: url("/design/pdf-gradient.png") center / cover no-repeat;
+.landing-section {
+  padding-block: clamp(3.5rem, 7vw, 6.5rem) clamp(4.5rem, 8vw, 7rem);
 }
 
-.landing-theme main > section:nth-child(even) {
-  background: url("/design/pdf-gradient.png") right center / cover no-repeat;
+@media (prefers-reduced-motion: no-preference) {
+  .landing-theme .reveal {
+    transition:
+      opacity 640ms ease-out,
+      transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--landing-reveal-delay, 0ms);
+  }
+
+  .landing-theme .reveal[data-revealed="false"]:not(:focus-within) {
+    opacity: 0;
+    transform: translateY(32px);
+  }
 }
 
-.landing-theme main > section::before {
+.landing-theme #problema {
+  --landing-scene: url("/design/landing/problema.webp");
+}
+
+.landing-theme #solucao {
+  --landing-scene: url("/design/landing/solucao.webp");
+}
+
+.landing-theme #recursos {
+  --landing-scene: url("/design/landing/recursos.webp");
+}
+
+.pdf-problem-heading {
+  display: grid;
+  width: fit-content;
+  grid-template-columns: minmax(0, 37rem) minmax(3.75rem, 7.5rem);
+  align-items: center;
+  gap: 0 clamp(0.6rem, 3vw, 1.5rem);
+  margin-bottom: clamp(2rem, 5vw, 3.25rem);
+}
+
+.pdf-problem-heading h2 {
+  color: var(--primary);
+  font-size: clamp(1.3rem, 3.6vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.17;
+  letter-spacing: -0.04em;
+}
+
+.pdf-problem-heading h2 > span {
+  display: block;
+}
+
+.pdf-problem-heading strong {
+  color: var(--foreground);
+  font-weight: 800;
+}
+
+.pdf-problem-heading .pdf-problem-lead {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pdf-problem-lead::after {
+  width: 25%;
+  border-top: 1px solid currentcolor;
+  color: var(--foreground);
   content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.13;
-  background: url("/design/pdf-texture.png") center / cover no-repeat;
-  mix-blend-mode: screen;
 }
 
-.landing-theme h1,
-.landing-theme h2 {
-  font-family: "Josefin Sans", sans-serif;
-  letter-spacing: -0.045em;
+.pdf-problem-lamp {
+  width: 100%;
+  height: auto;
 }
 
-.landing-theme h2 {
-  font-size: clamp(2.4rem, 5vw, 4.8rem);
-  line-height: 1.02;
+.pdf-section-header {
+  margin-bottom: clamp(1.6rem, 4.5vw, 3rem);
 }
 
-.landing-theme .glass-panel,
-.landing-theme main article,
-.landing-theme main .group.flex.h-full {
-  border: 2px solid rgb(227 255 205 / 43%);
-  background: linear-gradient(135deg, rgb(240 255 206 / 20%), rgb(10 67 43 / 32%));
-  box-shadow: 0 22px 45px rgb(0 38 25 / 14%);
-  backdrop-filter: blur(12px);
+.pdf-problem-title,
+.pdf-solution-title,
+.pdf-features-title {
+  height: auto;
 }
 
-.landing-theme .pdf-info-card {
+.pdf-problem-title {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+.pdf-solution-title,
+.pdf-features-title {
+  width: min(100%, 47rem);
+}
+
+.pdf-section-description {
+  max-width: 61ch;
+  margin-top: 0.75rem;
+  color: var(--foreground);
+  font-size: clamp(0.92rem, 1.4vw, 1.08rem);
+  line-height: 1.55;
+}
+
+.pdf-problem-heading .pdf-section-description {
+  grid-column: 1 / -1;
+  max-width: 55ch;
+}
+
+.pdf-info-card,
+.pdf-cta-panel {
+  border: 2px solid rgb(228 255 222 / 40%);
+  background: linear-gradient(135deg, rgb(239 255 215 / 17%), rgb(9 61 35 / 36%));
+  box-shadow: 0 0.75rem 1.6rem rgb(3 40 21 / 16%);
+}
+
+.pdf-info-card {
   position: relative;
-  min-height: 13rem;
-  border-radius: 1.5rem;
-  padding: 1.8rem;
+  height: 100%;
+  border-radius: 1.4rem;
+  padding: clamp(1rem, 2vw, 1.55rem);
+  color: var(--foreground);
 }
 
-.landing-theme .pdf-card-pill {
-  display: table;
-  max-width: 100%;
-  border-radius: 999px;
-  padding: 0.42rem 1.05rem 0.3rem;
-  background: #b5ff2a;
-  color: #084b3d !important;
-  font-family: "Poppins", sans-serif;
-  font-size: clamp(0.9rem, 1.3vw, 1.17rem);
+.pdf-card-pill {
+  width: fit-content;
+  border-radius: 1.15rem;
+  padding: 0.35em 0.85em;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: clamp(0.9rem, 1.35vw, 1.06rem);
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
-.landing-theme .pdf-info-card p {
-  max-width: 38ch;
-  color: #fffde9;
-  font-size: 0.95rem;
+#recursos .reveal:nth-child(even) .pdf-card-pill {
+  background: #ffd023;
+}
+
+.pdf-info-card p {
+  max-width: 52ch;
+  margin-top: 0.65rem;
   line-height: 1.5;
 }
 
-.landing-theme #problema .pdf-card-icon {
+.pdf-problem-icon {
   position: absolute;
-  top: 1.35rem;
-  right: 1.35rem;
-  border-color: #b5ff2a;
-  background: transparent;
+  width: var(--problem-icon-size, 4rem);
+  height: auto;
 }
 
-.landing-theme #problema .pdf-info-card .space-y-4 {
-  padding-right: 2.5rem;
-}
-.landing-theme #solucao .pdf-card-icon,
-.landing-theme #recursos .pdf-card-icon {
-  display: none;
-}
-.landing-theme #solucao .pdf-info-card h3,
-.landing-theme #recursos .pdf-info-card h3 {
-  margin-top: 0;
+.pdf-problem-card[data-icon="lupa-problema"] {
+  padding-inline-end: clamp(4.5rem, 9vw, 7rem);
 }
 
-.landing-theme main .group.flex.h-full h3,
-.landing-theme main article h3 {
-  color: var(--primary);
+.pdf-problem-card[data-icon="lupa-problema"] .pdf-problem-icon {
+  --problem-icon-size: clamp(3.4rem, 7vw, 6.25rem);
+  inset: -1.15rem 0.65rem auto auto;
+}
+
+.pdf-problem-card[data-icon="prancheta"] {
+  padding-inline-start: clamp(4.6rem, 9vw, 7rem);
+}
+
+.pdf-problem-card[data-icon="prancheta"] .pdf-problem-icon {
+  --problem-icon-size: clamp(3.5rem, 6.5vw, 5.7rem);
+  inset: 50% auto auto -0.6rem;
+  transform: translateY(-50%);
+}
+
+.pdf-problem-card[data-icon="evolucao"] {
+  padding-inline-end: clamp(4.2rem, 9vw, 7rem);
+}
+
+.pdf-problem-card[data-icon="evolucao"] .pdf-problem-icon {
+  --problem-icon-size: clamp(3.4rem, 7.5vw, 6.5rem);
+  inset: auto 0 -0.45rem auto;
+}
+
+.landing-theme .landing-cta {
+  --landing-scene: linear-gradient(to bottom, #38652d, var(--landing-footer));
+  padding-block: clamp(3rem, 6vw, 5rem);
+}
+
+.pdf-cta-panel h2 {
+  font-family: "Josefin Sans", sans-serif;
+  font-size: clamp(2rem, 4vw, 3.65rem);
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.landing-footer {
+  background: var(--landing-footer);
 }
 
 @media (max-width: 640px) {
   .landing-theme .pdf-hero {
-    min-height: 720px;
+    --landing-scene:
+      linear-gradient(90deg, rgb(7 60 38 / 59%), rgb(7 60 38 / 29%)),
+      url("/design/landing/inicio.webp");
+    --landing-scene-position: center, 90% center;
   }
-  .pdf-hero-content {
-    padding-top: 9rem;
-    padding-bottom: 5rem;
+
+  .pdf-hero-actions .pdf-enter-hero {
+    padding-inline: 0.9rem;
   }
-  .pdf-hero-display {
-    font-size: clamp(2.5rem, 10.7vw, 4rem);
+
+  .pdf-problem-lead::after {
+    display: none;
   }
-  .pdf-hero-dna {
-    top: 20%;
-    right: -95%;
-    width: 130vw;
-    opacity: 0.45;
-  }
-  .pdf-hero-actions {
-    gap: 0.7rem;
-  }
-  .pdf-search-icon {
-    width: 2.2rem;
-    height: 2.2rem;
+
+  .pdf-problem-heading {
+    grid-template-columns: minmax(0, 1fr) clamp(2.8rem, 14vw, 4.25rem);
   }
 }
